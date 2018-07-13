@@ -278,6 +278,17 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, int room) {
 			PostThreadMessage(parentthreadid, MSG_NEWSMALLTV, WPARAM(rrid), LPARAM(0));
 		return 0;
 	}
+	ret = m_tmpsysmsg.wmsg.find(L"Cλ�⻷");
+	if (ret != -1) {
+		if (!doc.HasMember("real_roomid") || !doc["real_roomid"].IsInt()) {
+			return -1;
+		}
+		int rrid = doc["real_roomid"].GetInt();
+		printf("%s[DanmuAPI] Center RoomID:%d \n", _tool.GetTimeString().c_str(), rrid);
+		if (parentthreadid)
+			PostThreadMessage(parentthreadid, MSG_NEWSMALLTV, WPARAM(rrid), LPARAM(0));
+		return 0;
+	}
 
 	return 0;
 }

@@ -100,7 +100,7 @@ public:
 	int ActStartHeart();
 	// 经验心跳
 	int ActHeart();
-	// 小电视
+	// 通告礼物
 	int ActSmallTV(int rrid, int loid);
 	// 节奏风暴
 	int ActStorm(int roid, long long cid);
@@ -187,7 +187,7 @@ public:
 
 // APIv3
 protected:
-	//小电视抽奖
+	// 通告礼物抽奖
 	int _APIv3SmallTV(int rrid, int loid);
 
 // 安卓端API 

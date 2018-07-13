@@ -1306,7 +1306,7 @@ int CBilibiliUserInfo::APIv2SendGift(int giftID, int roomID, int num, bool coinT
 	return 0;
 }
 
-// 小电视抽奖
+// 通告礼物抽奖
 int CBilibiliUserInfo::_APIv3SmallTV(int rrid, int loid)
 {
 	int ret;
@@ -1336,10 +1336,10 @@ int CBilibiliUserInfo::_APIv3SmallTV(int rrid, int loid)
 		std::string tmpstr;
 		if (doc.HasMember("message") && doc["message"].IsString())
 			tmpstr = _strcoding.UTF_8ToString(doc["message"].GetString());
-		printf("%s[User%d] SmallTV Error %s \n", _tool.GetTimeString().c_str(), _useropt.fileid, tmpstr.c_str());
+		printf("%s[User%d] Gift Error %s \n", _tool.GetTimeString().c_str(), _useropt.fileid, tmpstr.c_str());
 		return 0;
 	}
-	printf("%s[User%d] SmallTV Success \n", _tool.GetTimeString().c_str(), _useropt.fileid);
+	printf("%s[User%d] Gift Success \n", _tool.GetTimeString().c_str(), _useropt.fileid);
 	return 0;
 }
 

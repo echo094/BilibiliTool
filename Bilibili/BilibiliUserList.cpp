@@ -284,7 +284,7 @@ int CBilibiliUserList::WaitActThreadStop()
 
 int CBilibiliUserList::JoinTVALL(BILI_LOTTERYDATA *data)
 {
-	printf("%s[UserList] SmallTV Room: %d ID: %d \n", _tool.GetTimeString().c_str(), data->rrid, data->loid);
+	printf("%s[UserList] Gift Room: %d ID: %d \n", _tool.GetTimeString().c_str(), data->rrid, data->loid);
 	// 当前没有用户则不领取
 	if (!_usercount)
 		return 0;
@@ -445,7 +445,7 @@ DWORD CBilibiliUserList::Thread_ActTV(PVOID lpParameter)
 	PTHARED_DATAEX pdata = (PTHARED_DATAEX)lpParameter;
 	CBilibiliUserList *pclass = pdata->ptr;
 	// 等待领取
-	printf("%s[UserList] Thread wait for join tv %d. \n", pclass->_tool.GetTimeString().c_str(), pdata->id2);
+	printf("%s[UserList] Thread wait for join gift %d. \n", pclass->_tool.GetTimeString().c_str(), pdata->id2);
 	Sleep(pclass->_GetRand(5000, 5000));
 	// 领取为防止冲突 同一时间只能有一个用户在领取
 	// 在同一抽奖的两次抽奖之间增加间隔
