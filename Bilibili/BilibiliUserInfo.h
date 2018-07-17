@@ -165,6 +165,8 @@ protected:
 	int _APIv1SilverAward();
 	// 银瓜子换硬币新API
 	int _APIv1Silver2Coin();
+	// 查询扭蛋币数量
+	int _APIv1CapsuleCheck();
 public:
 	// 每日榜首低保
 	int APIv1YunYingGift(int);

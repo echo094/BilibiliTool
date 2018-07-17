@@ -162,7 +162,9 @@ int CBilibiliUserInfo::CheckLogin()
 int CBilibiliUserInfo::FreshUserInfo()
 {
 	int ret;
+	printf("[User%d]\n", _useropt.fileid);
 	ret = this->_APIv2GiftBag();
+	ret = this->_APIv1CapsuleCheck();
 	return 0;
 }
 
@@ -1056,9 +1058,42 @@ int CBilibiliUserInfo::_APIv1Silver2Coin()
 	doc.Parse(_httppackweb->strrecdata);
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt())
 		return JSON_ERROR;
-	ret = doc["code"].GetInt(); 
+	ret = doc["code"].GetInt();
 	std::string msg = _strcoding.UTF_8ToString(doc["msg"].GetString());
 	printf("%s[User%d] v1Silver2Coin: %s. \n", _tool.GetTimeString().c_str(), _useropt.fileid, msg.c_str());
+
+	return 0;
+}
+
+// 查询扭蛋币数量
+int CBilibiliUserInfo::_APIv1CapsuleCheck() {
+	_httppackweb->url = _urlapi + "/lottery/v1/Capsule/getUserInfo";
+	_httppackweb->ClearHeader();
+	_httppackweb->AddHeaderManual("Accept: application/json, text/javascript, */*; q=0.01");
+	_httppackweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
+	_httppackweb->AddHeaderManual(URL_DEFAULT_REFERER);
+	int ret = toollib::HttpGetEx(curlweb, _httppackweb);
+	if (ret) {
+		return HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(_httppackweb->strrecdata);
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()) {
+		return JSON_ERROR;
+	}
+	if (!doc.HasMember("data") || !doc["data"].IsObject()) {
+		return JSON_ERROR;
+	}
+	printf("  Capsule info:\n");
+	if (doc["data"].HasMember("normal") && doc["data"]["normal"].IsObject() 
+		&& doc["data"]["normal"].HasMember("coin") && doc["data"]["normal"]["coin"].IsInt()) {
+		printf("Normal: %d\n", doc["data"]["normal"]["coin"].GetInt());
+	}
+	if (doc["data"].HasMember("colorful") && doc["data"]["colorful"].IsObject()
+		&& doc["data"]["colorful"].HasMember("coin") && doc["data"]["colorful"]["coin"].IsInt()) {
+		printf("Colorful: %d\n", doc["data"]["colorful"]["coin"].GetInt());
+	}
 
 	return 0;
 }
@@ -1226,7 +1261,7 @@ int CBilibiliUserInfo::_APIv2GiftBag()
 		printf("%s[User%d] Get bag info failed. \n", _tool.GetTimeString().c_str(), _useropt.fileid);
 		return JSON_ERROR;
 	}
-	printf("%s[User%d] Current bag info: \n", _tool.GetTimeString().c_str(), _useropt.fileid);
+	printf("  Current bag info: \n");
 	int curtime, expiretime;
 	std::string giftname;
 	curtime = doc["data"]["time"].GetInt();
