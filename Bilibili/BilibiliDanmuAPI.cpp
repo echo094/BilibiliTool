@@ -245,6 +245,12 @@ int DanmuAPI::ParseSYSGIFT(rapidjson::Document &doc, int room) {
 }
 
 int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, int room) {
+	// 如果消息不含有房间ID 则说明不是抽奖信息
+	if (!doc.HasMember("real_roomid") || !doc["real_roomid"].IsInt()) {
+		return 0;
+	}
+	int rrid = doc["real_roomid"].GetInt();
+
 	std::string tmpstr;
 	tagDANMUMSGSYS m_tmpsysmsg;
 	m_tmpsysmsg.itype = 4;
@@ -256,41 +262,40 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, int room) {
 	m_tmpsysmsg.wmsg = _strcoding.UTF_8ToWString(tmpstr.c_str());
 
 	int ret = -1;
+	// small_tv
 	ret = m_tmpsysmsg.wmsg.find(L"小电视飞船");
 	if (ret != -1) {
-		if (!doc.HasMember("real_roomid") || !doc["real_roomid"].IsInt()) {
-			return -1;
-		}
-		int rrid = doc["real_roomid"].GetInt();
 		printf("%s[DanmuAPI] SmallTV RoomID:%d \n", _tool.GetTimeString().c_str(), rrid);
 		if (parentthreadid)
 			PostThreadMessage(parentthreadid, MSG_NEWSMALLTV, WPARAM(rrid), LPARAM(0));
 		return 0;
 	}
+	// GIFT_20003
 	ret = m_tmpsysmsg.wmsg.find(L"摩天大楼");
 	if (ret != -1) {
-		if (!doc.HasMember("real_roomid") || !doc["real_roomid"].IsInt()) {
-			return -1;
-		}
-		int rrid = doc["real_roomid"].GetInt();
 		printf("%s[DanmuAPI] Skyscraper RoomID:%d \n", _tool.GetTimeString().c_str(), rrid);
 		if (parentthreadid)
 			PostThreadMessage(parentthreadid, MSG_NEWSMALLTV, WPARAM(rrid), LPARAM(0));
 		return 0;
 	}
+	// GIFT_30013
 	ret = m_tmpsysmsg.wmsg.find(L"C位光环");
 	if (ret != -1) {
-		if (!doc.HasMember("real_roomid") || !doc["real_roomid"].IsInt()) {
-			return -1;
-		}
-		int rrid = doc["real_roomid"].GetInt();
 		printf("%s[DanmuAPI] Center RoomID:%d \n", _tool.GetTimeString().c_str(), rrid);
 		if (parentthreadid)
 			PostThreadMessage(parentthreadid, MSG_NEWSMALLTV, WPARAM(rrid), LPARAM(0));
 		return 0;
 	}
+	// GIFT_30014
+	ret = m_tmpsysmsg.wmsg.find(L"盛夏么么茶");
+	if (ret != -1) {
+		printf("%s[DanmuAPI] Summer Tea RoomID:%d \n", _tool.GetTimeString().c_str(), rrid);
+		if (parentthreadid)
+			PostThreadMessage(parentthreadid, MSG_NEWSMALLTV, WPARAM(rrid), LPARAM(0));
+		return 0;
+	}
 
-	return 0;
+	return -1;
 }
 
 // {"cmd":"GUARD_MSG","msg":"用户 :?[A]:? 在主播 [B] 的直播间开通了总督","buy_type":1}
