@@ -1368,6 +1368,10 @@ int CBilibiliUserInfo::_APIv3SmallTV(int rrid, int loid)
 	// 0成功 -400已领取 -500系统繁忙
 	int icode = doc["code"].GetInt();
 	if (icode) {
+		// 检查是否被封禁
+		if (icode == 400) {
+			this->SetBanned();
+		}
 		std::string tmpstr;
 		if (doc.HasMember("message") && doc["message"].IsString())
 			tmpstr = _strcoding.UTF_8ToString(doc["message"].GetString());
