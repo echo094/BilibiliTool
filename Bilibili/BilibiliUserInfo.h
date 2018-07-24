@@ -167,6 +167,8 @@ protected:
 	int _APIv1Silver2Coin();
 	// 查询扭蛋币数量
 	int _APIv1CapsuleCheck();
+	// 进入房间历史记录
+	int _APIv1RoomEntry(int room);
 public:
 	// 每日榜首低保
 	int APIv1YunYingGift(int);

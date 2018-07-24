@@ -333,6 +333,8 @@ int CBilibiliUserInfo::ActSmallTV(int rrid, int loid)
 {
 	int ret, count;
 	if (_useropt.conf & 0x40) {
+		// 产生访问记录
+		_APIv1RoomEntry(rrid);
 		// 网页端最多尝试三次
 		count = 2;
 		ret = this->_APIv3SmallTV(rrid, loid);
@@ -1093,6 +1095,29 @@ int CBilibiliUserInfo::_APIv1CapsuleCheck() {
 	if (doc["data"].HasMember("colorful") && doc["data"]["colorful"].IsObject()
 		&& doc["data"]["colorful"].HasMember("coin") && doc["data"]["colorful"]["coin"].IsInt()) {
 		printf("Colorful: %d\n", doc["data"]["colorful"]["coin"].GetInt());
+	}
+
+	return 0;
+}
+
+int CBilibiliUserInfo::_APIv1RoomEntry(int room)
+{
+	int ret;
+	_httppackweb->url = _urlapi + "/room/v1/Room/room_entry_action";
+	char datastr[400] = "";
+	sprintf_s(datastr, sizeof(datastr), "room_id=%d&platform=pc&csrf_token=%s&visit_id=%s",
+		room, _useropt.tokenjct.c_str(), _useropt.visitid.c_str());
+	_httppackweb->strsenddata = datastr;
+	_httppackweb->ClearHeader();
+	_httppackweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	_httppackweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded");
+	_httppackweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
+	std::string strreffer(URL_DEFAULT_REFERERBASE);
+	strreffer += std::to_string(room);
+	_httppackweb->AddHeaderManual(strreffer.c_str());
+	ret = toollib::HttpPostEx(curlweb, _httppackweb);
+	if (ret) {
+		return HTTP_ERROR;
 	}
 
 	return 0;
