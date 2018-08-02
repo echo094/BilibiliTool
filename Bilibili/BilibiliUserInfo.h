@@ -131,7 +131,7 @@ protected:
 
 // 其它直播API
 protected:
-	// 直播经验心跳包3
+	// 直播经验心跳Web
 	int PostOnlineHeart();
 	// 直播站签到
 	int GetSign();
@@ -147,7 +147,7 @@ public:
 protected:
 	// 获取播主账户ID（亦作 RUID）
 	int _APIv1MasterID(int liveRoomID);
-	// 直播经验心跳包1
+	// 直播经验心跳日志1
 	int _APIv1HeartBeat();
 	// 获取指定勋章排名
 	int _APIv1MedalRankList(int roomid, int uid, int &rank);

@@ -600,7 +600,7 @@ int CBilibiliUserInfo::GetSignInfo(BILIUSEROPT &pinfo)
 	return 0;
 }
 
-// 直播经验心跳包3
+// 直播经验心跳Web
 int CBilibiliUserInfo::PostOnlineHeart()
 {
 	// -403 非法心跳
@@ -758,20 +758,31 @@ int CBilibiliUserInfo::_APIv1MasterID(int liveRoomID)
 	return JSON_DATAERROR;
 }
 
-// 直播经验心跳包1
+// 直播经验心跳日志
 int CBilibiliUserInfo::_APIv1HeartBeat()
 {
 	int ret;
 	std::string thetime = std::to_string(_tool.GetTimeStamp());
-	_httppackweb->url = _urlapi + "/feed/v1/feed/heartBeat?_=" + thetime + "378";
+	_httppackweb->url = _urlapi + "/relation/v1/feed/heartBeat?_=" + thetime + "378";
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept:*/*");
 	_httppackweb->AddHeaderManual(URL_DEFAULT_REFERER);
 	ret = toollib::HttpGetEx(curlweb, _httppackweb);
 	if (ret)
 		return HTTP_ERROR;
-	// {"code":-403,"msg":"\u975e\u6cd5\u5fc3\u8df3","data":[1475575312,1475575146]} 
-	printf("%s[User%d] HeartBeat: OK \n", _tool.GetTimeString().c_str(), _useropt.fileid);
+
+	rapidjson::Document doc;
+	doc.Parse(_httppackweb->strrecdata);
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
+		return JSON_ERROR;
+	}
+	ret = doc["code"].GetInt();
+	if (ret) {
+		printf("%s[User%d] HeartBeat: %d \n", _tool.GetTimeString().c_str(), _useropt.fileid, ret);
+	}
+	else {
+		printf("%s[User%d] HeartBeat: OK \n", _tool.GetTimeString().c_str(), _useropt.fileid);
+	}
 
 	return 0;
 }
