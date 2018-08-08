@@ -8,20 +8,21 @@ using namespace toollib;
 using namespace std;
 
 
-__int64 CTools::GetTimeStamp()
-{
-	std::time(&m_time);
+__int64 CTools::GetTimeStamp() const {
+	time_t time;
+	std::time(&time);
 	//localtime_s(&timeinfo, &now);
-	return m_time;
+	return time;
 }
 
-std::string CTools::GetTimeString()
-{
-	std::time(&m_time);
-	localtime_s(&m_tm, &m_time);
+std::string CTools::GetTimeString() const {
+	time_t time;
+	std::tm tm;
+	std::time(&time);
+	localtime_s(&tm, &time);
 	std::string str;
 	char buff[25];
-	sprintf_s(buff, sizeof(buff), "[%04d%02d%02d-%02d-%02d-%02d]", 1900 + m_tm.tm_year, 1 + m_tm.tm_mon, m_tm.tm_mday, m_tm.tm_hour, m_tm.tm_min, m_tm.tm_sec);
+	sprintf_s(buff, sizeof(buff), "[%04d%02d%02d-%02d-%02d-%02d]", 1900 + tm.tm_year, 1 + tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 	str = buff;
 	return str;
 }
@@ -237,7 +238,7 @@ void CStrConvert::UTF_8ToGB2312(string &pOut, char *pText, int pLen)
 }
 
 //GB2312 转为 UTF-8
-void CStrConvert::GB2312ToUTF_8(string& pOut, const char *pText, int pLen)
+void CStrConvert::GB2312ToUTF_8(string& pOut, const char *pText, int pLen) const
 {
 	char buf[4];
 	memset(buf, 0, 4);
@@ -298,7 +299,7 @@ string CStrConvert::UrlGB2312(char * str)
 }
 
 //把str编码为网页中的 UTF-8 url encode ,英文不变，汉字三字节 如%3D%AE%88
-string CStrConvert::UrlUTF8(const char * str)
+string CStrConvert::UrlUTF8(const char * str) const
 {
 	string tt;
 	string dd;
@@ -391,7 +392,7 @@ std::wstring CStrConvert::UTF_8ToWString(const char* szU8)
 	return unicodeString;
 }
 
-std::string CStrConvert::UTF_8ToString(const char* szU8)
+std::string CStrConvert::UTF_8ToString(const char* szU8) const
 {
 	//预转换，得到所需空间的大小;
 	int nwLen = ::MultiByteToWideChar(CP_UTF8, NULL, szU8, strlen(szU8), NULL, 0);
@@ -511,7 +512,7 @@ char CStrConvert::StrToBin(char *str) {
 	return chn;
 }
 
-void CStrConvert::Gb2312ToUnicode(WCHAR* pOut, const char *gbBuffer)
+void CStrConvert::Gb2312ToUnicode(WCHAR* pOut, const char *gbBuffer) const
 {
 	::MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, gbBuffer, 2, pOut, 1);
 	return;
@@ -527,7 +528,7 @@ void CStrConvert::UTF_8ToUnicode(WCHAR* pOut, char *pText)
 	return;
 }
 
-void CStrConvert::UnicodeToUTF_8(char* pOut, WCHAR* pText)
+void CStrConvert::UnicodeToUTF_8(char* pOut, WCHAR* pText) const
 {
 	// 注意 WCHAR高低字的顺序,低字节在前，高字节在后
 	char* pchar = (char *)pText;

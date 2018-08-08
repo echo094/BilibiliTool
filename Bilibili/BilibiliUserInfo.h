@@ -76,7 +76,7 @@ private:
 public:
 	CBilibiliUserInfo();
 	~CBilibiliUserInfo();
-	bool getLoginStatus() { return _useropt.islogin; };
+	bool getLoginStatus()const { return _useropt.islogin; };
 	void setLoginStatus(bool status) { _useropt.islogin = status; };
 	int GetFileSN()const { return _useropt.fileid; };
 	void SetFileSN(int sn) { _useropt.fileid = sn; };
@@ -117,64 +117,62 @@ public:
 // 登录相关
 protected:
 	// 获取LIVE的一些Cookie
-	BILIRET GETLoginJct(int );
+	BILIRET GETLoginJct(int area) const;
 	// 获取验证码图片
-	BILIRET GETPicCaptcha();
+	BILIRET GETPicCaptcha() const;
 	// 获取RSA公钥加密密码
-	BILIRET GETEncodePsd(std::string &psd);
+	BILIRET GETEncodePsd(std::string &psd) const;
 	// 网页移动端登录接口
-	BILIRET POSTLogin(std::string username, std::string password, std::string strver = "");
+	BILIRET POSTLogin(std::string username, std::string password, std::string strver = "") const;
 
 // 用户信息获取相关
 protected:
 	// 获取直播站主要信息
-	BILIRET GetUserInfoLive(BILIUSEROPT &pinfo);
-	// 获取直播站签到信息
-	BILIRET GetSignInfo(BILIUSEROPT &pinfo);
+	BILIRET GetUserInfoLive(BILIUSEROPT &pinfo) const;
 
 // 其它直播API
 protected:
 	// 直播经验心跳Web
-	BILIRET PostOnlineHeart();
+	BILIRET PostOnlineHeart() const;
 	// 直播站签到
-	BILIRET GetSign();
+	BILIRET GetSign() const;
 	// 银瓜子换硬币
-	BILIRET PostSilver2Coin();
+	BILIRET PostSilver2Coin() const;
 	// 获取登录硬币
-	BILIRET GetCoin();
+	BILIRET GetCoin() const;
 public:
 	// 发送弹幕
-	BILIRET SendDanmuku(int roomID, std::string msg);
+	BILIRET SendDanmuku(int roomID, std::string msg) const;
 
 // APIv1
 protected:
 	// 获取播主账户ID（亦作 RUID）
-	BILIRET _APIv1MasterID(int liveRoomID, int &uid);
+	BILIRET _APIv1MasterID(int liveRoomID, int &uid) const;
 	// 直播经验心跳日志1
-	BILIRET _APIv1HeartBeat();
+	BILIRET _APIv1HeartBeat() const;
 	// 获取指定勋章排名
-	BILIRET _APIv1MedalRankList(int roomid, int uid, int &rank);
+	BILIRET _APIv1MedalRankList(int roomid, int uid, int &rank) const;
 	// 获取验证码图片
-	BILIRET _APIv1Captcha(std::string &img, std::string &token);
+	BILIRET _APIv1Captcha(std::string &img, std::string &token) const;
 	// 领取风暴
 	BILIRET _APIv1StormJoin(int roomID, long long cid, std::string code, std::string token);
 	// 运营活动抽奖
 	BILIRET _APIv1YunYing(int rid, int raffleId);
 	// 银瓜子验证码
-	BILIRET _APIv1SilverCaptcha();
+	BILIRET _APIv1SilverCaptcha() const;
 	// 获取当前宝箱领取情况
 	BILIRET _APIv1SilverCurrentTask();
 	// 领取银瓜子 失效
 	BILIRET _APIv1SilverAward();
 	// 银瓜子换硬币新API
-	BILIRET _APIv1Silver2Coin();
+	BILIRET _APIv1Silver2Coin() const;
 	// 查询扭蛋币数量
-	BILIRET _APIv1CapsuleCheck();
+	BILIRET _APIv1CapsuleCheck() const;
 	// 进入房间历史记录
-	BILIRET _APIv1RoomEntry(int room);
+	BILIRET _APIv1RoomEntry(int room) const;
 public:
 	// 每日榜首低保
-	BILIRET APIv1YunYingGift(int);
+	BILIRET APIv1YunYingGift(int rid) const;
 	// 新通用抽奖
 	BILIRET APIv1LotteryJoin(BILI_LOTTERYDATA &pdata);
 
@@ -185,12 +183,12 @@ protected:
 	//免费礼物领取心跳包
 	BILIRET _APIv2GetHeartGift();
 	// 查询背包道具
-	BILIRET _APIv2GiftBag();
+	BILIRET _APIv2GiftBag() const;
 	// 领取每日礼物
-	BILIRET _APIv2GiftDaily();
+	BILIRET _APIv2GiftDaily() const;
 public:
 	//赠送礼物
-	BILIRET APIv2SendGift(int giftID, int roomID, int num, bool coinType, int bagID);
+	BILIRET APIv2SendGift(int giftID, int roomID, int num, bool coinType, int bagID) const;
 
 // APIv3
 protected:
@@ -199,10 +197,10 @@ protected:
 
 // 安卓端API 
 private:
-	BILIRET _APIAndv2GetKey(std::string &psd);
+	BILIRET _APIAndv2GetKey(std::string &psd) const;
 	BILIRET _APIAndv2Login(std::string username, std::string password);
 	// 获取房间信息包括活动及抽奖
-	BILIRET _APIAndv1RoomInfo(int rid);
+	BILIRET _APIAndv1RoomInfo(int rid) const;
 	// 领取风暴
 	BILIRET _APIAndv1StormJoin(long long cid);
 	// 活动抽奖
@@ -210,7 +208,7 @@ private:
 
 // 其他
 protected:
-	int _GetMD5Sign(const char *in, std::string &sign);
+	int _GetMD5Sign(const char *in, std::string &sign) const;
 	int GetExpiredTime();
 	int GetToken(BILIUSEROPT &opt);
 	// 账户权限验证
@@ -220,7 +218,7 @@ protected:
 
 	BILIRET _GetCaptchaKey();
 	// 生成随机访问ID
-	int _GetVisitID(std::string &sid);
+	int _GetVisitID(std::string &sid) const;
 	// 大写转小写
-	int _ToLower(std::string &str);
+	int _ToLower(std::string &str) const;
 };

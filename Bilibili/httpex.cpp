@@ -131,7 +131,7 @@ int CCookiePack::GetCookie(std::string &name, std::string &value)
 	return 0;
 }
 
-int CCookiePack::GetCookieTime(std::string &name, int &value)
+int CCookiePack::GetCookieTime(std::string &name, int &value) const
 {
 	std::string str = "\t" + name + "\t";
 	int pr = cookie.find(str, 0);

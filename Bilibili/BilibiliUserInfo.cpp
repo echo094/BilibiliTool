@@ -393,7 +393,7 @@ int CBilibiliUserInfo::ActYunYing(std::string eventname, int rid, int raffleId)
 }
 
 // 获取LIVE的一些Cookie
-BILIRET CBilibiliUserInfo::GETLoginJct(int area)
+BILIRET CBilibiliUserInfo::GETLoginJct(int area) const
 {
 	printf("[User] Get initial cookie... \n");
 	int ret;
@@ -419,7 +419,7 @@ BILIRET CBilibiliUserInfo::GETLoginJct(int area)
 }
 
 // 获取验证码图片
-BILIRET CBilibiliUserInfo::GETPicCaptcha() {
+BILIRET CBilibiliUserInfo::GETPicCaptcha() const {
 	printf("[User] Get captcha... \n");
 	_httppackweb->url = DEF_URLLoginCaptcha + std::to_string((long long)_tool.GetTimeStamp());
 	_httppackweb->ClearHeader();
@@ -441,7 +441,7 @@ BILIRET CBilibiliUserInfo::GETPicCaptcha() {
 }
 
 // 获取RSA公钥加密密码
-BILIRET CBilibiliUserInfo::GETEncodePsd(std::string &psd) {
+BILIRET CBilibiliUserInfo::GETEncodePsd(std::string &psd) const {
 	printf("[User] Get RSA key... \n");
 	_httppackweb->url = DEF_URLLoginGweKey;
 	_httppackweb->url += "&_=" + std::to_string((long long)_tool.GetTimeStamp());
@@ -471,7 +471,7 @@ BILIRET CBilibiliUserInfo::GETEncodePsd(std::string &psd) {
 }
 
 // 移动端登录接口
-BILIRET CBilibiliUserInfo::POSTLogin(std::string username, std::string password, std::string strver) {
+BILIRET CBilibiliUserInfo::POSTLogin(std::string username, std::string password, std::string strver) const {
 	printf("[User] Logging in by mobile api... \n");
 	_httppackweb->url = DEF_URLLoginMini; 
 	std::string postdata = _strcoding.UrlUTF8((char*)password.c_str());
@@ -512,7 +512,7 @@ BILIRET CBilibiliUserInfo::POSTLogin(std::string username, std::string password,
 }
 
 // 获取直播站主要信息
-BILIRET CBilibiliUserInfo::GetUserInfoLive(BILIUSEROPT &pinfo) {
+BILIRET CBilibiliUserInfo::GetUserInfoLive(BILIUSEROPT &pinfo) const {
 	printf("[User] Get user live info... \n");
 	_httppackweb->url = _urlapi + "/User/getUserInfo";
 	_httppackweb->ClearHeader();
@@ -540,28 +540,8 @@ BILIRET CBilibiliUserInfo::GetUserInfoLive(BILIUSEROPT &pinfo) {
 	return BILIRET::NOFAULT;
 }
 
-// 获取直播站签到信息
-BILIRET CBilibiliUserInfo::GetSignInfo(BILIUSEROPT &pinfo) {
-	printf("[User] Get sign info... \n");
-	_httppackweb->url = _urlapi + "/sign/GetSignInfo";
-	_httppackweb->ClearHeader();
-	int ret = toollib::HttpGetEx(curlweb, _httppackweb);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-	
-	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
-	if (!doc.IsObject() || !doc.HasMember("msg") || !doc["msg"].IsString() 
-		|| strcmp("ok", doc["msg"].GetString())) {
-		return BILIRET::JSON_ERROR;
-	}
-
-	return BILIRET::NOFAULT;
-}
-
 // 直播经验心跳Web
-BILIRET CBilibiliUserInfo::PostOnlineHeart() {
+BILIRET CBilibiliUserInfo::PostOnlineHeart() const {
 	// -403 非法心跳
 	_httppackweb->url = _urlapi + "/User/userOnlineHeart";
 	_httppackweb->strsenddata = "";
@@ -590,7 +570,7 @@ BILIRET CBilibiliUserInfo::PostOnlineHeart() {
 }
 
 // 直播站签到
-BILIRET CBilibiliUserInfo::GetSign() {
+BILIRET CBilibiliUserInfo::GetSign() const {
 	_httppackweb->url = _urlapi + "/sign/doSign";
 	_httppackweb->ClearHeader();
 	int ret = toollib::HttpGetEx(curlweb, _httppackweb);
@@ -619,7 +599,7 @@ BILIRET CBilibiliUserInfo::GetSign() {
 }
 
 // 银瓜子换硬币
-BILIRET CBilibiliUserInfo::PostSilver2Coin() {
+BILIRET CBilibiliUserInfo::PostSilver2Coin() const {
 	_httppackweb->url = _urlapi + "/exchange/silver2coin";
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept: application/json, text/javascript, */*; q=0.01");
@@ -643,7 +623,7 @@ BILIRET CBilibiliUserInfo::PostSilver2Coin() {
 }
 
 // 获取登录硬币
-BILIRET CBilibiliUserInfo::GetCoin() {
+BILIRET CBilibiliUserInfo::GetCoin() const {
 	_httppackweb->url = "https://account.bilibili.com/site/getCoin";
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept: application/json, text/plain, */*");
@@ -664,7 +644,7 @@ BILIRET CBilibiliUserInfo::GetCoin() {
 }
 
 // 发送弹幕
-BILIRET  CBilibiliUserInfo::SendDanmuku(int roomID, std::string msg) {
+BILIRET  CBilibiliUserInfo::SendDanmuku(int roomID, std::string msg) const {
 	_httppackweb->url = _urlapi + "/msg/send";
 	std::string postdata;
 	postdata = "color=16777215&fontsize=25&mode=1&msg=" + _strcoding.UrlUTF8(msg.c_str()) +
@@ -695,7 +675,7 @@ BILIRET  CBilibiliUserInfo::SendDanmuku(int roomID, std::string msg) {
 }
 
 // 获取播主账户ID（亦作 RUID）
-BILIRET CBilibiliUserInfo::_APIv1MasterID(int liveRoomID, int &uid) {
+BILIRET CBilibiliUserInfo::_APIv1MasterID(int liveRoomID, int &uid) const {
 	_httppackweb->url = _urlapi + "/room/v1/Room/getRoomInfoMain?roomid=" + std::to_string(liveRoomID);
 	_httppackweb->ClearHeader();
 	int ret = toollib::HttpGetEx(curlweb, _httppackweb);
@@ -714,7 +694,7 @@ BILIRET CBilibiliUserInfo::_APIv1MasterID(int liveRoomID, int &uid) {
 }
 
 // 直播经验心跳日志
-BILIRET CBilibiliUserInfo::_APIv1HeartBeat() {
+BILIRET CBilibiliUserInfo::_APIv1HeartBeat() const {
 	int ret;
 	std::string thetime = std::to_string(_tool.GetTimeStamp());
 	_httppackweb->url = _urlapi + "/relation/v1/feed/heartBeat?_=" + thetime + "378";
@@ -743,7 +723,7 @@ BILIRET CBilibiliUserInfo::_APIv1HeartBeat() {
 }
 
 // 获取指定勋章排名
-BILIRET CBilibiliUserInfo::_APIv1MedalRankList(int roomid, int uid, int &rank) {
+BILIRET CBilibiliUserInfo::_APIv1MedalRankList(int roomid, int uid, int &rank) const {
 	_httppackweb->url = _urlapi + "/rankdb/v1/RoomRank/webMedalRank?";
 	char datastr[100] = "";
 	sprintf_s(datastr, sizeof(datastr), "roomid=%d&ruid=%d", roomid, uid);
@@ -770,7 +750,7 @@ BILIRET CBilibiliUserInfo::_APIv1MedalRankList(int roomid, int uid, int &rank) {
 }
 
 // 获取节奏风暴验证码
-BILIRET CBilibiliUserInfo::_APIv1Captcha(std::string &img, std::string &token) {
+BILIRET CBilibiliUserInfo::_APIv1Captcha(std::string &img, std::string &token) const {
 	int ret;
 	_httppackweb->url = _urlapi + "/captcha/v1/Captcha/create?_=" + std::to_string(_tool.GetTimeStamp()) + "324&width=112&height=32";
 	_httppackweb->ClearHeader();
@@ -887,7 +867,7 @@ BILIRET CBilibiliUserInfo::_APIv1YunYing(int rid, int raffleId) {
 }
 
 // 银瓜子验证码
-BILIRET CBilibiliUserInfo::_APIv1SilverCaptcha() {
+BILIRET CBilibiliUserInfo::_APIv1SilverCaptcha() const {
 	_httppackweb->url = _urlapi + "/lottery/v1/SilverBox/getCaptcha?ts=" + std::to_string((long long)_tool.GetTimeStamp()) + "537";
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept:application/json, text/plain, */*");
@@ -1005,7 +985,7 @@ BILIRET CBilibiliUserInfo::_APIv1SilverAward() {
 }
 
 // 银瓜子换硬币
-BILIRET CBilibiliUserInfo::_APIv1Silver2Coin() {
+BILIRET CBilibiliUserInfo::_APIv1Silver2Coin() const {
 	_httppackweb->url = _urlapi + "/pay/v1/Exchange/silver2coin";
 	_httppackweb->strsenddata = "platform=pc&csrf_token=" + _useropt.tokenjct;
 	_httppackweb->ClearHeader();
@@ -1032,7 +1012,7 @@ BILIRET CBilibiliUserInfo::_APIv1Silver2Coin() {
 }
 
 // 查询扭蛋币数量
-BILIRET CBilibiliUserInfo::_APIv1CapsuleCheck() {
+BILIRET CBilibiliUserInfo::_APIv1CapsuleCheck() const {
 	_httppackweb->url = _urlapi + "/lottery/v1/Capsule/getUserInfo";
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept: application/json, text/javascript, */*; q=0.01");
@@ -1063,7 +1043,7 @@ BILIRET CBilibiliUserInfo::_APIv1CapsuleCheck() {
 	return BILIRET::NOFAULT;
 }
 
-BILIRET CBilibiliUserInfo::_APIv1RoomEntry(int room) {
+BILIRET CBilibiliUserInfo::_APIv1RoomEntry(int room) const {
 	int ret;
 	_httppackweb->url = _urlapi + "/room/v1/Room/room_entry_action";
 	char datastr[400] = "";
@@ -1085,7 +1065,7 @@ BILIRET CBilibiliUserInfo::_APIv1RoomEntry(int room) {
 	return BILIRET::NOFAULT;
 }
 
-BILIRET CBilibiliUserInfo::APIv1YunYingGift(int rid) {
+BILIRET CBilibiliUserInfo::APIv1YunYingGift(int rid) const {
 	int ret;
 	_httppackweb->url = _urlapi + "/activity/v1/Common/getReceiveGift?roomid=" + std::to_string(rid);
 	_httppackweb->ClearHeader();
@@ -1230,7 +1210,7 @@ BILIRET CBilibiliUserInfo::_APIv2GetHeartGift() {
 }
 
 // 查询背包道具
-BILIRET CBilibiliUserInfo::_APIv2GiftBag() {
+BILIRET CBilibiliUserInfo::_APIv2GiftBag() const {
 	_httppackweb->url = _urlapi + "/gift/v2/gift/bag_list";
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept: application/json, text/plain, */*");
@@ -1270,7 +1250,7 @@ BILIRET CBilibiliUserInfo::_APIv2GiftBag() {
 }
 
 // 领取每日礼物
-BILIRET CBilibiliUserInfo::_APIv2GiftDaily() {
+BILIRET CBilibiliUserInfo::_APIv2GiftDaily() const {
 	_httppackweb->url = _urlapi + "/gift/v2/live/receive_daily_bag";
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept: application/json, text/plain, */*");
@@ -1302,7 +1282,7 @@ BILIRET CBilibiliUserInfo::_APIv2GiftDaily() {
 }
 
 // 赠送礼物
-BILIRET CBilibiliUserInfo::APIv2SendGift(int giftID, int roomID, int num, bool coinType, int bagID) {
+BILIRET CBilibiliUserInfo::APIv2SendGift(int giftID, int roomID, int num, bool coinType, int bagID) const {
 	_httppackweb->url = _urlapi + "/gift/v2/live/bag_send";
 	char datastr[300] = "";
 	int uid;
@@ -1371,7 +1351,7 @@ BILIRET CBilibiliUserInfo::_APIv3SmallTV(int rrid, int loid)
 }
 
 // 移动端加密密钥
-BILIRET CBilibiliUserInfo::_APIAndv2GetKey(std::string &psd)
+BILIRET CBilibiliUserInfo::_APIAndv2GetKey(std::string &psd) const
 {
 	printf("[User] Get APP RSA key... \n");
 	_httppackapp->url = "https://passport.bilibili.com/api/oauth2/getKey";
@@ -1442,7 +1422,7 @@ BILIRET CBilibiliUserInfo::_APIAndv2Login(std::string username, std::string pass
 	return BILIRET::NOFAULT;
 }
 
-BILIRET CBilibiliUserInfo::_APIAndv1RoomInfo(int rid) {
+BILIRET CBilibiliUserInfo::_APIAndv1RoomInfo(int rid) const {
 	_httppackapp->url = _urlapi + "/activity/v1/Common/mobileRoomInfo?";
 	char datastr[400] = "";
 	sprintf_s(datastr, sizeof(datastr), "access_key=%s&actionKey=appkey&appkey=%s&build=5230002&device=android&mobi_app=android&platform=android&roomid=%d&ts=%I64d", 
@@ -1552,16 +1532,14 @@ BILIRET CBilibiliUserInfo::_APIAndv1YunYing(std::string eventname, int rid, int 
 	return BILIRET::NOFAULT;
 }
 
-int CBilibiliUserInfo::_GetMD5Sign(const char *in, std::string &sign)
-{
+int CBilibiliUserInfo::_GetMD5Sign(const char *in, std::string &sign) const {
 	std::string str = in;
 	str += APP_SECRET;
 	sign = Encode_MD5(str);
 	return 0;
 }
 
-int CBilibiliUserInfo::GetExpiredTime()
-{
+int CBilibiliUserInfo::GetExpiredTime() {
 	std::string ckname;
 	int cktime;
 	ckname = "bili_jct";
@@ -1571,8 +1549,7 @@ int CBilibiliUserInfo::GetExpiredTime()
 	return cktime;
 }
 
-int CBilibiliUserInfo::GetToken(BILIUSEROPT &opt)
-{
+int CBilibiliUserInfo::GetToken(BILIUSEROPT &opt) {
 	std::string ckname;
 	_httpcookie.UpdateCookies(curlweb);
 	ckname = "LIVE_LOGIN_DATA";
@@ -1587,20 +1564,17 @@ int CBilibiliUserInfo::GetToken(BILIUSEROPT &opt)
 	return 0;
 }
 
-int CBilibiliUserInfo::AccountVerify()
-{
+int CBilibiliUserInfo::AccountVerify() {
 	return 0;
 }
 
-int CBilibiliUserInfo::SetBanned()
-{
+int CBilibiliUserInfo::SetBanned() {
 	// 账户被封禁时取消所有抽奖以及瓜子的领取
 	_useropt.conf = _useropt.conf & 0x1;
 	return 0;
 }
 
-BILIRET CBilibiliUserInfo::_GetCaptchaKey()
-{
+BILIRET CBilibiliUserInfo::_GetCaptchaKey() {
 	// 新增Cookie验证
 	int ret;
 	_httppackweb->url = "https://www.bilibili.com/plus/widget/ajaxGetCaptchaKey.php?js";
@@ -1628,8 +1602,7 @@ BILIRET CBilibiliUserInfo::_GetCaptchaKey()
 
 // 生成随机访问ID
 // ((new Date).getTime() * Math.ceil(1e6 * Math.random())).toString(36)
-int CBilibiliUserInfo::_GetVisitID(std::string &sid)
-{
+int CBilibiliUserInfo::_GetVisitID(std::string &sid) const {
 	long long randid;
 	char ch;
 	srand((unsigned int)time(0)); 
@@ -1655,8 +1628,7 @@ int CBilibiliUserInfo::_GetVisitID(std::string &sid)
 }
 
 // 大写转小写
-int CBilibiliUserInfo::_ToLower(std::string &str)
-{
+int CBilibiliUserInfo::_ToLower(std::string &str) const {
 	std::string tmpstr = "";
 	char ch;
 	for (unsigned int i = 0; i < str.length(); i++) {

@@ -71,7 +71,7 @@ namespace toollib {
 		int UpdateCookies(CURL *pcurl);
 		//查找特定名称的Cookie值
 		int GetCookie(std::string &name, std::string &value);
-		int GetCookieTime(std::string &name, int &value);
+		int GetCookieTime(std::string &name, int &value) const;
 	};
 
 	int HttpGetEx(CURL *pcurl, CHTTPPack *pHTTPPack, int flag = 1);
