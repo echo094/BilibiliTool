@@ -6,7 +6,7 @@ CBilibiliMain::CBilibiliMain(CURL *pcurl):
 	_tcpdanmu(NULL),
 	_wsdanmu(NULL) {
 
-	curmode = BILI_STOP;
+	curmode = TOOL_EVENT::STOP;
 	curl = pcurl;
 
 	char name[50];
@@ -63,15 +63,15 @@ int CBilibiliMain::SaveLogFile() {
 
 
 int CBilibiliMain::StopMonitorALL() {
-	if (curmode == BILI_STOP)
+	if (curmode == TOOL_EVENT::STOP)
 		return 0;
 	int ret = -1;
 
-	if (curmode == BILI_ONLINE) {
+	if (curmode == TOOL_EVENT::ONLINE) {
 		ret = _userlist->StopUserHeart();
 		printf("[Main] Heart stopped.\n");
 	}
-	if (curmode == BILI_GET_SYSMSG_GIFT) {
+	if (curmode == TOOL_EVENT::GET_SYSMSG_GIFT) {
 		printf("[Main] Closing ws threads...\n");
 
 		_wsdanmu->SetNotifyThread(0);
@@ -84,7 +84,7 @@ int CBilibiliMain::StopMonitorALL() {
 		ret = _userlist->WaitActThreadStop();
 		printf("[Main] User Thread Clear.\n");
 	}
-	if (curmode == BILI_GET_HIDEN_GIFT) {
+	if (curmode == TOOL_EVENT::GET_HIDEN_GIFT) {
 		printf("[Main] Closing socket threads...\n");
 
 		_tcpdanmu->SetNotifyThread(0);
@@ -97,14 +97,14 @@ int CBilibiliMain::StopMonitorALL() {
 		ret = _userlist->WaitActThreadStop();
 		printf("[Main] User Thread Clear.\n");
 	}
-	curmode = BILI_STOP;
+	curmode = TOOL_EVENT::STOP;
 
 	return ret;
 }
 
 int CBilibiliMain::StartUserHeart() {
 	int ret = 0;
-	curmode = BILI_ONLINE;
+	curmode = TOOL_EVENT::ONLINE;
 	ret = _userlist->StartUserHeart();
 
 	return ret;
@@ -112,7 +112,7 @@ int CBilibiliMain::StartUserHeart() {
 
 int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 	int ret = -1;
-	curmode = BILI_GET_SYSMSG_GIFT;
+	curmode = TOOL_EVENT::GET_SYSMSG_GIFT;
 
 	if (!_wsdanmu) {
 		_wsdanmu = new CWSDanmu;
@@ -128,7 +128,7 @@ int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 	GetCurrentDirectoryA(sizeof(filepath), filepath);
 	strcat_s(filepath, DEF_CONFIGGILE_NAME);
 	int troom = ::GetPrivateProfileIntA("Global", "Room", 23058, filepath);
-	ret = _wsdanmu->ConnectToRoom(troom, MSG_PUBEVENT);
+	ret = _wsdanmu->ConnectToRoom(troom, DANMU_FLAG::MSG_PUBEVENT);
 
 	printf("[Main] Curent Room Num:%d \n", _roomcount);
 	return ret;
@@ -136,20 +136,20 @@ int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 
 void CBilibiliMain::SetDanmukuShow()
 {
-	if (curmode == BILI_GET_SYSMSG_GIFT) {
+	if (curmode == TOOL_EVENT::GET_SYSMSG_GIFT) {
 		_wsdanmu->SetDanmukuOn();
 	}
-	if (curmode == BILI_GET_HIDEN_GIFT) {
+	if (curmode == TOOL_EVENT::GET_HIDEN_GIFT) {
 		_tcpdanmu->SetDanmukuOn();
 	}
 }
 
 void CBilibiliMain::SetDanmukuHide()
 {
-	if (curmode == BILI_GET_SYSMSG_GIFT) {
+	if (curmode == TOOL_EVENT::GET_SYSMSG_GIFT) {
 		_wsdanmu->SetDanmukuOff();
 	}
-	if (curmode == BILI_GET_HIDEN_GIFT) {
+	if (curmode == TOOL_EVENT::GET_HIDEN_GIFT) {
 		_tcpdanmu->SetDanmukuOff();
 	}
 }
@@ -204,14 +204,14 @@ int CBilibiliMain::JoinYunYingGift(int room)
 
 int CBilibiliMain::JoinGuardGift(const char *user)
 {
-	int ret;
+	BILIRET ret;
 	BILI_LOTTERYDATA pdata;
 	ret = _apilive->ApiSearchUser(curl, user, pdata.rrid);
-	if (ret) {
+	if (ret != BILIRET::NOFAULT) {
 		return -1;
 	}
 	ret = _apilive->ApiCheckGuard(curl, pdata.rrid, pdata.loid);
-	if (ret) {
+	if (ret != BILIRET::NOFAULT) {
 		return -1;
 	}
 	pdata.type = "guard";
@@ -232,10 +232,10 @@ int CBilibiliMain::JoinSpecialGift(int room, long long cid, std::string str)
 int CBilibiliMain::Debugfun(int index)
 {
 	if (index == 1) {
-		if (curmode == BILI_GET_SYSMSG_GIFT) {
+		if (curmode == TOOL_EVENT::GET_SYSMSG_GIFT) {
 			_wsdanmu->ShowCount();
 		}
-		if (curmode == BILI_GET_HIDEN_GIFT) {
+		if (curmode == TOOL_EVENT::GET_HIDEN_GIFT) {
 			_tcpdanmu->ShowCount();
 		}
 	}

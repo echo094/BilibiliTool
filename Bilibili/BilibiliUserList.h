@@ -3,6 +3,16 @@
 #include <queue> 
 #include <list>
 
+//功能模块编号
+enum class TOOL_EVENT {
+	STOP = 10,
+	ONLINE,
+	GET_SYSMSG_GIFT,
+	GET_HIDEN_GIFT,
+	DEBUG1,
+	DEBUG2,
+};
+
 // 传递给线程的数据结构体
 class CBilibiliUserList;
 typedef struct _THARED_DATAEX
@@ -20,7 +30,7 @@ private:
 	bool _isworking[2]; //线程运行循环标志
 	DWORD _msgthread;//当前主消息循环
 	HANDLE _lphandle[2];//线程句柄列表
-	int _workmode;//工作模式
+	TOOL_EVENT m_workmode;//工作模式
 
 private:
 	CTools _tool;

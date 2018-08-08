@@ -6,7 +6,7 @@ CBilibiliUserList::CBilibiliUserList()
 	_parentthread = 0;
 	_msgthread = 0;
 	memset(_isworking, 0, sizeof(_isworking));
-	_workmode = BILI_STOP;
+	m_workmode = TOOL_EVENT::STOP;
 	_threadcount = 0;
 	// 初始化线程互斥量
 	InitializeCriticalSection(&_csthread);
@@ -49,18 +49,17 @@ CBilibiliUserList::~CBilibiliUserList()
 #endif
 }
 
-int  CBilibiliUserList::AddUser(std::string username, std::string password)
-{
-	if (_workmode != BILI_STOP)
+int  CBilibiliUserList::AddUser(std::string username, std::string password) {
+	if (m_workmode != TOOL_EVENT::STOP)
 		return -1;
-	int ret;
 	if (SearchUser(username)) {
 		printf("[UserList] This account is already in the list. \n");
 		return -1;
 	}
 	CBilibiliUserInfo *puser = new CBilibiliUserInfo;
-	ret = puser->Login(_usercount + 1, username, password);
-	if (ret == 0) {
+	LOGINRET lret;
+	lret = puser->Login(_usercount + 1, username, password);
+	if (lret == LOGINRET::NOFAULT) {
 		_usercount++;
 		_userlist.push_back(puser);
 		printf("[UserList] User %d logged in successfully. \n", _usercount);
@@ -68,7 +67,7 @@ int  CBilibiliUserList::AddUser(std::string username, std::string password)
 	}
 	else {
 		delete puser;
-		if (ret == STATUS_NOTVALID)
+		if (lret == LOGINRET::NOTVALID)
 			printf("[UserList] Sorry, this account is not valid. \n");
 		else
 			printf("[UserList] User %d logged in failed. \n", _usercount + 1);
@@ -78,7 +77,7 @@ int  CBilibiliUserList::AddUser(std::string username, std::string password)
 
 int  CBilibiliUserList::DeleteUser(std::string username)
 {
-	if (_workmode != BILI_STOP)
+	if (m_workmode != TOOL_EVENT::STOP)
 		return -1;
 	std::list<CBilibiliUserInfo*>::iterator itor;
 	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
@@ -112,7 +111,7 @@ int  CBilibiliUserList::DeleteUser(std::string username)
 
 int CBilibiliUserList::ClearUserList()
 {
-	if (_workmode != BILI_STOP)
+	if (m_workmode != TOOL_EVENT::STOP)
 		return -1;
 	std::list<CBilibiliUserInfo*>::iterator itor;
 	for (itor = _userlist.begin(); itor != _userlist.end();) {
@@ -135,7 +134,7 @@ int CBilibiliUserList::ShowUserList()
 
 int CBilibiliUserList::ImportUserList()
 {
-	if (_workmode != BILI_STOP)
+	if (m_workmode != TOOL_EVENT::STOP)
 		return -1;
 	ClearUserList();
 	int ret, tmpi, ii;
@@ -147,7 +146,7 @@ int CBilibiliUserList::ImportUserList()
 	for (ii = 0; ii < tmpi; ii++) {
 		puser = new CBilibiliUserInfo;
 		ret = puser->ReadFileAccount(prikey, ii + 1, _cfgfile);
-		if (ret != -1) {
+		if (!ret) {
 			// 读取成功
 			_usercount++;
 			_userlist.push_back(puser);
@@ -163,12 +162,12 @@ int CBilibiliUserList::ImportUserList()
 	// this->CheckUserStatusALL();
 	printf("[UserList] Import %d users finish. \n", _usercount);
 
-	return ret;
+	return 0;
 }
 
 int CBilibiliUserList::ExportUserList()
 {
-	if (_workmode != BILI_STOP)
+	if (m_workmode != TOOL_EVENT::STOP)
 		return -1;
 	int ret;
 	//如果有数据
@@ -187,10 +186,10 @@ int CBilibiliUserList::ReloginAll()
 	std::list<CBilibiliUserInfo*>::iterator itor;
 	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
 		switch ((*itor)->Relogin()) {
-		case 0:
+		case LOGINRET::NOFAULT:
 			printf("[UserList] Account %s Logged in. \n", (*itor)->GetUsername().c_str());
 			break;
-		case  STATUS_NOTVALID:
+		case LOGINRET::NOTVALID:
 			printf("[UserList] Account %s Not valid. \n", (*itor)->GetUsername().c_str());
 			break;
 		default:
@@ -206,10 +205,10 @@ int CBilibiliUserList::CheckUserStatusALL()
 	std::list<CBilibiliUserInfo*>::iterator itor;
 	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
 		switch ((*itor)->CheckLogin()) {
-		case 0:
+		case LOGINRET::NOFAULT:
 			printf("[UserList] Account %s Logged in. \n", (*itor)->GetUsername().c_str());
 			break;
-		case  STATUS_NOTVALID:
+		case LOGINRET::NOTVALID:
 			printf("[UserList] Account %s Not valid. \n", (*itor)->GetUsername().c_str());
 			break;
 		default:
@@ -245,10 +244,10 @@ int CBilibiliUserList::StartUserHeart()
 {
 	if (!_isworking[0])
 	{
-		_workmode = BILI_ONLINE;
+		m_workmode = TOOL_EVENT::ONLINE;
 		_lphandle[0] = CreateThread(NULL, 0, Thread_UserListMSG, this, 0, &_msgthread);
 		if (_lphandle[0] == INVALID_HANDLE_VALUE) {
-			_workmode = BILI_STOP;
+			m_workmode = TOOL_EVENT::STOP;
 			return -1;
 		}
 		//确认线程已经启动
@@ -270,7 +269,7 @@ int CBilibiliUserList::StopUserHeart()
 		while (_isworking[0])
 			Sleep(100);
 		_msgthread = 0;
-		_workmode = BILI_STOP;
+		m_workmode = TOOL_EVENT::STOP;
 	}
 	return 0;
 }
@@ -528,7 +527,7 @@ DWORD CBilibiliUserList::Thread_UserListMSG(PVOID lpParameter)
 	MSG msg;
 	//开启心跳定时器
 	DWORD hearttimer;
-	if (pclass->_workmode == BILI_ONLINE)
+	if (pclass->m_workmode == TOOL_EVENT::ONLINE)
 		hearttimer = SetTimer(NULL, 1, 60000, NULL);
 	while (pclass->_isworking[0])
 	{
@@ -547,7 +546,7 @@ DWORD CBilibiliUserList::Thread_UserListMSG(PVOID lpParameter)
 			if (msg.message == WM_TIMER)
 			{
 				if (msg.wParam == hearttimer) {
-					if (pclass->_workmode == BILI_ONLINE)
+					if (pclass->m_workmode == TOOL_EVENT::ONLINE)
 						pclass->_HeartExp();
 				}
 			}

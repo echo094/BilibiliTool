@@ -12,11 +12,10 @@
 #include <fstream>
 #include "BilibiliDanmuAPI.h"
 
-typedef enum _BILI_ROOMMONITOR_MODE
-{
+enum class DANMU_MODE {
 	SINGLE_ROOM = 1,
-	MULTI_ROOM,
-}BILI_ROOMMONITOR_MODE;
+	MULTI_ROOM
+};
 
 class CBilibiliDanmu:
 	public DanmuAPI, 
@@ -33,11 +32,11 @@ protected:
 
 public:
 	// 开启主监视线程 初始化IOCP类
-	int Init(int mode = MULTI_ROOM);
+	int Init(DANMU_MODE mode = DANMU_MODE::MULTI_ROOM);
 	// 退出所有线程 断开Socket 释放所有IOCP资源
 	int Deinit();
 	// 连接一个房间
-	int ConnectToRoom(int room, int flag);
+	int ConnectToRoom(int room, DANMU_FLAG flag);
 	// 断开特定房间
 	int DisconnectFromRoom(int room);
 	// 显示当前连接数

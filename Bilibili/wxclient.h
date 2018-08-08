@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 // #define WITH_TLS
 #ifdef WITH_TLS
 #include <websocketpp/config/asio_client.hpp>

@@ -48,13 +48,14 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 			TranslateMessage(&msg);
 			if (msg.message == ON_USER_COMMAND)
 			{
+				TOOL_EVENT opt = static_cast<TOOL_EVENT>(msg.wParam);
 				if (msg.wParam == 0)
 					runflag = false;
-				else if (msg.wParam == BILI_STOP) {
+				else if (opt == TOOL_EVENT::STOP) {
 					ret = m_BilibiliMain->StopMonitorALL();
 					isrunning = false;
 				}
-				else if (msg.wParam == BILI_ONLINE) {
+				else if (opt == TOOL_EVENT::ONLINE) {
 					if (isrunning) {
 						printf("Another task is working. \n");
 					}
@@ -63,7 +64,7 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 						ret = m_BilibiliMain->StartUserHeart();
 					}
 				}
-				else if (msg.wParam == BILI_GET_SYSMSG_GIFT) {
+				else if (opt == TOOL_EVENT::GET_SYSMSG_GIFT) {
 					if (isrunning) {
 						printf("Another task is working. \n");
 					}
@@ -72,10 +73,10 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 						ret = m_BilibiliMain->StartMonitorPubEvent(threadid);
 					}
 				}
-				else if (msg.wParam == BILI_DEBUG1) {
+				else if (opt == TOOL_EVENT::DEBUG1) {
 					m_BilibiliMain->Debugfun(1);
 				}
-				else if (msg.wParam == BILI_DEBUG2) {
+				else if (opt == TOOL_EVENT::DEBUG2) {
 					m_BilibiliMain->Debugfun(2);
 				}
 			}
@@ -282,13 +283,13 @@ int ProcessCommand(std::string str)
 		m_BilibiliMain->GetUserList()->GetUserInfoALL();
 	}
 	else if (!str.compare("10") || !str.compare("stopall")) {
-		PostThreadMessage(threadid, ON_USER_COMMAND, WPARAM(BILI_STOP), LPARAM(0));
+		PostThreadMessage(threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::STOP), LPARAM(0));
 	}
 	else if (!str.compare("11") || !str.compare("userexp")) {
-		PostThreadMessage(threadid, ON_USER_COMMAND, WPARAM(BILI_ONLINE), LPARAM(0));
+		PostThreadMessage(threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::ONLINE), LPARAM(0));
 	}
 	else if (!str.compare("12") || !str.compare("lotterystart")) {
-		PostThreadMessage(threadid, ON_USER_COMMAND, WPARAM(BILI_GET_SYSMSG_GIFT), LPARAM(0));
+		PostThreadMessage(threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::GET_SYSMSG_GIFT), LPARAM(0));
 	}
 	else if (!str.compare("21")) {
 		printf("Saving lottery history... \n");
@@ -303,7 +304,7 @@ int ProcessCommand(std::string str)
 		m_BilibiliMain->SetDanmukuHide();
 	}
 	else if (!str.compare("90")) {
-		PostThreadMessage(threadid, ON_USER_COMMAND, WPARAM(BILI_DEBUG1), LPARAM(0));
+		PostThreadMessage(threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::DEBUG1), LPARAM(0));
 	}
 	else {
 		printf("未知命令\n");

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "BilibiliDanmuAPI.h"
 
 struct tagDANMUMSGDANMU
@@ -94,9 +94,9 @@ int DanmuAPI::ParseJSON(char *str, int room) {
 		return this->ParseDANMUMSG(doc, room);
 	}
 
-	// ½Ú×à·ç±©
+	// èŠ‚å¥é£æš´
 	if (strtype == "SPECIAL_GIFT") {
-		if (!(room_list[room].flag & MSG_SPECIALGIFT))
+		if (room_list[room].flag != DANMU_FLAG::MSG_SPECIALGIFT)
 			return 0;
 		return this->ParseSTORMMSG(doc, room);
 	}
@@ -105,23 +105,23 @@ int DanmuAPI::ParseJSON(char *str, int room) {
 		return 0;
 	}
 
-	//ÔËÓª»î¶¯Ê¹ÓÃSYS_GIFTÏûÏ¢
-	//ĞÂÔö»î¶¯Ê±¼à¿ØÖ¸¶¨ÀñÎïID¼´¿É
+	//è¿è¥æ´»åŠ¨ä½¿ç”¨SYS_GIFTæ¶ˆæ¯
+	//æ–°å¢æ´»åŠ¨æ—¶ç›‘æ§æŒ‡å®šç¤¼ç‰©IDå³å¯
 	if (strtype == "SYS_GIFT") {
 		return 0;
-		if (!(room_list[room].flag & MSG_PUBEVENT))
+		if (room_list[room].flag != DANMU_FLAG::MSG_PUBEVENT)
 			return 0;
 		return this->ParseSYSGIFT(doc, room);
 	}
 
 	if (strtype == "SYS_MSG") {
-		if (!(room_list[room].flag & MSG_PUBEVENT))
+		if (room_list[room].flag != DANMU_FLAG::MSG_PUBEVENT)
 			return 0;
 		return this->ParseSYSMSG(doc, room);
 	}
 
 	if (strtype == "GUARD_MSG") {
-		if (!(room_list[room].flag & MSG_PUBEVENT))
+		if (room_list[room].flag != DANMU_FLAG::MSG_PUBEVENT)
 			return 0;
 		return this->ParseGUARDMSG(doc, room);
 	}
@@ -245,7 +245,7 @@ int DanmuAPI::ParseSYSGIFT(rapidjson::Document &doc, int room) {
 }
 
 int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, int room) {
-	// Èç¹ûÏûÏ¢²»º¬ÓĞ·¿¼äID ÔòËµÃ÷²»ÊÇ³é½±ĞÅÏ¢
+	// å¦‚æœæ¶ˆæ¯ä¸å«æœ‰æˆ¿é—´ID åˆ™è¯´æ˜ä¸æ˜¯æŠ½å¥–ä¿¡æ¯
 	if (!doc.HasMember("real_roomid") || !doc["real_roomid"].IsInt()) {
 		return 0;
 	}
@@ -263,7 +263,7 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, int room) {
 
 	int ret = -1;
 	// small_tv
-	ret = m_tmpsysmsg.wmsg.find(L"Ğ¡µçÊÓ·É´¬");
+	ret = m_tmpsysmsg.wmsg.find(L"å°ç”µè§†é£èˆ¹");
 	if (ret != -1) {
 		printf("%s[DanmuAPI] SmallTV RoomID:%d \n", _tool.GetTimeString().c_str(), rrid);
 		if (parentthreadid)
@@ -271,7 +271,7 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, int room) {
 		return 0;
 	}
 	// GIFT_20003
-	ret = m_tmpsysmsg.wmsg.find(L"Ä¦Ìì´óÂ¥");
+	ret = m_tmpsysmsg.wmsg.find(L"æ‘©å¤©å¤§æ¥¼");
 	if (ret != -1) {
 		printf("%s[DanmuAPI] Skyscraper RoomID:%d \n", _tool.GetTimeString().c_str(), rrid);
 		if (parentthreadid)
@@ -279,7 +279,7 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, int room) {
 		return 0;
 	}
 	// GIFT_30013
-	ret = m_tmpsysmsg.wmsg.find(L"CÎ»¹â»·");
+	ret = m_tmpsysmsg.wmsg.find(L"Cä½å…‰ç¯");
 	if (ret != -1) {
 		printf("%s[DanmuAPI] Center RoomID:%d \n", _tool.GetTimeString().c_str(), rrid);
 		if (parentthreadid)
@@ -287,7 +287,7 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, int room) {
 		return 0;
 	}
 	// GIFT_30014
-	ret = m_tmpsysmsg.wmsg.find(L"Ê¢ÏÄÃ´Ã´²è");
+	ret = m_tmpsysmsg.wmsg.find(L"ç››å¤ä¹ˆä¹ˆèŒ¶");
 	if (ret != -1) {
 		printf("%s[DanmuAPI] Summer Tea RoomID:%d \n", _tool.GetTimeString().c_str(), rrid);
 		if (parentthreadid)
@@ -298,14 +298,14 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, int room) {
 	return -1;
 }
 
-// {"cmd":"GUARD_MSG","msg":"ÓÃ»§ :?[A]:? ÔÚÖ÷²¥ [B] µÄÖ±²¥¼ä¿ªÍ¨ÁË×Ü¶½","buy_type":1}
+// {"cmd":"GUARD_MSG","msg":"ç”¨æˆ· :?[A]:? åœ¨ä¸»æ’­ [B] çš„ç›´æ’­é—´å¼€é€šäº†æ€»ç£","buy_type":1}
 int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, int room) {
 	if (!doc.HasMember("msg") || !doc["msg"].IsString()) {
 		return -1;
 	}
 	std::string str1, str2;
-	str1 = _strcoding.UrlUTF8(":? ÔÚÖ÷²¥ ");
-	str2 = _strcoding.UrlUTF8(" µÄÖ±²¥¼ä¿ªÍ¨ÁË×Ü¶½");
+	str1 = _strcoding.UrlUTF8(":? åœ¨ä¸»æ’­ ");
+	str2 = _strcoding.UrlUTF8(" çš„ç›´æ’­é—´å¼€é€šäº†æ€»ç£");
 	std::string msg = _strcoding.UTF_8ToString(doc["msg"].GetString());
 	msg = _strcoding.UrlUTF8(msg.c_str());
 	printf("[DanmuAPI] Roomid: %d GUARD_MSG %s \n", room, msg.c_str());

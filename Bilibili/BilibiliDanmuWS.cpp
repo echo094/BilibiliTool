@@ -118,7 +118,7 @@ int CWSDanmu::Deinit() {
 	return 0;
 }
 
-int CWSDanmu::ConnectToRoom(int room, int flag) {
+int CWSDanmu::ConnectToRoom(int room, DANMU_FLAG flag) {
 	int ret;
 	std::string url = DM_WSSERVER;
 	ret = this->connect(room, url);

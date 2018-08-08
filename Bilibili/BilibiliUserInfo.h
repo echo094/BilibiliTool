@@ -22,6 +22,13 @@
 #define DEF_URLLoginAJAX "https://passport.bilibili.com/ajax/miniLogin/minilogin"
 #define DEF_URLLoginMini "https://passport.bilibili.com/ajax/miniLogin/login"
 
+enum class LOGINRET {
+	NOFAULT,
+	NOTLOGIN,
+	NOTVALID,
+	NOTINVITED
+};
+
 struct tagHeartInfo
 {
 	int timercount;// 心跳计时
@@ -84,11 +91,11 @@ protected:
 
 public:
 	// 新用户登录
-	int Login(int index, std::string username, std::string password);
+	LOGINRET Login(int index, std::string username, std::string password);
 	// 重新登录
-	int Relogin();
+	LOGINRET Relogin();
 	// 导入用户验证
-	int CheckLogin();
+	LOGINRET CheckLogin();
 	// 获取用户信息
 	int FreshUserInfo();
 	// 从文件导入指定账户
@@ -110,100 +117,96 @@ public:
 // 登录相关
 protected:
 	// 获取LIVE的一些Cookie
-	int GETLoginJct(int );
+	BILIRET GETLoginJct(int );
 	// 获取验证码图片
-	int GETPicCaptcha();
+	BILIRET GETPicCaptcha();
 	// 获取RSA公钥加密密码
-	int GETEncodePsd(std::string &psd);
+	BILIRET GETEncodePsd(std::string &psd);
 	// 网页移动端登录接口
-	int POSTLogin(std::string username, std::string password, std::string strver = "");
+	BILIRET POSTLogin(std::string username, std::string password, std::string strver = "");
 
 // 用户信息获取相关
 protected:
-	// 获取主站主要信息
-	int GetUserInfoAV(BILIUSEROPT &pinfo);
 	// 获取直播站主要信息
-	int GetUserInfoLive(BILIUSEROPT &pinfo);
-	// 获取直播站直播间信息
-	int GetLiveRoomInfo(BILIUSEROPT &pinfo);
+	BILIRET GetUserInfoLive(BILIUSEROPT &pinfo);
 	// 获取直播站签到信息
-	int GetSignInfo(BILIUSEROPT &pinfo);
+	BILIRET GetSignInfo(BILIUSEROPT &pinfo);
 
 // 其它直播API
 protected:
 	// 直播经验心跳Web
-	int PostOnlineHeart();
+	BILIRET PostOnlineHeart();
 	// 直播站签到
-	int GetSign();
+	BILIRET GetSign();
 	// 银瓜子换硬币
-	int PostSilver2Coin();
+	BILIRET PostSilver2Coin();
 	// 获取登录硬币
-	int GetCoin();
+	BILIRET GetCoin();
 public:
 	// 发送弹幕
-	int SendDanmuku(int roomID, std::string msg);
+	BILIRET SendDanmuku(int roomID, std::string msg);
 
 // APIv1
 protected:
 	// 获取播主账户ID（亦作 RUID）
-	int _APIv1MasterID(int liveRoomID);
+	BILIRET _APIv1MasterID(int liveRoomID, int &uid);
 	// 直播经验心跳日志1
-	int _APIv1HeartBeat();
+	BILIRET _APIv1HeartBeat();
 	// 获取指定勋章排名
-	int _APIv1MedalRankList(int roomid, int uid, int &rank);
+	BILIRET _APIv1MedalRankList(int roomid, int uid, int &rank);
 	// 获取验证码图片
-	int _APIv1Captcha(std::string &img, std::string &token);
+	BILIRET _APIv1Captcha(std::string &img, std::string &token);
 	// 领取风暴
-	int _APIv1StormJoin(int roomID, long long cid, std::string code, std::string token);
+	BILIRET _APIv1StormJoin(int roomID, long long cid, std::string code, std::string token);
 	// 运营活动抽奖
-	int _APIv1YunYing(int rid, int raffleId);
+	BILIRET _APIv1YunYing(int rid, int raffleId);
 	// 银瓜子验证码
-	int _APIv1SilverCaptcha();
+	BILIRET _APIv1SilverCaptcha();
 	// 获取当前宝箱领取情况
-	int _APIv1SilverCurrentTask();
-	// 领取银瓜子
-	int _APIv1SilverAward();
+	BILIRET _APIv1SilverCurrentTask();
+	// 领取银瓜子 失效
+	BILIRET _APIv1SilverAward();
 	// 银瓜子换硬币新API
-	int _APIv1Silver2Coin();
+	BILIRET _APIv1Silver2Coin();
 	// 查询扭蛋币数量
-	int _APIv1CapsuleCheck();
+	BILIRET _APIv1CapsuleCheck();
 	// 进入房间历史记录
-	int _APIv1RoomEntry(int room);
+	BILIRET _APIv1RoomEntry(int room);
 public:
 	// 每日榜首低保
-	int APIv1YunYingGift(int);
+	BILIRET APIv1YunYingGift(int);
 	// 新通用抽奖
-	int APIv1LotteryJoin(BILI_LOTTERYDATA &pdata);
+	BILIRET APIv1LotteryJoin(BILI_LOTTERYDATA &pdata);
 
 // APIv2
 protected:
 	//免费礼物领取状态查询
-	int _APIv2CheckHeartGift();
+	BILIRET _APIv2CheckHeartGift();
 	//免费礼物领取心跳包
-	int _APIv2GetHeartGift();
+	BILIRET _APIv2GetHeartGift();
 	// 查询背包道具
-	int _APIv2GiftBag();
+	BILIRET _APIv2GiftBag();
 	// 领取每日礼物
-	int _APIv2GiftDaily();
+	BILIRET _APIv2GiftDaily();
 public:
 	//赠送礼物
-	int APIv2SendGift(int giftID, int roomID, int num, bool coinType, int bagID);
+	BILIRET APIv2SendGift(int giftID, int roomID, int num, bool coinType, int bagID);
 
 // APIv3
 protected:
 	// 通告礼物抽奖
-	int _APIv3SmallTV(int rrid, int loid);
+	BILIRET _APIv3SmallTV(int rrid, int loid);
 
 // 安卓端API 
 private:
-	int _APIAndv2GetKey(std::string &psd);
-	int _APIAndv2Login(std::string username, std::string password);
+	BILIRET _APIAndv2GetKey(std::string &psd);
+	BILIRET _APIAndv2Login(std::string username, std::string password);
 	// 获取房间信息包括活动及抽奖
-	int _APIAndv1RoomInfo(int rid);
+	BILIRET _APIAndv1RoomInfo(int rid);
 	// 领取风暴
-	int _APIAndv1StormJoin(long long cid);
+	BILIRET _APIAndv1StormJoin(long long cid);
 	// 活动抽奖
-	int _APIAndv1YunYing(std::string eventname, int rid, int raffleId);
+	BILIRET _APIAndv1YunYing(std::string eventname, int rid, int raffleId);
 
 // 其他
 protected:
@@ -215,7 +218,7 @@ protected:
 	// 账户被封禁
 	int SetBanned();
 
-	int _GetCaptchaKey();
+	BILIRET _GetCaptchaKey();
 	// 生成随机访问ID
 	int _GetVisitID(std::string &sid);
 	// 大写转小写

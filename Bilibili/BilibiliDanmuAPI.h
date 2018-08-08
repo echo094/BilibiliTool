@@ -1,12 +1,18 @@
-#pragma once
+ï»¿#pragma once
 #include <map>
 
+enum class DANMU_FLAG {
+	MSG_NONE = 0,
+	MSG_PUBEVENT = 1,
+	MSG_SPECIALGIFT = 2,
+};
+
 typedef struct tagRoomInfo {
-	int flag;
+	DANMU_FLAG flag;
 	bool needconnect;
 
 	tagRoomInfo() :
-		flag(0),
+		flag(DANMU_FLAG::MSG_NONE),
 		needconnect(false) {}
 
 }ROOM_INFO;
@@ -22,7 +28,7 @@ public:
 public:
 	void SetDanmukuOn() { bdanmukuon = true; }
 	void SetDanmukuOff() { bdanmukuon = false; }
-	// ÉèÖÃ¸¸¼¶Ïß³ÌID
+	// è®¾ç½®çˆ¶çº§çº¿ç¨‹ID
 	int SetNotifyThread(DWORD id);
 
 protected:
@@ -36,7 +42,7 @@ protected:
 	int ParseGUARDMSG(rapidjson::Document &doc, int room);
 
 protected:
-	DWORD parentthreadid;//ÉÏ¼¶ÏûÏ¢Ïß³Ì
+	DWORD parentthreadid;//ä¸Šçº§æ¶ˆæ¯çº¿ç¨‹
 	bool bdanmukuon;
 	bool bmodedebug;
 	CTools _tool;

@@ -17,7 +17,7 @@ private:
 	std::fstream _logfile;//日志文件句柄
 	char _logbuff[100];//日志缓冲区
 
-	int curmode;//当前模式
+	TOOL_EVENT curmode;//当前模式
 	CBilibiliUserList *_userlist;//账户列表类
 
 	int _roomcount;//当前连接的房间数

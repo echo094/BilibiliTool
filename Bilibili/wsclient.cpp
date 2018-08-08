@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "wxclient.h"
 
 websocket_endpoint *ptrmsg = NULL;
@@ -160,7 +160,7 @@ context_ptr websocket_endpoint::on_tls_init(websocketpp::connection_hdl) {
 #endif
 
 int websocket_endpoint::connect(int label, std::string const & uri) {
-	// Èç¹û¸Ã±àºÅÒÑ´æÔÚÔò³¢ÊÔ¶Ï¿ªÁ¬½Ó¡£
+	// å¦‚æœè¯¥ç¼–å·å·²å­˜åœ¨åˆ™å°è¯•æ–­å¼€è¿æ¥ã€‚
 	close(label, websocketpp::close::status::normal, "");
 
 	websocketpp::lib::error_code ec;

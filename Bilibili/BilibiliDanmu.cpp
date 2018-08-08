@@ -147,12 +147,12 @@ int CBilibiliDanmu::OnHeart() {
 }
 
 //开启主监视线程 初始化IOCP类
-int CBilibiliDanmu::Init(int mode) {
+int CBilibiliDanmu::Init(DANMU_MODE mode) {
 	if (_isworking)
 		return -1;
 	// 开启心跳模块
 	this->SetHeart(true, 30000);
-	if (mode == SINGLE_ROOM) {
+	if (mode == DANMU_MODE::SINGLE_ROOM) {
 		this->Initialize(2);
 	}
 	else {
@@ -177,7 +177,7 @@ int CBilibiliDanmu::Deinit() {
 	return 0;
 }
 
-int CBilibiliDanmu::ConnectToRoom(int room, int flag) {
+int CBilibiliDanmu::ConnectToRoom(int room, DANMU_FLAG flag) {
 	if (room_list.find(room) != room_list.end()) {
 		return -1;
 	}

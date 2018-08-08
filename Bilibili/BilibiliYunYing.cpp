@@ -58,18 +58,22 @@ CBilibiliLotteryBase::~CBilibiliLotteryBase()
 
 int CBilibiliLotteryBase::CheckLottery(CURL *pcurl, int room)
 {
-	int ret, rrid;
+	int rrid;
+	BILIRET ret;
 	ret = this->_CheckRoom(pcurl, room, rrid);
-	if (ret) {
-		// 房间无效则返回0 停止查询
-		if (ret == 1)
-			return 0;
+	// 房间无效则返回0 停止查询
+	if (ret == BILIRET::ROOM_BLOCK) {
+		return 0;
+	}
+	if (ret != BILIRET::NOFAULT) {
 		// 查询失败返回-1
 		return -1;
 	}
 	ret = this->_GetLotteryID(pcurl, room, rrid);
-
-	return ret;
+	if (ret != BILIRET::NOFAULT) {
+		return -1;
+	}
+	return 0;
 }
 
 int CBilibiliLotteryBase::GetNextLottery(BILI_LOTTERYDATA &plo)
@@ -84,8 +88,7 @@ int CBilibiliLotteryBase::GetNextLottery(BILI_LOTTERYDATA &plo)
 	return 0;
 }
 
-int CBilibiliLotteryBase::_CheckRoom(CURL *pcurl, int srid, int &rrid)
-{
+BILIRET CBilibiliLotteryBase::_CheckRoom(CURL *pcurl, int srid, int &rrid) {
 	int ret;
 	_httppack.url = URL_LIVEAPI_HEAD;
 	_httppack.url += "/room/v1/Room/room_init?id=" + std::to_string(srid);
@@ -94,7 +97,7 @@ int CBilibiliLotteryBase::_CheckRoom(CURL *pcurl, int srid, int &rrid)
 	ret = toollib::HttpGetEx(pcurl, &_httppack);
 	if (ret) {
 		printf("%s[Lottery] Get RealRoomID Failed! \n", _tool.GetTimeString().c_str());
-		return HTTP_ERROR;
+		return BILIRET::HTTP_ERROR;
 	}
 
 	rapidjson::Document doc;
@@ -103,19 +106,19 @@ int CBilibiliLotteryBase::_CheckRoom(CURL *pcurl, int srid, int &rrid)
 		|| !doc.HasMember("data") || !doc["data"].IsObject()
 		|| !doc["data"].HasMember("room_id") || !doc["data"]["room_id"].IsInt()) {
 		printf("%s[Lottery] Get RealRoomID Failed! \n", _tool.GetTimeString().c_str());
-		return JSON_DATAERROR;
+		return BILIRET::JSON_ERROR;
 	}
 	if (doc["data"]["is_hidden"].GetBool() || doc["data"]["is_locked"].GetBool() || doc["data"]["encrypted"].GetBool()) {
 		printf("%s[Lottery] Invalid Room! \n", _tool.GetTimeString().c_str());
-		return 1;
+		return BILIRET::ROOM_BLOCK;
 	}
 	rrid = doc["data"]["room_id"].GetInt();
 	printf("%s[Lottery] RealRoomID: %d \n", _tool.GetTimeString().c_str(), rrid);
 
-	return 0;
+	return BILIRET::NOFAULT;
 }
 
-int CBilibiliLotteryBase::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid)
+void CBilibiliLotteryBase::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid)
 {
 	long long curtime = _tool.GetTimeStamp();
 	unsigned int i;
@@ -164,11 +167,9 @@ int CBilibiliLotteryBase::_UpdateLotteryList(rapidjson::Value &infoArray, int sr
 	if (!flag) {
 		printf("%s[Lottery] No New ID \n", _tool.GetTimeString().c_str());
 	}
-
-	return 0;
 }
 
-int CBilibiliYunYing::_GetLotteryID(CURL *pcurl, int srid, int rrid)
+BILIRET CBilibiliYunYing::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 {
 	int ret;
 	_httppack.url = URL_LIVEAPI_HEAD;
@@ -177,28 +178,28 @@ int CBilibiliYunYing::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 	ret = toollib::HttpGetEx(pcurl, &_httppack, 1);
 	if (ret) {
 		printf("%s[Raffle]HTTP GET Failed! \n", _tool.GetTimeString().c_str());
-		return HTTP_ERROR;
+		return BILIRET::HTTP_ERROR;
 	}
 
 	rapidjson::Document doc;
 	doc.Parse(_httppack.strrecdata);
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || !doc.HasMember("data") || !doc["data"].IsArray()) {
 		printf("[Raffle] ERROR: %s\n", _httppack.strrecdata);
-		return JSON_ERROR;
+		return BILIRET::JSON_ERROR;
 	}
 	ret = doc["code"].GetInt();
 	if (ret) {
 		std::string msg = _strcoding.UTF_8ToString(doc["msg"].GetString());
 		printf("[Raffle] ERROR: %d %s\n", ret, msg.c_str());
-		return JSON_ERROR;
+		return BILIRET::JSON_ERROR;
 	}
 	// 处理并添加新的抽奖信息
-	ret = this->_UpdateLotteryList(doc["data"], srid, rrid);
+	this->_UpdateLotteryList(doc["data"], srid, rrid);
 
-	return ret;
+	return BILIRET::NOFAULT;
 }
 
-int CBilibiliSmallTV::_GetLotteryID(CURL *pcurl, int srid, int rrid)
+BILIRET CBilibiliSmallTV::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 {
 	int ret;
 	_httppack.url = URL_LIVEAPI_HEAD;
@@ -207,7 +208,7 @@ int CBilibiliSmallTV::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 	ret = toollib::HttpGetEx(pcurl, &_httppack);
 	if (ret) {
 		printf("%s[SmallTV] HTTP GET Failed! \n", _tool.GetTimeString().c_str());
-		return HTTP_ERROR;
+		return BILIRET::HTTP_ERROR;
 	}
 
 	//开始处理小电视信息
@@ -216,15 +217,15 @@ int CBilibiliSmallTV::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("list") || !doc["data"]["list"].IsArray()) {
 		printf("[SmallTV]ERROR: %d! \n", doc["code"].IsInt());
-		return JSON_DATAERROR;
+		return BILIRET::JSON_ERROR;
 	}
 	// 处理并添加新的抽奖信息
-	ret = this->_UpdateLotteryList(doc["data"]["list"], srid, rrid);
+	this->_UpdateLotteryList(doc["data"]["list"], srid, rrid);
 
-	return ret;
+	return BILIRET::NOFAULT;
 }
 
-int CBilibiliLive::ApiSearchUser(CURL *pcurl, const char *user, int &rrid)
+BILIRET CBilibiliLive::ApiSearchUser(CURL *pcurl, const char *user, int &rrid)
 {
 	int ret;
 	_httppack.url = "https://search.bilibili.com/api/search?search_type=live_user&keyword=";
@@ -234,7 +235,7 @@ int CBilibiliLive::ApiSearchUser(CURL *pcurl, const char *user, int &rrid)
 	ret = toollib::HttpGetEx(pcurl, &_httppack);
 	if (ret) {
 		printf("%s[Live] Search User Failed! \n", _tool.GetTimeString().c_str());
-		return HTTP_ERROR;
+		return BILIRET::HTTP_ERROR;
 	}
 
 	rapidjson::Document doc;
@@ -242,20 +243,20 @@ int CBilibiliLive::ApiSearchUser(CURL *pcurl, const char *user, int &rrid)
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("result") || !doc["result"].IsArray()) {
 		printf("%s[Live] Search User Failed! \n", _tool.GetTimeString().c_str());
-		return JSON_DATAERROR;
+		return BILIRET::JSON_ERROR;
 	}
 	rapidjson::Value &infoArray = doc["result"];
 	if (infoArray.Size() == 0) {
 		printf("%s[Live] User not found! \n", _tool.GetTimeString().c_str());
-		return -1;
+		return BILIRET::NORESULT;
 	}
 	rrid = doc["result"][0]["roomid"].GetInt();
 	printf("%s[API Search] RoomID: %d \n", _tool.GetTimeString().c_str(), rrid);
 
-	return 0;
+	return BILIRET::NOFAULT;
 }
 
-int CBilibiliLive::ApiCheckGuard(CURL *pcurl, int rrid, int &loid)
+BILIRET CBilibiliLive::ApiCheckGuard(CURL *pcurl, int rrid, int &loid)
 {
 	int ret;
 	_httppack.url = URL_LIVEAPI_HEAD;
@@ -265,7 +266,7 @@ int CBilibiliLive::ApiCheckGuard(CURL *pcurl, int rrid, int &loid)
 	ret = toollib::HttpGetEx(pcurl, &_httppack);
 	if (ret) {
 		printf("%s[Live] Check Guard Failed! \n", _tool.GetTimeString().c_str());
-		return HTTP_ERROR;
+		return BILIRET::HTTP_ERROR;
 	}
 
 	rapidjson::Document doc;
@@ -273,15 +274,15 @@ int CBilibiliLive::ApiCheckGuard(CURL *pcurl, int rrid, int &loid)
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("guard") || !doc["data"]["guard"].IsArray()) {
 		printf("%s[Live] Check Guard Failed! \n", _tool.GetTimeString().c_str());
-		return JSON_DATAERROR;
+		return BILIRET::JSON_ERROR;
 	}
 	rapidjson::Value &infoArray = doc["data"]["guard"];
 	if (infoArray.Size() == 0) {
 		printf("%s[Live] Guard not found! \n", _tool.GetTimeString().c_str());
-		return -1;
+		return BILIRET::NORESULT;
 	}
 	loid = infoArray[0]["id"].GetInt();
 	printf("%s[API Search] GuardID: %d \n", _tool.GetTimeString().c_str(), loid);
 
-	return 0;
+	return BILIRET::NOFAULT;
 }
