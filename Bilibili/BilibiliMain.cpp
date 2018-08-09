@@ -25,12 +25,8 @@ CBilibiliMain::CBilibiliMain(CURL *pcurl):
 CBilibiliMain::~CBilibiliMain() {
 	_logfile.close();
 	curl = NULL;
-	if (_tcpdanmu) {
-		delete _tcpdanmu;
-	}
-	if (_wsdanmu) {
-		delete _wsdanmu;
-	}
+	delete _tcpdanmu;
+	delete _wsdanmu;
 	delete _lotterytv;
 	delete _lotteryyy;
 	delete _apilive;

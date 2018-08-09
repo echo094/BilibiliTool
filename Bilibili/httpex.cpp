@@ -33,21 +33,17 @@ int CHTTPPack::AddDefHeader(const char *str)
 	return 0;
 }
 
-bool CHTTPPack::ClearHeader()
-{
+bool CHTTPPack::ClearHeader() {
 	i_numsendheader = _defheadernum;
 	return true;
 }
 
-bool CHTTPPack::ClearRec()
-{
+bool CHTTPPack::ClearRec() {
 	sstrrecheader = "";
 	sstrrecdata = "";
-	if (strrecheader != NULL)
-		delete[] strrecheader;
+	delete[] strrecheader;
 	strrecheader = NULL;
-	if (strrecdata != NULL)
-		delete[] strrecdata;
+	delete[] strrecdata;
 	strrecdata = NULL;
 	i_lenrecheader = 0;
 	i_lenrecdata = 0;

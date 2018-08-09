@@ -47,7 +47,7 @@ private:
 	int _threadcount;
 
 public:
-	CBilibiliUserList();
+	explicit CBilibiliUserList();
 	~CBilibiliUserList();
 
 public:

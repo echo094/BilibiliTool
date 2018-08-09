@@ -74,7 +74,7 @@ private:
 	CStrConvert _strcoding;
 	
 public:
-	CBilibiliUserInfo();
+	explicit CBilibiliUserInfo();
 	~CBilibiliUserInfo();
 	bool getLoginStatus()const { return _useropt.islogin; };
 	void setLoginStatus(bool status) { _useropt.islogin = status; };

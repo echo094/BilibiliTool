@@ -28,7 +28,7 @@ private:
 	CWSDanmu *_wsdanmu;
 
 public:
-	CBilibiliMain(CURL *pcurl = NULL);
+	explicit CBilibiliMain(CURL *pcurl = NULL);
 	~CBilibiliMain();
 
 //HTTP数据收发
