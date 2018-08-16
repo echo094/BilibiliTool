@@ -26,9 +26,9 @@ public:
 
 // 重载CIOCPClient中的函数
 protected:
-	int OnClose(PER_SOCKET_CONTEXT* pSocketContext);
-	int OnReceive(PER_SOCKET_CONTEXT* pSocketContext, PER_IO_CONTEXT* pIoContext, int byteslen);
-	virtual int OnHeart();
+	int OnClose(PER_SOCKET_CONTEXT* pSocketContext) override;
+	int OnReceive(PER_SOCKET_CONTEXT* pSocketContext, PER_IO_CONTEXT* pIoContext, int byteslen) override;
+	int OnHeart() override;
 
 public:
 	// 开启主监视线程 初始化IOCP类

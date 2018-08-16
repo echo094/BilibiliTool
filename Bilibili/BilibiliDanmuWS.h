@@ -28,13 +28,13 @@ public:
 	~CWSDanmu();
 
 protected:
-	void on_timer(websocketpp::lib::error_code const & ec);
+	void on_timer(websocketpp::lib::error_code const & ec) override;
 
 public:
-	void on_open(connection_metadata *it);
-	void on_fail(connection_metadata *it);
-	void on_close(connection_metadata *it);
-	void on_message(connection_metadata *it, std::string &msg, int len);
+	void on_open(connection_metadata *it) override;
+	void on_fail(connection_metadata *it) override;
+	void on_close(connection_metadata *it) override;
+	void on_message(connection_metadata *it, std::string &msg, int len) override;
 
 public:
 	// 开启心跳定时器

@@ -34,13 +34,13 @@ protected:
 class CBilibiliYunYing: public CBilibiliLotteryBase
 {
 protected:
-	BILIRET _GetLotteryID(CURL *pcurl, int srid, int rrid);
+	BILIRET _GetLotteryID(CURL *pcurl, int srid, int rrid) override;
 };
 
 class CBilibiliSmallTV : public CBilibiliLotteryBase
 {
 protected:
-	BILIRET _GetLotteryID(CURL *pcurl, int srid, int rrid);
+	BILIRET _GetLotteryID(CURL *pcurl, int srid, int rrid) override;
 };
 
 // 其它API
