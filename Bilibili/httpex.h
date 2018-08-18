@@ -74,9 +74,9 @@ namespace toollib {
 		int GetCookieTime(std::string &name, int &value) const;
 	};
 
-	int HttpGetEx(CURL *pcurl, CHTTPPack *pHTTPPack, int flag = 1);
-	int HttpPostEx(CURL *pcurl, CHTTPPack *pHTTPPack, int flag = 1);
-	int HttpHeadEx(CURL *pcurl, CHTTPPack *pHTTPPack, int flag = 1);
+	int HttpGetEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, int flag = 1);
+	int HttpPostEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, int flag = 1);
+	int HttpHeadEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, int flag = 1);
 
 }
 

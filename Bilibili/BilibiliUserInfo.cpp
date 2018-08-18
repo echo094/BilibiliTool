@@ -14,11 +14,11 @@ CBilibiliUserInfo::CBilibiliUserInfo()
 	_key_3des = "08E1CAAD409B840208E1CAAD";
 	curlweb = curl_easy_init();
 	curlapp = curl_easy_init();
-	_httppackweb = new CHTTPPack();
+	_httppackweb = std::make_unique<CHTTPPack>();
 	_httppackweb->AddDefHeader("Accept-Language: zh-CN,zh;q=0.8");
 	_httppackweb->AddDefHeader("Connection: keep-alive");
 	_httppackweb->AddDefHeader("DNT: 1");
-	_httppackapp = new CHTTPPack("Mozilla/5.0 BiliDroid/5.23.2 (bbcallen@gmail.com)");
+	_httppackapp = std::make_unique<CHTTPPack>("Mozilla/5.0 BiliDroid/5.23.2 (bbcallen@gmail.com)");
 	_httppackapp->AddDefHeader("Buvid: A59813F7-2A50-42C5-A246-AF93A96374E320912infoc");
 	_httppackapp->AddDefHeader("Device-ID: KRkhFHdFd0J0RXBFOUU5Cj8KPQg_Dz4OOQkxBDUA");
 	_httppackapp->AddDefHeader("Display-ID: 759639-1523371597");
@@ -28,11 +28,11 @@ CBilibiliUserInfo::CBilibiliUserInfo()
 CBilibiliUserInfo::~CBilibiliUserInfo()
 {
 	curl_easy_cleanup(curlweb);
-	curlweb = NULL;
+	curlweb = nullptr;
 	curl_easy_cleanup(curlapp);
-	curlapp = NULL;
-	delete _httppackweb;
-	delete _httppackapp;
+	curlapp = nullptr;
+	_httppackweb = nullptr;
+	_httppackapp = nullptr;
 #ifdef _DEBUG
 	printf("[User] Stop. \n");
 #endif

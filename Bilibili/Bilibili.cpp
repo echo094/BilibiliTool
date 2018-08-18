@@ -12,13 +12,13 @@ using namespace std;
 #define BILI_HEPLER_HEADER "\n Bilibili Tool \n"
 
 //本软件主模块
-CBilibiliMain *m_BilibiliMain;
+static unique_ptr<CBilibiliMain> g_BilibiliMain;
 //用于查询的共享CURL句柄
-CURL* curl;
+static CURL* curl;
 
-bool threadflag = false;//主线程运行状态
-DWORD threadid;//主线程序号
-HANDLE threadhandle;//主线程句柄
+static bool threadflag = false;//主线程运行状态
+static DWORD threadid;//主线程序号
+static HANDLE threadhandle;//主线程句柄
 
 #define ON_USER_COMMAND WM_USER + 610 
 
@@ -52,7 +52,7 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 				if (msg.wParam == 0)
 					runflag = false;
 				else if (opt == TOOL_EVENT::STOP) {
-					ret = m_BilibiliMain->StopMonitorALL();
+					ret = g_BilibiliMain->StopMonitorALL();
 					isrunning = false;
 				}
 				else if (opt == TOOL_EVENT::ONLINE) {
@@ -61,7 +61,7 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 					}
 					else {
 						isrunning = true;
-						ret = m_BilibiliMain->StartUserHeart();
+						ret = g_BilibiliMain->StartUserHeart();
 					}
 				}
 				else if (opt == TOOL_EVENT::GET_SYSMSG_GIFT) {
@@ -70,38 +70,38 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 					}
 					else {
 						isrunning = true;
-						ret = m_BilibiliMain->StartMonitorPubEvent(threadid);
+						ret = g_BilibiliMain->StartMonitorPubEvent(threadid);
 					}
 				}
 				else if (opt == TOOL_EVENT::DEBUG1) {
-					m_BilibiliMain->Debugfun(1);
+					g_BilibiliMain->Debugfun(1);
 				}
 				else if (opt == TOOL_EVENT::DEBUG2) {
-					m_BilibiliMain->Debugfun(2);
+					g_BilibiliMain->Debugfun(2);
 				}
 			}
 			if (msg.message == MSG_NEWSMALLTV)
 			{
-				m_BilibiliMain->JoinTV(msg.wParam);
+				g_BilibiliMain->JoinTV(msg.wParam);
 			}
 			if (msg.message == MSG_NEWYUNYING)
 			{
-				m_BilibiliMain->JoinYunYing(msg.wParam);
+				g_BilibiliMain->JoinYunYing(msg.wParam);
 			}
 			if (msg.message == MSG_NEWYUNYINGDAILY)
 			{
-				m_BilibiliMain->JoinYunYingGift(msg.wParam);
+				g_BilibiliMain->JoinYunYingGift(msg.wParam);
 			}
 			if (msg.message == MSG_NEWGUARD)
 			{
 				std::string *puser = (std::string *)msg.wParam;
-				m_BilibiliMain->JoinGuardGift(puser->c_str());
+				g_BilibiliMain->JoinGuardGift(puser->c_str());
 				delete puser;
 			}
 			if (msg.message == MSG_NEWSPECIALGIFT)
 			{
 				tagSPECIALGIFT *tspecialgift = (tagSPECIALGIFT *)msg.lParam;
-				m_BilibiliMain->JoinSpecialGift(msg.wParam, tspecialgift->id, tspecialgift->content);
+				g_BilibiliMain->JoinSpecialGift(msg.wParam, tspecialgift->id, tspecialgift->content);
 				delete tspecialgift;
 			}
 			if (msg.message == WM_TIMER)
@@ -114,7 +114,7 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 	}
 	//开始清理过程
 	if (isrunning)
-		ret = m_BilibiliMain->StopMonitorALL();
+		ret = g_BilibiliMain->StopMonitorALL();
 	OutputDebugString(_T("BilibiliWIN32 -> Thread Stop!\n"));
 	threadflag = false;
 	return 0;
@@ -136,7 +136,7 @@ int main()
 	curl = curl_easy_init();
 
 	// 创建Bili助手主模块
-	m_BilibiliMain = new CBilibiliMain(curl);
+	g_BilibiliMain = std::make_unique<CBilibiliMain>(curl);
 
 	string command;
 	setlocale(LC_ALL, "chs");
@@ -159,8 +159,8 @@ int main()
 		Sleep(100);
 
 	printf("Do some cleaning... \n");
-	m_BilibiliMain->SetCURLHandle(NULL);
-	delete m_BilibiliMain;
+	g_BilibiliMain->SetCURLHandle(NULL);
+	g_BilibiliMain = nullptr;
 	// 清理libcurl库
 	printf("Cleaning CURL handles... \n");
 	curl_easy_cleanup(curl);
@@ -251,13 +251,13 @@ int ProcessCommand(std::string str)
 		printHelp();
 	}
 	else if (!str.compare("1") || !str.compare("userimport")) {
-		m_BilibiliMain->GetUserList()->ImportUserList();
+		g_BilibiliMain->GetUserList()->ImportUserList();
 	}
 	else if (!str.compare("2") || !str.compare("userexport")) {
-		m_BilibiliMain->GetUserList()->ExportUserList();
+		g_BilibiliMain->GetUserList()->ExportUserList();
 	}
 	else if (!str.compare("3") || !str.compare("userlist")) {
-		m_BilibiliMain->GetUserList()->ShowUserList();
+		g_BilibiliMain->GetUserList()->ShowUserList();
 	}
 	else if (!str.compare("4") || !str.compare("useradd")) {
 		std::string name, psd;
@@ -265,22 +265,22 @@ int ProcessCommand(std::string str)
 		getline(cin, name);
 		cout << "Password: ";
 		GetPassword(psd);
-		m_BilibiliMain->GetUserList()->AddUser(name, psd);
+		g_BilibiliMain->GetUserList()->AddUser(name, psd);
 	}
 	else if (!str.compare("5") || !str.compare("userdel")) {
 		char tstr[30];
 		cout << "Account: ";
 		cin >> tstr;
-		m_BilibiliMain->GetUserList()->DeleteUser(tstr);
+		g_BilibiliMain->GetUserList()->DeleteUser(tstr);
 	}
 	else if (!str.compare("6") || !str.compare("userre")) {
-		m_BilibiliMain->GetUserList()->ReloginAll();
+		g_BilibiliMain->GetUserList()->ReloginAll();
 	}
 	else if (!str.compare("7") || !str.compare("userlogin")) {
-		m_BilibiliMain->GetUserList()->CheckUserStatusALL();
+		g_BilibiliMain->GetUserList()->CheckUserStatusALL();
 	}
 	else if (!str.compare("8") || !str.compare("usergetinfo")) {
-		m_BilibiliMain->GetUserList()->GetUserInfoALL();
+		g_BilibiliMain->GetUserList()->GetUserInfoALL();
 	}
 	else if (!str.compare("10") || !str.compare("stopall")) {
 		PostThreadMessage(threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::STOP), LPARAM(0));
@@ -293,15 +293,15 @@ int ProcessCommand(std::string str)
 	}
 	else if (!str.compare("21")) {
 		printf("Saving lottery history... \n");
-		m_BilibiliMain->SaveLogFile();
+		g_BilibiliMain->SaveLogFile();
 	}
 	else if (!str.compare("22")) {
 		printf("Danmuku Print. \n");
-		m_BilibiliMain->SetDanmukuShow();
+		g_BilibiliMain->SetDanmukuShow();
 	}
 	else if (!str.compare("23")) {
 		printf("Danmuku Drop. \n");
-		m_BilibiliMain->SetDanmukuHide();
+		g_BilibiliMain->SetDanmukuHide();
 	}
 	else if (!str.compare("90")) {
 		PostThreadMessage(threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::DEBUG1), LPARAM(0));

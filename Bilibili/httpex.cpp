@@ -183,7 +183,7 @@ static size_t write_data_callback(void *ptr, size_t size, size_t nmemb, void *st
 	return nmemb;
 }
 
-int toollib::HttpGetEx(CURL *pcurl, CHTTPPack *pHTTPPack, int flag)
+int toollib::HttpGetEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, int flag)
 {
 	CURLcode res;
 	struct curl_slist *slist = NULL;//存放HTTP表头
@@ -252,7 +252,7 @@ int toollib::HttpGetEx(CURL *pcurl, CHTTPPack *pHTTPPack, int flag)
 	return res;
 }
 
-int toollib::HttpPostEx(CURL *pcurl, CHTTPPack *pHTTPPack, int flag)
+int toollib::HttpPostEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, int flag)
 {
 	CURLcode res;
 	struct curl_slist *slist = NULL;//存放HTTP表头
@@ -323,7 +323,7 @@ int toollib::HttpPostEx(CURL *pcurl, CHTTPPack *pHTTPPack, int flag)
 	return res;
 }
 
-int toollib::HttpHeadEx(CURL *pcurl, CHTTPPack *pHTTPPack, int flag)
+int toollib::HttpHeadEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, int flag)
 {
 	CURLcode res;
 	struct curl_slist *slist = NULL;//存放HTTP表头

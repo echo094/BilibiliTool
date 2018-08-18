@@ -11,7 +11,7 @@ public:
 protected:
 	CTools _tool;
 	CStrConvert _strcoding;
-	CHTTPPack _httppack;
+	unique_ptr<CHTTPPack> _httppack;
 	int _curid;
 	std::list<PBILI_LOTTERYDATA> _bili_lotteryactive;
 
@@ -49,8 +49,14 @@ class CBilibiliLive
 protected:
 	CTools _tool;
 	CStrConvert _strcoding;
-	CHTTPPack _httppack;
+	unique_ptr<CHTTPPack> _httppack;
 public:
+	CBilibiliLive() {
+		_httppack = std::make_unique<CHTTPPack>();
+	}
+	~CBilibiliLive() {
+		_httppack = nullptr;
+	}
 	BILIRET ApiSearchUser(CURL *pcurl, const char *user, int &rrid);
 	BILIRET ApiCheckGuard(CURL *pcurl, int rrid, int &loid);
 };

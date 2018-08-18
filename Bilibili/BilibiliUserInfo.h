@@ -86,7 +86,7 @@ public:
 protected:
 	// 两个连接 一个用于网页端 一个用于手机端
 	CURL *curlweb, *curlapp;
-	CHTTPPack *_httppackweb, *_httppackapp;
+	unique_ptr<CHTTPPack> _httppackweb, _httppackapp;
 	CCookiePack _httpcookie;
 
 public:

@@ -18,27 +18,27 @@ private:
 	char _logbuff[100];//日志缓冲区
 
 	TOOL_EVENT curmode;//当前模式
-	CBilibiliUserList *_userlist;//账户列表类
+	unique_ptr<CBilibiliUserList> _userlist;//账户列表类
 
 	int _roomcount;//当前连接的房间数
-	CBilibiliSmallTV *_lotterytv;//小电视信息处理类
-	CBilibiliYunYing *_lotteryyy;//季节性活动信息处理类
-	CBilibiliLive *_apilive; // 其它API
-	CBilibiliDanmu *_tcpdanmu;
-	CWSDanmu *_wsdanmu;
+	unique_ptr<CBilibiliSmallTV> _lotterytv;//小电视信息处理类
+	unique_ptr<CBilibiliYunYing> _lotteryyy;//季节性活动信息处理类
+	unique_ptr<CBilibiliLive> _apilive; // 其它API
+	unique_ptr<CBilibiliDanmu> _tcpdanmu;
+	unique_ptr<CWSDanmu> _wsdanmu;
 
 public:
 	explicit CBilibiliMain(CURL *pcurl = NULL);
 	~CBilibiliMain();
 
-//HTTP数据收发
+	//HTTP数据收发
 protected:
 	CURL *curl;
 public:
 	int SetCURLHandle(CURL *pcurl);
 
 public:
-	CBilibiliUserList* GetUserList(int index = 0);
+	unique_ptr<CBilibiliUserList> &GetUserList(int index = 0);
 	int SaveLogFile();
 
 	int StopMonitorALL();

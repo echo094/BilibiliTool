@@ -44,13 +44,13 @@ bool sortbiliyunyingdata(const PBILI_LOTTERYDATA & item1, const PBILI_LOTTERYDAT
 	return item1->loid < item2->loid;
 }
 
-CBilibiliLotteryBase::CBilibiliLotteryBase()
-{
+CBilibiliLotteryBase::CBilibiliLotteryBase() {
+	_httppack = std::make_unique<CHTTPPack>();
 	_curid = 0;
 }
 
-CBilibiliLotteryBase::~CBilibiliLotteryBase()
-{
+CBilibiliLotteryBase::~CBilibiliLotteryBase() {
+	_httppack = nullptr;
 #ifdef _DEBUG
 	printf("[Lottery]Stop. \n");
 #endif
@@ -90,18 +90,18 @@ int CBilibiliLotteryBase::GetNextLottery(BILI_LOTTERYDATA &plo)
 
 BILIRET CBilibiliLotteryBase::_CheckRoom(CURL *pcurl, int srid, int &rrid) {
 	int ret;
-	_httppack.url = URL_LIVEAPI_HEAD;
-	_httppack.url += "/room/v1/Room/room_init?id=" + std::to_string(srid);
-	_httppack.ClearHeader();
-	_httppack.AddHeaderManual("Accept: application/json, text/plain, */*");
-	ret = toollib::HttpGetEx(pcurl, &_httppack);
+	_httppack->url = URL_LIVEAPI_HEAD;
+	_httppack->url += "/room/v1/Room/room_init?id=" + std::to_string(srid);
+	_httppack->ClearHeader();
+	_httppack->AddHeaderManual("Accept: application/json, text/plain, */*");
+	ret = toollib::HttpGetEx(pcurl, _httppack);
 	if (ret) {
 		printf("%s[Lottery] Get RealRoomID Failed! \n", _tool.GetTimeString().c_str());
 		return BILIRET::HTTP_ERROR;
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppack.strrecdata);
+	doc.Parse(_httppack->strrecdata);
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsObject()
 		|| !doc["data"].HasMember("room_id") || !doc["data"]["room_id"].IsInt()) {
@@ -172,19 +172,19 @@ void CBilibiliLotteryBase::_UpdateLotteryList(rapidjson::Value &infoArray, int s
 BILIRET CBilibiliYunYing::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 {
 	int ret;
-	_httppack.url = URL_LIVEAPI_HEAD;
-	_httppack.url += "/activity/v1/Raffle/check?roomid=" + std::to_string(rrid);
-	_httppack.ClearHeader();
-	ret = toollib::HttpGetEx(pcurl, &_httppack, 1);
+	_httppack->url = URL_LIVEAPI_HEAD;
+	_httppack->url += "/activity/v1/Raffle/check?roomid=" + std::to_string(rrid);
+	_httppack->ClearHeader();
+	ret = toollib::HttpGetEx(pcurl, _httppack, 1);
 	if (ret) {
 		printf("%s[Raffle]HTTP GET Failed! \n", _tool.GetTimeString().c_str());
 		return BILIRET::HTTP_ERROR;
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppack.strrecdata);
+	doc.Parse(_httppack->strrecdata);
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || !doc.HasMember("data") || !doc["data"].IsArray()) {
-		printf("[Raffle] ERROR: %s\n", _httppack.strrecdata);
+		printf("[Raffle] ERROR: %s\n", _httppack->strrecdata);
 		return BILIRET::JSON_ERROR;
 	}
 	ret = doc["code"].GetInt();
@@ -202,10 +202,10 @@ BILIRET CBilibiliYunYing::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 BILIRET CBilibiliSmallTV::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 {
 	int ret;
-	_httppack.url = URL_LIVEAPI_HEAD;
-	_httppack.url += "/gift/v3/smalltv/check?roomid=" + std::to_string(rrid);
-	_httppack.ClearHeader();
-	ret = toollib::HttpGetEx(pcurl, &_httppack);
+	_httppack->url = URL_LIVEAPI_HEAD;
+	_httppack->url += "/gift/v3/smalltv/check?roomid=" + std::to_string(rrid);
+	_httppack->ClearHeader();
+	ret = toollib::HttpGetEx(pcurl, _httppack);
 	if (ret) {
 		printf("%s[SmallTV] HTTP GET Failed! \n", _tool.GetTimeString().c_str());
 		return BILIRET::HTTP_ERROR;
@@ -213,7 +213,7 @@ BILIRET CBilibiliSmallTV::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 
 	//开始处理小电视信息
 	rapidjson::Document doc;
-	doc.Parse(_httppack.strrecdata);
+	doc.Parse(_httppack->strrecdata);
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("list") || !doc["data"]["list"].IsArray()) {
 		printf("[SmallTV]ERROR: %d! \n", doc["code"].IsInt());
@@ -228,18 +228,18 @@ BILIRET CBilibiliSmallTV::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 BILIRET CBilibiliLive::ApiSearchUser(CURL *pcurl, const char *user, int &rrid)
 {
 	int ret;
-	_httppack.url = "https://search.bilibili.com/api/search?search_type=live_user&keyword=";
-	_httppack.url += user;
-	_httppack.ClearHeader();
-	_httppack.AddHeaderManual("Accept: application/json, text/plain, */*");
-	ret = toollib::HttpGetEx(pcurl, &_httppack);
+	_httppack->url = "https://search.bilibili.com/api/search?search_type=live_user&keyword=";
+	_httppack->url += user;
+	_httppack->ClearHeader();
+	_httppack->AddHeaderManual("Accept: application/json, text/plain, */*");
+	ret = toollib::HttpGetEx(pcurl, _httppack);
 	if (ret) {
 		printf("%s[Live] Search User Failed! \n", _tool.GetTimeString().c_str());
 		return BILIRET::HTTP_ERROR;
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppack.strrecdata);
+	doc.Parse(_httppack->strrecdata);
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("result") || !doc["result"].IsArray()) {
 		printf("%s[Live] Search User Failed! \n", _tool.GetTimeString().c_str());
@@ -259,18 +259,18 @@ BILIRET CBilibiliLive::ApiSearchUser(CURL *pcurl, const char *user, int &rrid)
 BILIRET CBilibiliLive::ApiCheckGuard(CURL *pcurl, int rrid, int &loid)
 {
 	int ret;
-	_httppack.url = URL_LIVEAPI_HEAD;
-	_httppack.url += "/lottery/v1/lottery/check?roomid=" + std::to_string(rrid);
-	_httppack.ClearHeader();
-	_httppack.AddHeaderManual("Accept: application/json, text/plain, */*");
-	ret = toollib::HttpGetEx(pcurl, &_httppack);
+	_httppack->url = URL_LIVEAPI_HEAD;
+	_httppack->url += "/lottery/v1/lottery/check?roomid=" + std::to_string(rrid);
+	_httppack->ClearHeader();
+	_httppack->AddHeaderManual("Accept: application/json, text/plain, */*");
+	ret = toollib::HttpGetEx(pcurl, _httppack);
 	if (ret) {
 		printf("%s[Live] Check Guard Failed! \n", _tool.GetTimeString().c_str());
 		return BILIRET::HTTP_ERROR;
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppack.strrecdata);
+	doc.Parse(_httppack->strrecdata);
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("guard") || !doc["data"]["guard"].IsArray()) {
 		printf("%s[Live] Check Guard Failed! \n", _tool.GetTimeString().c_str());

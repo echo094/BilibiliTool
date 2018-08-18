@@ -2,10 +2,7 @@
 #include "BilibiliMain.h"
 #include <fstream>
 
-CBilibiliMain::CBilibiliMain(CURL *pcurl):
-	_tcpdanmu(NULL),
-	_wsdanmu(NULL) {
-
+CBilibiliMain::CBilibiliMain(CURL *pcurl){
 	curmode = TOOL_EVENT::STOP;
 	curl = pcurl;
 
@@ -16,21 +13,23 @@ CBilibiliMain::CBilibiliMain(CURL *pcurl):
 	_logfile.open(name, std::ios::in | std::ios::out);
 
 	_roomcount = 0;
-	_lotterytv = new CBilibiliSmallTV;
-	_lotteryyy = new CBilibiliYunYing;
-	_apilive = new CBilibiliLive;
-	_userlist = new CBilibiliUserList;
+	_tcpdanmu = nullptr;
+	_wsdanmu = nullptr;
+	_lotterytv = std::make_unique<CBilibiliSmallTV>();
+	_lotteryyy = std::make_unique<CBilibiliYunYing>();
+	_apilive = std::make_unique<CBilibiliLive>();
+	_userlist = std::make_unique<CBilibiliUserList>();
 }
 
 CBilibiliMain::~CBilibiliMain() {
 	_logfile.close();
 	curl = NULL;
-	delete _tcpdanmu;
-	delete _wsdanmu;
-	delete _lotterytv;
-	delete _lotteryyy;
-	delete _apilive;
-	delete _userlist;
+	_tcpdanmu = nullptr;
+	_wsdanmu = nullptr;
+	_lotterytv = nullptr;
+	_lotteryyy = nullptr;
+	_apilive = nullptr;
+	_userlist = nullptr;
 #ifdef _DEBUG
 	printf("[Main] Stop. \n");
 #endif
@@ -41,7 +40,7 @@ int CBilibiliMain::SetCURLHandle(CURL *pcurl) {
 	return 0;
 }
 
-CBilibiliUserList* CBilibiliMain::GetUserList(int index) {
+unique_ptr<CBilibiliUserList> &CBilibiliMain::GetUserList(int index) {
 	return _userlist;
 }
 
@@ -72,8 +71,7 @@ int CBilibiliMain::StopMonitorALL() {
 
 		_wsdanmu->SetNotifyThread(0);
 		ret = _wsdanmu->Deinit();
-		delete _wsdanmu;
-		_wsdanmu = NULL;
+		_wsdanmu = nullptr;
 
 		_roomcount = 0;
 		printf("[Main] Monitor stopped.\n");
@@ -85,8 +83,7 @@ int CBilibiliMain::StopMonitorALL() {
 
 		_tcpdanmu->SetNotifyThread(0);
 		ret = _tcpdanmu->Deinit();
-		delete _tcpdanmu;
-		_tcpdanmu = NULL;
+		_tcpdanmu = nullptr;
 
 		_roomcount = 0;
 		printf("[Main] Monitor stopped.\n");
@@ -110,8 +107,8 @@ int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 	int ret = -1;
 	curmode = TOOL_EVENT::GET_SYSMSG_GIFT;
 
-	if (!_wsdanmu) {
-		_wsdanmu = new CWSDanmu;
+	if (_wsdanmu == nullptr) {
+		_wsdanmu = std::make_unique<CWSDanmu>();
 	}
 	_roomcount++;
 	if (_roomcount == 1) {
