@@ -335,25 +335,6 @@ int CBilibiliUserInfo::ActHeart() {
 	}
 	return 0;
 }
-int CBilibiliUserInfo::ActSmallTV(int rrid, int loid)
-{
-	BILIRET bret;
-	int count;
-	if (_useropt.conf & 0x40) {
-		// 产生访问记录
-		_APIv1RoomEntry(rrid);
-		// 网页端最多尝试三次
-		count = 2;
-		bret = this->_APIv3SmallTV(rrid, loid);
-		while ((bret != BILIRET::NOFAULT) &&count) {
-			Sleep(1000);
-			bret = this->_APIv3SmallTV(rrid, loid);
-			count--;
-		}
-	}
-
-	return 0;
-}
 
 int CBilibiliUserInfo::ActStorm(int roid, long long cid) {
 	// 风暴只领取一次 不管成功与否
@@ -365,6 +346,37 @@ int CBilibiliUserInfo::ActStorm(int roid, long long cid) {
 	if (_useropt.conf & 0x20) {
 		// 调用客户端API领取
 		_APIAndv1StormJoin(cid);
+		return 0;
+	}
+	return 0;
+}
+
+int CBilibiliUserInfo::ActSmallTV(int rrid, int loid)
+{
+	BILIRET bret;
+	int count;
+	if (_useropt.conf & 0x40) {
+		// 产生访问记录
+		_APIv1RoomEntry(rrid);
+		// 网页端最多尝试三次
+		count = 2;
+		bret = this->_APIv3SmallTV(rrid, loid);
+		while ((bret != BILIRET::NOFAULT) && count) {
+			Sleep(1000);
+			bret = this->_APIv3SmallTV(rrid, loid);
+			count--;
+		}
+	}
+
+	return 0;
+}
+
+int CBilibiliUserInfo::ActGuard(BILI_LOTTERYDATA &pdata) {
+	if (_useropt.conf & 0x80) {
+		// 产生访问记录
+		_APIv1RoomEntry(pdata.rrid);
+		// 网页端API
+		_APIv2LotteryJoin(pdata);
 		return 0;
 	}
 	return 0;
@@ -1097,43 +1109,6 @@ BILIRET CBilibiliUserInfo::APIv1YunYingGift(int rid) const {
 	return BILIRET::NOFAULT;
 }
 
-BILIRET CBilibiliUserInfo::APIv1LotteryJoin(BILI_LOTTERYDATA &pdata) {
-	int ret;
-	_httppackweb->url = _urlapi + "/lottery/v1/lottery/join";
-	char datastr[400] = "";
-	sprintf_s(datastr, sizeof(datastr), "roomid=%d&id=%d&type=%s&csrf_token=%s&visit_id=%s",
-		pdata.rrid, pdata.loid, pdata.type.c_str(), _useropt.tokenjct.c_str(), _useropt.visitid.c_str());
-	_httppackweb->strsenddata = datastr;
-	_httppackweb->ClearHeader();
-	_httppackweb->AddHeaderManual("Accept: application/json, text/plain, */*");
-	_httppackweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded");
-	_httppackweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
-	std::string strreffer(URL_DEFAULT_REFERERBASE);
-	strreffer += std::to_string(pdata.rrid);
-	_httppackweb->AddHeaderManual(strreffer.c_str());
-	ret = toollib::HttpPostEx(curlweb, _httppackweb);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
-	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
-		return BILIRET::JSON_ERROR;
-	}
-	std::string tmpstr;
-	if (doc["code"].GetInt()) {
-		tmpstr = doc["message"].GetString();
-	}
-	else {
-		tmpstr = doc["data"]["message"].GetString();
-	}
-	tmpstr = _strcoding.UTF_8ToString(tmpstr.c_str());
-	printf("%s[User%d] Lottery %s \n", _tool.GetTimeString().c_str(), _useropt.fileid, tmpstr.c_str());
-
-	return BILIRET::NOFAULT;
-}
-
 // 免费礼物领取状态查询
 BILIRET CBilibiliUserInfo::_APIv2CheckHeartGift() {
 	int ret;
@@ -1277,6 +1252,43 @@ BILIRET CBilibiliUserInfo::_APIv2GiftDaily() const {
 	else {
 		printf("%s[User%d] Receive daily gift Code: %d \n", _tool.GetTimeString().c_str(), _useropt.fileid, ret);
 	}
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET CBilibiliUserInfo::_APIv2LotteryJoin(BILI_LOTTERYDATA &pdata) {
+	int ret;
+	_httppackweb->url = _urlapi + "/lottery/v2/Lottery/join";
+	char datastr[400] = "";
+	sprintf_s(datastr, sizeof(datastr), "roomid=%d&id=%d&type=%s&csrf_token=%s&visit_id=%s",
+		pdata.rrid, pdata.loid, pdata.type.c_str(), _useropt.tokenjct.c_str(), _useropt.visitid.c_str());
+	_httppackweb->strsenddata = datastr;
+	_httppackweb->ClearHeader();
+	_httppackweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	_httppackweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded");
+	_httppackweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
+	std::string strreffer(URL_DEFAULT_REFERERBASE);
+	strreffer += std::to_string(pdata.rrid);
+	_httppackweb->AddHeaderManual(strreffer.c_str());
+	ret = toollib::HttpPostEx(curlweb, _httppackweb);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(_httppackweb->strrecdata);
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
+		return BILIRET::JSON_ERROR;
+	}
+	std::string tmpstr;
+	if (doc["code"].GetInt()) {
+		tmpstr = doc["message"].GetString();
+	}
+	else {
+		tmpstr = doc["data"]["message"].GetString();
+	}
+	tmpstr = _strcoding.UTF_8ToString(tmpstr.c_str());
+	printf("%s[User%d] Lottery %s \n", _tool.GetTimeString().c_str(), _useropt.fileid, tmpstr.c_str());
 
 	return BILIRET::NOFAULT;
 }

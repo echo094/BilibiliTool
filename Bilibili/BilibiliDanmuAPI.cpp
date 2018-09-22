@@ -121,8 +121,6 @@ int DanmuAPI::ParseJSON(char *str, int room) {
 	}
 
 	if (strtype == "GUARD_MSG") {
-		if (room_list[room].flag != DANMU_FLAG::MSG_PUBEVENT)
-			return 0;
 		return this->ParseGUARDMSG(doc, room);
 	}
 
@@ -251,80 +249,40 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, int room) {
 	}
 	int rrid = doc["real_roomid"].GetInt();
 
-	std::string tmpstr;
-	tagDANMUMSGSYS m_tmpsysmsg;
-	m_tmpsysmsg.itype = 4;
-	tmpstr = doc["msg"].GetString();
-#ifdef _DEBUG
-	std::string showstr = _strcoding.UTF_8ToString(tmpstr.c_str());
-	printf("[DanmuAPI] Roomid: %d SYS_MSG %s \n", room, showstr.c_str());
-#endif
-	m_tmpsysmsg.wmsg = _strcoding.UTF_8ToWString(tmpstr.c_str());
+	// 有房间号就进行抽奖
+	if (parentthreadid) {
+		PostThreadMessage(parentthreadid, MSG_NEWSMALLTV, WPARAM(rrid), LPARAM(0));
+	}
 
-	int ret = -1;
-	// small_tv
-	ret = m_tmpsysmsg.wmsg.find(L"小电视飞船");
-	if (ret != -1) {
-		printf("%s[DanmuAPI] SmallTV RoomID:%d \n", _tool.GetTimeString().c_str(), rrid);
-		if (parentthreadid)
-			PostThreadMessage(parentthreadid, MSG_NEWSMALLTV, WPARAM(rrid), LPARAM(0));
+	return 0;
+}
+
+// {"cmd":"GUARD_MSG","msg":"用户 :?[A]:? 在本房间开通了舰长","buy_type":3}
+// {"cmd":"GUARD_MSG","msg":"用户 :?[A]:? 在主播 [B] 的直播间开通了总督","msg_new":"","url":"","roomid":10116204,"buy_type":1,"broadcast_type":0}
+int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, int room) {
+	if (!doc.HasMember("buy_type") || !doc["buy_type"].IsInt()) {
+		// 非开通消息
 		return 0;
 	}
-	// GIFT_20003
-	ret = m_tmpsysmsg.wmsg.find(L"摩天大楼");
-	if (ret != -1) {
-		printf("%s[DanmuAPI] Skyscraper RoomID:%d \n", _tool.GetTimeString().c_str(), rrid);
-		if (parentthreadid)
-			PostThreadMessage(parentthreadid, MSG_NEWSMALLTV, WPARAM(rrid), LPARAM(0));
-		return 0;
+	int btype = doc["buy_type"].GetInt();
+	printf("%s[DanmuAPI] Roomid: %d GUARD_MSG Type: %d \n", _tool.GetTimeString().c_str(), room, btype);
+	// 只需发送房间号
+	if (room_list[room].flag == DANMU_FLAG::MSG_PUBEVENT) {
+		// 总督上船消息
+		if (btype == 1) {
+			if (parentthreadid)
+				PostThreadMessage(parentthreadid, MSG_NEWGUARD, WPARAM(room), LPARAM(btype));
+			return 0;
+		}
 	}
-	// GIFT_30013
-	ret = m_tmpsysmsg.wmsg.find(L"C位光环");
-	if (ret != -1) {
-		printf("%s[DanmuAPI] Center RoomID:%d \n", _tool.GetTimeString().c_str(), rrid);
-		if (parentthreadid)
-			PostThreadMessage(parentthreadid, MSG_NEWSMALLTV, WPARAM(rrid), LPARAM(0));
-		return 0;
-	}
-	// GIFT_30014
-	ret = m_tmpsysmsg.wmsg.find(L"盛夏么么茶");
-	if (ret != -1) {
-		printf("%s[DanmuAPI] Summer Tea RoomID:%d \n", _tool.GetTimeString().c_str(), rrid);
-		if (parentthreadid)
-			PostThreadMessage(parentthreadid, MSG_NEWSMALLTV, WPARAM(rrid), LPARAM(0));
-		return 0;
+	if (room_list[room].flag == DANMU_FLAG::MSG_SPECIALGIFT) {
+		// 舰长或提督上船消息
+		if (btype != 1) {
+			if (parentthreadid)
+				PostThreadMessage(parentthreadid, MSG_NEWGUARD, WPARAM(room), LPARAM(btype));
+			return 0;
+		}
 	}
 
 	return -1;
-}
-
-// {"cmd":"GUARD_MSG","msg":"用户 :?[A]:? 在主播 [B] 的直播间开通了总督","buy_type":1}
-int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, int room) {
-	if (!doc.HasMember("msg") || !doc["msg"].IsString()) {
-		return -1;
-	}
-	std::string str1, str2;
-	str1 = _strcoding.UrlUTF8(":? 在主播 ");
-	str2 = _strcoding.UrlUTF8(" 的直播间开通了总督");
-	std::string msg = _strcoding.UTF_8ToString(doc["msg"].GetString());
-	msg = _strcoding.UrlUTF8(msg.c_str());
-	printf("[DanmuAPI] Roomid: %d GUARD_MSG %s \n", room, msg.c_str());
-	int pos1, pos2;
-	pos1 = msg.find(str1.c_str());
-	if (pos1 == -1) {
-		return -1;
-	}
-	pos1 += str1.length();
-	pos2 = msg.find(str2, pos1);
-	if (pos2 == -1) {
-		return -1;
-	}
-	std::string *user = new std::string;
-	*user = msg.substr(pos1, pos2 - pos1);
-	msg = _strcoding.UrlUTF8Decode(*user);
-	printf("[DanmuAPI] Roomid: %d GUARD_MSG %s \n", room, msg.c_str());
-	if (parentthreadid)
-		PostThreadMessage(parentthreadid, MSG_NEWGUARD, WPARAM(user), LPARAM(0));
-
-	return 0;
 }

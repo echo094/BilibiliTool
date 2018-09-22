@@ -341,13 +341,13 @@ int CBilibiliUserList::JoinYunYingGiftALL(int rid)
 
 int CBilibiliUserList::JoinGuardALL(BILI_LOTTERYDATA &data)
 {
-	printf("%s[UserList] Guard Gift Room: %d Id: %d\n", _tool.GetTimeString().c_str(), data.rrid, data.loid);
+	printf("%s[UserList] Guard Room: %d Id: %d\n", _tool.GetTimeString().c_str(), data.rrid, data.loid);
 	std::list<CBilibiliUserInfo*>::iterator itor;
 	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
 		if (!(*itor)->getLoginStatus())
 			continue;
 
-		(*itor)->APIv1LotteryJoin(data);
+		(*itor)->ActGuard(data);
 	}
 	return 0;
 }

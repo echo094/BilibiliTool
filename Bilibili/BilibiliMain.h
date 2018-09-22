@@ -23,7 +23,7 @@ private:
 	int _roomcount;//当前连接的房间数
 	unique_ptr<CBilibiliSmallTV> _lotterytv;//小电视信息处理类
 	unique_ptr<CBilibiliYunYing> _lotteryyy;//季节性活动信息处理类
-	unique_ptr<CBilibiliLive> _apilive; // 其它API
+	unique_ptr<CBilibiliGuard> _lotterygu;//上船信息处理类
 	unique_ptr<CBilibiliDanmu> _tcpdanmu;
 	unique_ptr<CWSDanmu> _wsdanmu;
 
@@ -44,12 +44,13 @@ public:
 	int StopMonitorALL();
 	int StartUserHeart();
 	int StartMonitorPubEvent(int pthreadid);
+	int StartMonitorHiddenEvent(int pthreadid);
 	void SetDanmukuShow();
 	void SetDanmukuHide();
 	int JoinTV(int room);
 	int JoinYunYing(int room);
 	int JoinYunYingGift(int room);
-	int JoinGuardGift(const char *user);
+	int JoinGuardGift(int user);
 	int JoinSpecialGift(int room, long long cid, std::string str);
 	int Debugfun(int index);
 };

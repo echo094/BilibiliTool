@@ -1,5 +1,7 @@
 ﻿#include "stdafx.h"
 #include "BilibiliYunYing.h"
+#include <sstream>
+#include <iostream>
 using namespace rapidjson;
 
 /*
@@ -223,6 +225,82 @@ BILIRET CBilibiliSmallTV::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 	this->_UpdateLotteryList(doc["data"]["list"], srid, rrid);
 
 	return BILIRET::NOFAULT;
+}
+
+BILIRET CBilibiliGuard::_GetLotteryID(CURL *pcurl, int srid, int rrid)
+{
+	int ret;
+	std::ostringstream oss;
+	oss << URL_LIVEAPI_HEAD << "/lottery/v1/Lottery/check_guard?roomid=" << rrid;
+	_httppack->url = oss.str();
+	_httppack->ClearHeader();
+	ret = toollib::HttpGetEx(pcurl, _httppack);
+	if (ret) {
+		printf("%s[Guard] HTTP GET Failed! \n", _tool.GetTimeString().c_str());
+		return BILIRET::HTTP_ERROR;
+	}
+
+	// 开始处理上船信息
+	rapidjson::Document doc;
+	doc.Parse(_httppack->strrecdata);
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
+		|| !doc.HasMember("data") || !doc["data"].IsArray()) {
+		printf("[SmallTV]ERROR: %d! \n", doc["code"].IsInt());
+		return BILIRET::JSON_ERROR;
+	}
+	// 处理并添加新的上船信息
+	this->_UpdateLotteryList(doc["data"], srid, rrid);
+
+	return BILIRET::NOFAULT;
+}
+
+void CBilibiliGuard::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid)
+{
+	long long curtime = _tool.GetTimeStamp();
+	unsigned int i;
+	std::string tid;
+	int tmpid;
+	std::list<PBILI_LOTTERYDATA> tlist;
+	PBILI_LOTTERYDATA pdata;
+
+	// 将所有上船ID放入临时列表
+	for (i = 0; i < infoArray.Size(); i++) {
+		if (infoArray[i]["id"].IsInt()) {
+			tmpid = infoArray[i]["id"].GetInt();
+		}
+		else {
+			continue;
+		}
+		pdata = new BILI_LOTTERYDATA;
+		pdata->srid = srid;
+		pdata->rrid = rrid;
+		pdata->loid = tmpid;
+		pdata->type = infoArray[i]["keyword"].GetString();
+		pdata->time = curtime + infoArray[i]["time"].GetInt();
+		pdata->exinfo = infoArray[i]["privilege_type"].GetInt();
+		tlist.push_back(pdata);
+	}
+	// 排序
+	tlist.sort(sortbiliyunyingdata);
+	// 添加到正式列表
+	int flag = 0;
+	std::list<PBILI_LOTTERYDATA>::iterator itor;
+	for (itor = tlist.begin(); itor != tlist.end();) {
+		if ((*itor)->loid <= _curid) {
+			delete (*itor);
+		}
+		else {
+			flag++;
+			_curid = (*itor)->loid;
+			_bili_lotteryactive.push_back(*itor);
+			std::cout << _tool.GetTimeString() << "[Guard] Type: " << (*itor)->type << " Id: " << _curid
+				<< " GType: " << (*itor)->exinfo << std::endl;
+		}
+		itor = tlist.erase(itor);
+	}
+	if (!flag) {
+		std::cout << _tool.GetTimeString() << "[Guard] No New ID" << std::endl;
+	}
 }
 
 BILIRET CBilibiliLive::ApiSearchUser(CURL *pcurl, const char *user, int &rrid)

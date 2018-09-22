@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "BilibiliMain.h"
 #include <fstream>
+#include <sstream>
 
 CBilibiliMain::CBilibiliMain(CURL *pcurl){
 	curmode = TOOL_EVENT::STOP;
@@ -17,7 +18,7 @@ CBilibiliMain::CBilibiliMain(CURL *pcurl){
 	_wsdanmu = nullptr;
 	_lotterytv = std::make_unique<CBilibiliSmallTV>();
 	_lotteryyy = std::make_unique<CBilibiliYunYing>();
-	_apilive = std::make_unique<CBilibiliLive>();
+	_lotterygu = std::make_unique<CBilibiliGuard>();
 	_userlist = std::make_unique<CBilibiliUserList>();
 }
 
@@ -28,7 +29,7 @@ CBilibiliMain::~CBilibiliMain() {
 	_wsdanmu = nullptr;
 	_lotterytv = nullptr;
 	_lotteryyy = nullptr;
-	_apilive = nullptr;
+	_lotterygu = nullptr;
 	_userlist = nullptr;
 #ifdef _DEBUG
 	printf("[Main] Stop. \n");
@@ -127,6 +128,39 @@ int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 	return ret;
 }
 
+int CBilibiliMain::StartMonitorHiddenEvent(int pthreadid) {
+	int ret = -1, room;
+	curmode = TOOL_EVENT::GET_HIDEN_GIFT;
+
+	if (_tcpdanmu == nullptr) {
+		_tcpdanmu = std::make_unique<CBilibiliDanmu>();
+	}
+	std::ifstream filein;
+	filein.open("BiliRoomMonitor.txt", std::ios::in);
+	if (filein.is_open()) {
+		while (!filein.eof()) {
+			filein >> room;
+
+			if (_roomcount == DEF_MAX_ROOM) {
+				break;
+			}
+			if (room < 0) {
+				continue;
+			}
+			_roomcount++;
+			if (_roomcount == 1) {
+				ret = _tcpdanmu->SetNotifyThread(pthreadid);
+				_tcpdanmu->Init(DANMU_MODE::MULTI_ROOM);
+			}
+			ret = _tcpdanmu->ConnectToRoom(room, DANMU_FLAG::MSG_SPECIALGIFT);
+			Sleep(0);
+		}
+		filein.close();
+	}
+	printf("[Main] Curent Room Num:%d \n", _roomcount);
+	return ret;
+}
+
 void CBilibiliMain::SetDanmukuShow()
 {
 	if (curmode == TOOL_EVENT::GET_SYSMSG_GIFT) {
@@ -195,20 +229,24 @@ int CBilibiliMain::JoinYunYingGift(int room)
 	return 0;
 }
 
-int CBilibiliMain::JoinGuardGift(const char *user)
+int CBilibiliMain::JoinGuardGift(int room)
 {
-	BILIRET ret;
+	int ret = -1, count = 2;
+	ret = _lotterygu->CheckLottery(curl, room);
+	while (ret&&count) {
+		Sleep(1000);
+		ret = _lotterygu->CheckLottery(curl, room);
+		count--;
+	}
+	if (ret != 0)
+		return -1;
 	BILI_LOTTERYDATA pdata;
-	ret = _apilive->ApiSearchUser(curl, user, pdata.rrid);
-	if (ret != BILIRET::NOFAULT) {
-		return -1;
+	while (_lotterygu->GetNextLottery(pdata) == 0) {
+		sprintf_s(_logbuff, sizeof(_logbuff), "{time:%I64d,type:'%s_%d',ruid:%d,loid:%d},\n", _tool.GetTimeStamp(), pdata.type.c_str(), pdata.exinfo, pdata.rrid, pdata.loid);
+		_logfile.write(_logbuff, strlen(_logbuff));
+
+		_userlist->JoinGuardALL(pdata);
 	}
-	ret = _apilive->ApiCheckGuard(curl, pdata.rrid, pdata.loid);
-	if (ret != BILIRET::NOFAULT) {
-		return -1;
-	}
-	pdata.type = "guard";
-	_userlist->JoinGuardALL(pdata);
 
 	return 0;
 }

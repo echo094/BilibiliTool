@@ -107,10 +107,12 @@ public:
 	int ActStartHeart();
 	// 经验心跳
 	int ActHeart();
-	// 通告礼物
-	int ActSmallTV(int rrid, int loid);
 	// 节奏风暴
 	int ActStorm(int roid, long long cid);
+	// 通告礼物
+	int ActSmallTV(int rrid, int loid);
+	// 上船低保
+	int ActGuard(BILI_LOTTERYDATA &pdata);
 	// 参与双端抽奖
 	int ActYunYing(std::string eventname, int rid, int raffleId);
 
@@ -173,8 +175,6 @@ protected:
 public:
 	// 每日榜首低保
 	BILIRET APIv1YunYingGift(int rid) const;
-	// 新通用抽奖
-	BILIRET APIv1LotteryJoin(BILI_LOTTERYDATA &pdata);
 
 // APIv2
 protected:
@@ -186,6 +186,8 @@ protected:
 	BILIRET _APIv2GiftBag() const;
 	// 领取每日礼物
 	BILIRET _APIv2GiftDaily() const;
+	// 新通用抽奖
+	BILIRET _APIv2LotteryJoin(BILI_LOTTERYDATA &pdata);
 public:
 	//赠送礼物
 	BILIRET APIv2SendGift(int giftID, int roomID, int num, bool coinType, int bagID) const;

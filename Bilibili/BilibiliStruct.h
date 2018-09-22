@@ -56,5 +56,6 @@ typedef struct _BILI_LOTTERYDATA
 	time_t time = 0;
 	int srid = 0, rrid = 0;
 	int loid = 0;
+	int exinfo;
 	std::string type;
 }BILI_LOTTERYDATA, *PBILI_LOTTERYDATA;

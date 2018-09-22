@@ -26,8 +26,7 @@ protected:
 	// 检测房间号以及房间状态
 	BILIRET _CheckRoom(CURL *pcurl, int srid, int &rrid);
 	// 更新待抽奖列表
-	void _UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid);
-
+	virtual void _UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid);
 };
 
 
@@ -41,6 +40,14 @@ class CBilibiliSmallTV : public CBilibiliLotteryBase
 {
 protected:
 	BILIRET _GetLotteryID(CURL *pcurl, int srid, int rrid) override;
+};
+
+class CBilibiliGuard : public CBilibiliLotteryBase
+{
+protected:
+	BILIRET _GetLotteryID(CURL *pcurl, int srid, int rrid) override;
+	// 更新待领取列表
+	void _UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid) override;
 };
 
 // 其它API

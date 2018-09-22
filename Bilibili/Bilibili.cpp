@@ -73,6 +73,15 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 						ret = g_BilibiliMain->StartMonitorPubEvent(threadid);
 					}
 				}
+				else if (opt == TOOL_EVENT::GET_HIDEN_GIFT) {
+					if (isrunning) {
+						printf("Another task is working. \n");
+					}
+					else {
+						isrunning = true;
+						ret = g_BilibiliMain->StartMonitorHiddenEvent(threadid);
+					}
+				}
 				else if (opt == TOOL_EVENT::DEBUG1) {
 					g_BilibiliMain->Debugfun(1);
 				}
@@ -94,9 +103,7 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 			}
 			if (msg.message == MSG_NEWGUARD)
 			{
-				std::string *puser = (std::string *)msg.wParam;
-				g_BilibiliMain->JoinGuardGift(puser->c_str());
-				delete puser;
+				g_BilibiliMain->JoinGuardGift(msg.wParam);
 			}
 			if (msg.message == MSG_NEWSPECIALGIFT)
 			{
@@ -228,12 +235,13 @@ void printHelp()
   > 8 usergetinfo \t 获取账户信息         \n\
   >10 stopall     \t 关闭所有领取         \n\
   >11 userexp     \t 开启领取经验         \n\
-  >12 lotterystart\t 开启领取小电视等道具 \n\
+  >12 startlp     \t 开启广播类事件监控   \n\
+  >13 startlh     \t 开启非广播类事件监控 \n\
   >21 savelog     \t 更新日志文件         \n\
   >22 danmukuon   \t 显示弹幕消息         \n\
   >23 danmukuoff  \t 隐藏弹幕消息         \n\
-  >   help        \t 目录                 \n\
-  >   exit        \t 退出                 \n");
+  >   help        \t 目录                \n\
+  >   exit        \t 退出                \n");
 }
 
 int ProcessCommand(std::string str)
@@ -288,8 +296,11 @@ int ProcessCommand(std::string str)
 	else if (!str.compare("11") || !str.compare("userexp")) {
 		PostThreadMessage(threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::ONLINE), LPARAM(0));
 	}
-	else if (!str.compare("12") || !str.compare("lotterystart")) {
+	else if (!str.compare("12") || !str.compare("startlp")) {
 		PostThreadMessage(threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::GET_SYSMSG_GIFT), LPARAM(0));
+	}
+	else if (!str.compare("13") || !str.compare("startlh")) {
+		PostThreadMessage(threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::GET_HIDEN_GIFT), LPARAM(0));
 	}
 	else if (!str.compare("21")) {
 		printf("Saving lottery history... \n");
