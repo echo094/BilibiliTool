@@ -8,13 +8,6 @@ struct tagDANMUMSGDANMU
 	std::wstring wstrmsg;
 };
 
-struct tagDANMUMSGWELCOME
-{
-	int itype;
-	int iuid, iguard_level;
-	std::wstring struname;
-};
-
 struct tagDANMUMSGSYS
 {
 	int itype;
@@ -134,33 +127,24 @@ int DanmuAPI::ParseJSON(char *str, int room) {
 		return this->ParseGUARDLO(doc, room);
 	}
 
-	//Exit if it is not in debug mode. 
-	if (!bmodedebug)
+	if ((strtype == "PREPARING") || (strtype == "CUT_OFF")) {
+		if (m_rinfo[room].flag != DANMU_FLAG::MSG_SPECIALGIFT) {
+			return 0;
+		}
+		// 标记为需关闭
+		m_rinfo[room].needclose = true;
+		printf("%s[DanmuAPI] Roomid: %d Notice Close \n", _tool.GetTimeString().c_str(), room);
 		return 0;
+	}
 
-	if (strtype == "WELCOME") {
-		tagDANMUMSGWELCOME m_tmpwelcome;
-		m_tmpwelcome.itype = 1;
-		m_tmpwelcome.iuid = doc["data"]["uid"].GetInt();
-		m_tmpwelcome.struname = _strcoding.UTF_8ToWString(doc["data"]["uname"].GetString());
-		printf("[DanmuAPI] WELCOME: %d \n", m_tmpwelcome.iuid);
-	}
-	else if (strtype == "WELCOME_GUARD") {
-		tagDANMUMSGWELCOME m_tmpwelcome;
-		m_tmpwelcome.itype = 2;
-		m_tmpwelcome.iuid = doc["data"]["uid"].GetInt();
-		m_tmpwelcome.iguard_level = doc["data"]["guard_level"].GetInt();
-		m_tmpwelcome.struname = _strcoding.UTF_8ToWString(doc["data"]["username"].GetString());
-		printf("[DanmuAPI] WELCOME_GUARD: %d \n", m_tmpwelcome.iuid);
-	}
-	else if (strtype == "TV_START") {
-		// printf("[DanmuAPI] TV_START: %d \n", roomid);
-	}
-	else if (strtype == "TV_END") {
-		// printf("[DanmuAPI] TV_END: %d \n", roomid);
-	}
-	else if (strtype == "EVENT_CMD") {
-		printf("[DanmuAPI] EVENT_CMD: %s \n", str);
+	if (strtype == "LIVE") {
+		if (m_rinfo[room].flag != DANMU_FLAG::MSG_SPECIALGIFT) {
+			return 0;
+		}
+		// 取消需要关闭的标记
+		m_rinfo[room].needclose = false;
+		printf("%s[DanmuAPI] Roomid: %d Notice Open \n", _tool.GetTimeString().c_str(), room);
+		return 0;
 	}
 
 	return 0;

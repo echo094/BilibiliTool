@@ -212,16 +212,15 @@ long long CBilibiliDanmu::GetRUID() {
 	return static_cast <long long> (val);
 }
 
-int CBilibiliDanmu::ShowCount() {
-	printf("Map count: %d IO count: %d \n", m_rinfo.size(), m_arrayClientContext.size());
-	return m_arrayClientContext.size();
-}
-
 int CBilibiliDanmu::UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag) {
 	using namespace std;
 	set<unsigned> dlist, ilist;
-	// 断开失效房间
-	set_difference(m_rlist.begin(), m_rlist.end(), nlist.begin(), nlist.end(), inserter(dlist, dlist.end()));
+	// 断开关播房间
+	for (auto it = m_rlist.begin(); it != m_rlist.end(); it++) {
+		if (m_rinfo[(*it)].needclose) {
+			dlist.insert(*it);
+		}
+	}
 	for (auto it = dlist.begin(); it != dlist.end(); it++) {
 		DisconnectFromRoom(*it);
 	}
@@ -236,6 +235,11 @@ int CBilibiliDanmu::UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag) {
 	cout << "Add room count: " << ilist.size() << endl;
 	cout << "Current room count: " << m_rlist.size() << endl;
 	return m_rlist.size();
+}
+
+int CBilibiliDanmu::ShowCount() {
+	printf("Map count: %d IO count: %d \n", m_rinfo.size(), m_arrayClientContext.size());
+	return m_arrayClientContext.size();
 }
 
 int CBilibiliDanmu::MakeConnectionInfo(unsigned char* str, int len, int room) {

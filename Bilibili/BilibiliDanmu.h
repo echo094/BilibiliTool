@@ -39,10 +39,10 @@ public:
 	int ConnectToRoom(const unsigned room, DANMU_FLAG flag);
 	// 断开特定房间
 	int DisconnectFromRoom(const unsigned room);
-	// 显示当前连接数
-	int ShowCount();
 	// 更新房间
 	int UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag);
+	// 显示当前连接数
+	int ShowCount();
 
 private:
 	long long GetRUID();

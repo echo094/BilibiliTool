@@ -9,12 +9,17 @@ enum class DANMU_FLAG {
 };
 
 typedef struct tagRoomInfo {
+	// 房间监控类型
 	DANMU_FLAG flag;
+	// 需要重连（心跳失败时）
 	bool needconnect;
+	// 需要关闭（下播时）
+	bool needclose;
 
 	tagRoomInfo() :
 		flag(DANMU_FLAG::MSG_NONE),
-		needconnect(false) {}
+		needconnect(false),
+		needclose(false) {}
 
 }ROOM_INFO;
 
@@ -22,8 +27,7 @@ class DanmuAPI {
 public:
 	DanmuAPI():
 		parentthreadid(0),
-		bdanmukuon(false),
-		bmodedebug(false) {}
+		bdanmukuon(false) {}
 	virtual ~DanmuAPI() {}
 
 public:
@@ -46,7 +50,6 @@ protected:
 protected:
 	DWORD parentthreadid;//上级消息线程
 	bool bdanmukuon;
-	bool bmodedebug;
 	CTools _tool;
 	CStrConvert _strcoding;
 	std::set<unsigned> m_rlist;
