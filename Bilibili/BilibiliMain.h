@@ -43,8 +43,6 @@ private:
 	CTools _tool;
 	// 日志文件句柄
 	std::fstream _logfile;
-	// 日志缓冲区
-	char _logbuff[100];
 
 	// 当前模式
 	TOOL_EVENT curmode;

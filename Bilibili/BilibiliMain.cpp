@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "BilibiliMain.h"
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
 CBilibiliMain::CBilibiliMain(CURL *pcurl){
@@ -188,9 +189,12 @@ int CBilibiliMain::JoinTV(int room)
 		return -1;
 	BILI_LOTTERYDATA pdata;
 	while (_lotterytv->GetNextLottery(pdata) == 0) {
-		sprintf_s(_logbuff, sizeof(_logbuff), "{time:%I64d,type:'%s',ruid:%d,loid:%d},\n", _tool.GetTimeStamp(), pdata.type.c_str(), pdata.rrid, pdata.loid);
-		_logfile.write(_logbuff, strlen(_logbuff));
-
+		_logfile << "{time:" << _tool.GetTimeStamp()
+			<< ",type:'" << pdata.type
+			<< "',ruid:" << pdata.rrid
+			<< ",loid:" << pdata.loid
+			<< "}," << std::endl;
+		
 		_userlist->JoinTVALL(&pdata);
 	}
 	return 0;
@@ -209,8 +213,11 @@ int CBilibiliMain::JoinYunYing(int room)
 		return -1;
 	BILI_LOTTERYDATA pdata;
 	while (_lotteryyy->GetNextLottery(pdata) == 0) {
-		sprintf_s(_logbuff, sizeof(_logbuff), "{time:%I64d,type:'Raffle',ruid:%d,loid:%d},\n", _tool.GetTimeStamp(), pdata.rrid, pdata.loid);
-		_logfile.write(_logbuff, strlen(_logbuff));
+		_logfile << "{time:" << _tool.GetTimeStamp()
+			<< ",type:'" << "Raffle"
+			<< "',ruid:" << pdata.rrid
+			<< ",loid:" << pdata.loid
+			<< "}," << std::endl;
 
 		_userlist->JoinYunYingALL(pdata);
 	}
@@ -236,9 +243,12 @@ int CBilibiliMain::JoinGuardGift(int room)
 		return -1;
 	BILI_LOTTERYDATA pdata;
 	while (_lotterygu->GetNextLottery(pdata) == 0) {
-		sprintf_s(_logbuff, sizeof(_logbuff), "{time:%I64d,type:'%s_%d',ruid:%d,loid:%d},\n", _tool.GetTimeStamp(), pdata.type.c_str(), pdata.exinfo, pdata.rrid, pdata.loid);
-		_logfile.write(_logbuff, strlen(_logbuff));
-
+		_logfile << "{time:" << _tool.GetTimeStamp()
+			<< ",type:'" << pdata.type << '_' << pdata.exinfo
+			<< "',ruid:" << pdata.rrid
+			<< ",loid:" << pdata.loid
+			<< "}," << std::endl;
+		
 		_userlist->JoinGuardALL(pdata);
 	}
 
@@ -247,20 +257,27 @@ int CBilibiliMain::JoinGuardGift(int room)
 
 int CBilibiliMain::JoinGuardGift(BILI_LOTTERYDATA &pdata)
 {
-	sprintf_s(_logbuff, sizeof(_logbuff), "{time:%I64d,type:'%s_%d',ruid:%d,loid:%d},\n", _tool.GetTimeStamp(), pdata.type.c_str(), pdata.exinfo, pdata.rrid, pdata.loid);
-	_logfile.write(_logbuff, strlen(_logbuff));
-
 	_userlist->JoinGuardALL(pdata);
+
+	_logfile << "{time:" << _tool.GetTimeStamp()
+		<< ",type:'" << pdata.type << '_' << pdata.exinfo
+		<< "',ruid:" << pdata.rrid
+		<< ",loid:" << pdata.loid
+		<< "}," << std::endl;
 
 	return 0;
 }
 
 int CBilibiliMain::JoinSpecialGift(int room, long long cid)
 {
-	int ret;
-	ret = _userlist->JoinSpecialGiftALL(room, cid);
-	sprintf_s(_logbuff, sizeof(_logbuff), "{time:%I64d,type:'storm',ruid:%d,loid:%I64d},\n", _tool.GetTimeStamp(), room, cid);
-	_logfile.write(_logbuff, strlen(_logbuff));
+	_userlist->JoinSpecialGiftALL(room, cid);
+
+	_logfile << "{time:" << _tool.GetTimeStamp()
+		<< ",type:'" << "storm"
+		<< "',ruid:" << room
+		<< ",loid:" << cid
+		<< "}," << std::endl;
+
 	return 0;
 }
 
