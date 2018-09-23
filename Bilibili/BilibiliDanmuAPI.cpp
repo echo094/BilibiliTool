@@ -265,23 +265,27 @@ int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, int room) {
 		return 0;
 	}
 	int btype = doc["buy_type"].GetInt();
-	printf("%s[DanmuAPI] Roomid: %d GUARD_MSG Type: %d \n", _tool.GetTimeString().c_str(), room, btype);
 	// 只需发送房间号
 	if (room_list[room].flag == DANMU_FLAG::MSG_PUBEVENT) {
+		// 处理广播事件
 		// 总督上船消息
 		if (btype == 1) {
+			int rid = doc["roomid"].GetInt();
+			printf("%s[DanmuAPI] GUARD_MSG Roomid: %d Type: %d \n", _tool.GetTimeString().c_str(), rid, btype);
 			if (parentthreadid)
-				PostThreadMessage(parentthreadid, MSG_NEWGUARD, WPARAM(room), LPARAM(btype));
-			return 0;
+				PostThreadMessage(parentthreadid, MSG_NEWGUARD, WPARAM(rid), LPARAM(btype));
 		}
+		return 0;
 	}
 	if (room_list[room].flag == DANMU_FLAG::MSG_SPECIALGIFT) {
+		// 处理非广播事件
 		// 舰长或提督上船消息
 		if (btype != 1) {
+			printf("%s[DanmuAPI] GUARD_MSG Roomid: %d Type: %d \n", _tool.GetTimeString().c_str(), room, btype);
 			if (parentthreadid)
 				PostThreadMessage(parentthreadid, MSG_NEWGUARD, WPARAM(room), LPARAM(btype));
-			return 0;
 		}
+		return 0;
 	}
 
 	return -1;
