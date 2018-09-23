@@ -47,10 +47,14 @@ protected:
 	int ParseGUARDLO(rapidjson::Document &doc, int room);
 
 protected:
-	DWORD parentthreadid;//上级消息线程
+	// 上级消息线程
+	DWORD parentthreadid;
+	// 连接的房间集合
+	std::set<unsigned> m_rlist;
+	// 房间信息map
+	std::map<unsigned, ROOM_INFO> m_rinfo;
+
 	bool bdanmukuon;
 	CTools _tool;
 	CStrConvert _strcoding;
-	std::set<unsigned> m_rlist;
-	std::map<unsigned, ROOM_INFO> m_rinfo;
 };

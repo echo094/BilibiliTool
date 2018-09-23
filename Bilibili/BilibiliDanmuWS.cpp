@@ -17,7 +17,7 @@ CWSDanmu::~CWSDanmu() {
 void CWSDanmu::on_timer(websocketpp::lib::error_code const & ec) {
 	if (ec) {
 		// there was an error, stop telemetry
-		m_endpoint.get_alog().write(websocketpp::log::alevel::app,
+		m_client.get_alog().write(websocketpp::log::alevel::app,
 			"Timer Error: " + ec.message());
 		return;
 	}
@@ -112,6 +112,7 @@ int CWSDanmu::Deinit() {
 		return 0;
 
 	this->cancel_timer();
+	// 这里会触发事件但不会进入继承的 on_close 函数
 	this->closeall();
 	// 清理列表
 	m_rinfo.clear();
@@ -133,6 +134,18 @@ int CWSDanmu::ConnectToRoom(const unsigned room, DANMU_FLAG flag) {
 	info.flag = flag;
 	m_rinfo[room] = info;
 	m_rlist.insert(room);
+
+	return 0;
+}
+
+int CWSDanmu::DisconnectFromRoom(const unsigned room) {
+	if (!m_rlist.count(room)) {
+		return -1;
+	}
+	this->close(room, websocketpp::close::status::going_away, "");
+	// 从列表清除该房间
+	m_rinfo.erase(room);
+	m_rlist.erase(room);
 
 	return 0;
 }
@@ -180,7 +193,7 @@ int CWSDanmu::SendConnectionInfo(connection_metadata *it) {
 	unsigned char cmdstr[128];
 	int len = MakeConnectionInfo(cmdstr, 128, it->get_id());
 	websocketpp::lib::error_code ec;
-	m_endpoint.send(it->get_hdl(), cmdstr, len, websocketpp::frame::opcode::binary, ec);
+	m_client.send(it->get_hdl(), cmdstr, len, websocketpp::frame::opcode::binary, ec);
 	if (ec) {
 		std::cout << "[WSDanmu] Error sending connection message: " << ec.message() << std::endl;
 		return -1;
@@ -193,7 +206,7 @@ int CWSDanmu::SendHeartInfo(connection_metadata &it) {
 	unsigned char cmdstr[128];
 	int len = MakeHeartInfo(cmdstr, 128);
 	websocketpp::lib::error_code ec;
-	m_endpoint.send(it.get_hdl(), cmdstr, len, websocketpp::frame::opcode::binary, ec);
+	m_client.send(it.get_hdl(), cmdstr, len, websocketpp::frame::opcode::binary, ec);
 	if (ec) {
 		std::cout << "[WSDanmu] Error sending heart message: " << ec.message() << std::endl;
 		return -1;

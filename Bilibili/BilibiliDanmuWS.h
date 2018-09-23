@@ -13,6 +13,13 @@
 5 命令，数据中['cmd']表示具体命令
 7 认证并加入房间
 8 服务器确认加入房间
+
+WS说明
+API中的map信息与WS中的连接map相独立
+在连接时两个map都会添加对象
+在连接意外断开时状态码会更新 两个map的连接信息保留
+心跳时对断开的连接重连
+关闭指定房间时清除两个map中的对应信息
 */
 
 #pragma once
@@ -43,6 +50,8 @@ public:
 	int Deinit();
 	// 连接一个房间
 	int ConnectToRoom(const unsigned room, DANMU_FLAG flag);
+	// 断开特定房间
+	int DisconnectFromRoom(const unsigned room);
 	// 显示当前连接数
 	int ShowCount();
 

@@ -23,12 +23,16 @@ typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
 typedef websocketpp::client<websocketpp::config::asio> client;
 #endif
 
+// 前置声明
+class websocket_endpoint;
+
 class connection_metadata {
 public:
 	typedef websocketpp::lib::shared_ptr<connection_metadata> ptr;
 
-	connection_metadata(int id, websocketpp::connection_hdl hdl, std::string uri)
-		: m_id(id)
+	connection_metadata(websocket_endpoint *ep, int id, websocketpp::connection_hdl hdl, std::string uri)
+		: m_endpoint(ep)
+		, m_id(id)
 		, m_hdl(hdl)
 		, m_status("Connecting")
 		, m_uri(uri)
@@ -61,18 +65,23 @@ public:
 		return m_error_reason;
 	}
 
-	void record_sent_message(std::string message);
-	void record_recv_message(client::message_ptr msg);
-
 	friend std::ostream & operator<< (std::ostream & out, connection_metadata const & data);
 private:
+	// 连接终端对象 在事件中回调
+	websocket_endpoint *m_endpoint;
+	// 标签
 	int m_id;
+	// 连接句柄
 	websocketpp::connection_hdl m_hdl;
+	// 连接状态
 	std::string m_status;
+	// 服务器链接
 	std::string m_uri;
+	// 服务器名称
 	std::string m_server;
+	// 连接关闭的原因
 	std::string m_error_reason;
-	std::vector<std::string> m_messages;
+	// 接收数据缓存
 	std::string m_recvbuff;
 };
 
@@ -103,8 +112,12 @@ public:
 
 protected:
 	typedef std::map<int, connection_metadata::ptr> con_list;
+	// 标签-连接指针的map
 	con_list m_connection_list;
-	client m_endpoint;
+	// 连接终端
+	client m_client;
+	// 终端 m_client 的运行线程
 	websocketpp::lib::shared_ptr<websocketpp::lib::thread> m_thread;
+	// 心跳定时器
 	client::timer_ptr m_timer;
 };

@@ -38,7 +38,7 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 	// 是否有功能模块正在运行
 	bool isrunning = false;
 	// 主线程定时器
-	DWORD hearttimer;
+	DWORD hearttimer = 0;
 
 	int bRet = 0, ret;
 	MSG msg;
@@ -82,7 +82,10 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 				if (msg.wParam == 0)
 					runflag = false;
 				else if (opt == TOOL_EVENT::STOP) {
-					KillTimer(NULL, hearttimer);
+					if (hearttimer) {
+						KillTimer(NULL, hearttimer);
+						hearttimer = 0;
+					}
 					ret = g_BilibiliMain->StopMonitorALL();
 					isrunning = false;
 				}
