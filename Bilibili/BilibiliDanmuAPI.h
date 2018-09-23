@@ -42,7 +42,6 @@ protected:
 	int ParseJSON(char *str, int room);
 	int ParseDANMUMSG(rapidjson::Document &doc, int room);
 	int ParseSTORMMSG(rapidjson::Document &doc, int room);
-	int ParseSYSGIFT(rapidjson::Document &doc, int room);
 	int ParseSYSMSG(rapidjson::Document &doc, int room);
 	int ParseGUARDMSG(rapidjson::Document &doc, int room);
 	int ParseGUARDLO(rapidjson::Document &doc, int room);

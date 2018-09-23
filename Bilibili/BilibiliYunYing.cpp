@@ -171,36 +171,6 @@ void CBilibiliLotteryBase::_UpdateLotteryList(rapidjson::Value &infoArray, int s
 	}
 }
 
-BILIRET CBilibiliYunYing::_GetLotteryID(CURL *pcurl, int srid, int rrid)
-{
-	int ret;
-	_httppack->url = URL_LIVEAPI_HEAD;
-	_httppack->url += "/activity/v1/Raffle/check?roomid=" + std::to_string(rrid);
-	_httppack->ClearHeader();
-	ret = toollib::HttpGetEx(pcurl, _httppack, 1);
-	if (ret) {
-		printf("%s[Raffle]HTTP GET Failed! \n", _tool.GetTimeString().c_str());
-		return BILIRET::HTTP_ERROR;
-	}
-
-	rapidjson::Document doc;
-	doc.Parse(_httppack->strrecdata);
-	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || !doc.HasMember("data") || !doc["data"].IsArray()) {
-		printf("[Raffle] ERROR: %s\n", _httppack->strrecdata);
-		return BILIRET::JSON_ERROR;
-	}
-	ret = doc["code"].GetInt();
-	if (ret) {
-		std::string msg = _strcoding.UTF_8ToString(doc["msg"].GetString());
-		printf("[Raffle] ERROR: %d %s\n", ret, msg.c_str());
-		return BILIRET::JSON_ERROR;
-	}
-	// 处理并添加新的抽奖信息
-	this->_UpdateLotteryList(doc["data"], srid, rrid);
-
-	return BILIRET::NOFAULT;
-}
-
 BILIRET CBilibiliSmallTV::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 {
 	int ret;

@@ -98,13 +98,9 @@ int DanmuAPI::ParseJSON(char *str, int room) {
 		return 0;
 	}
 
-	//运营活动使用SYS_GIFT消息
-	//新增活动时监控指定礼物ID即可
+	// 旧的运营活动使用SYS_GIFT消息 已作废
 	if (strtype == "SYS_GIFT") {
 		return 0;
-		if (m_rinfo[room].flag != DANMU_FLAG::MSG_PUBEVENT)
-			return 0;
-		return this->ParseSYSGIFT(doc, room);
 	}
 
 	if (strtype == "SYS_MSG") {
@@ -206,21 +202,6 @@ int DanmuAPI::ParseSTORMMSG(rapidjson::Document &doc, int room) {
 		return 0;
 	}
 	return -1;
-}
-
-int DanmuAPI::ParseSYSGIFT(rapidjson::Document &doc, int room) {
-	tagDANMUMSGSYS m_tmpsysmsg;
-	m_tmpsysmsg.itype = 5;
-	if (doc.HasMember("giftId")) {
-		m_tmpsysmsg.igiftid = doc["giftId"].GetInt();
-		if (m_tmpsysmsg.igiftid == 116 || m_tmpsysmsg.igiftid == 117) {
-			m_tmpsysmsg.iroomid = doc["real_roomid"].GetInt();
-			printf("%s[DanmuAPI] Raffle RealRoomId:%d Gift: %d\n", _tool.GetTimeString().c_str(), m_tmpsysmsg.iroomid, m_tmpsysmsg.igiftid);
-			if (parentthreadid)
-				PostThreadMessage(parentthreadid, MSG_NEWYUNYING, WPARAM((UINT)m_tmpsysmsg.iroomid), LPARAM(0));
-		}
-	}
-	return 0;
 }
 
 int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, int room) {

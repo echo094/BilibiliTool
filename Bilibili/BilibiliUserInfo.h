@@ -113,8 +113,6 @@ public:
 	int ActSmallTV(int rrid, int loid);
 	// 上船低保
 	int ActGuard(BILI_LOTTERYDATA &pdata);
-	// 参与双端抽奖
-	int ActYunYing(std::string eventname, int rid, int raffleId);
 
 // 登录相关
 protected:
@@ -138,8 +136,6 @@ protected:
 	BILIRET PostOnlineHeart() const;
 	// 直播站签到
 	BILIRET GetSign() const;
-	// 银瓜子换硬币
-	BILIRET PostSilver2Coin() const;
 	// 获取登录硬币
 	BILIRET GetCoin() const;
 public:
@@ -158,8 +154,6 @@ protected:
 	BILIRET _APIv1Captcha(std::string &img, std::string &token) const;
 	// 领取风暴
 	BILIRET _APIv1StormJoin(int roomID, long long cid, std::string code, std::string token);
-	// 运营活动抽奖
-	BILIRET _APIv1YunYing(int rid, int raffleId);
 	// 银瓜子验证码
 	BILIRET _APIv1SilverCaptcha() const;
 	// 获取当前宝箱领取情况
@@ -172,9 +166,6 @@ protected:
 	BILIRET _APIv1CapsuleCheck() const;
 	// 进入房间历史记录
 	BILIRET _APIv1RoomEntry(int room) const;
-public:
-	// 每日榜首低保
-	BILIRET APIv1YunYingGift(int rid) const;
 
 // APIv2
 protected:
@@ -205,8 +196,6 @@ private:
 	BILIRET _APIAndv1RoomInfo(int rid) const;
 	// 领取风暴
 	BILIRET _APIAndv1StormJoin(long long cid);
-	// 活动抽奖
-	BILIRET _APIAndv1YunYing(std::string eventname, int rid, int raffleId);
 
 // 其他
 protected:

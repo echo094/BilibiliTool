@@ -305,8 +305,6 @@ int CBilibiliUserInfo::ActStartHeart() {
 	_APIv2GiftDaily();
 	// 兑换硬币
 	if (_useropt.conf & 0x01) {
-		PostSilver2Coin();
-		Sleep(1000);
 		_APIv1Silver2Coin();
 	}
 	// 登录硬币
@@ -379,28 +377,6 @@ int CBilibiliUserInfo::ActGuard(BILI_LOTTERYDATA &pdata) {
 		_APIv2LotteryJoin(pdata);
 		return 0;
 	}
-	return 0;
-}
-
-int CBilibiliUserInfo::ActYunYing(std::string eventname, int rid, int raffleId)
-{
-	BILIRET ret;
-	int count;
-	if (_useropt.conf & 0x08) {
-		// 手机端只操作一次
-		ret = this->_APIAndv1YunYing(eventname, rid, raffleId);
-	}
-	if (_useropt.conf & 0x04) {
-		// 网页端最多尝试三次
-		count = 2;
-		ret = this->_APIv1YunYing(rid, raffleId);
-		while ((ret!= BILIRET::NOFAULT)&&count) {
-			Sleep(1000);
-			ret = this->_APIv1YunYing(rid, raffleId);
-			count--;
-		}
-	}
-
 	return 0;
 }
 
@@ -610,30 +586,6 @@ BILIRET CBilibiliUserInfo::GetSign() const {
 	return BILIRET::NOFAULT;
 }
 
-// 银瓜子换硬币
-BILIRET CBilibiliUserInfo::PostSilver2Coin() const {
-	_httppackweb->url = _urlapi + "/exchange/silver2coin";
-	_httppackweb->ClearHeader();
-	_httppackweb->AddHeaderManual("Accept: application/json, text/javascript, */*; q=0.01");
-	_httppackweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=UTF-8");
-	int ret = toollib::HttpGetEx(curlweb, _httppackweb);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	// 0兑换成功 -403已兑换
-	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
-	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
-		return BILIRET::JSON_ERROR;
-	}
-	ret = doc["code"].GetInt();
-	std::string msg = _strcoding.UTF_8ToString(doc["msg"].GetString());
-	printf("%s[User%d] Silver2Coin: %s. \n", _tool.GetTimeString().c_str(), _useropt.fileid, msg.c_str());
-
-	return BILIRET::NOFAULT;
-}
-
 // 获取登录硬币
 BILIRET CBilibiliUserInfo::GetCoin() const {
 	_httppackweb->url = "https://account.bilibili.com/site/getCoin";
@@ -833,51 +785,6 @@ BILIRET CBilibiliUserInfo::_APIv1StormJoin(int roomID, long long cid, std::strin
 	return BILIRET::NOFAULT;
 }
 
-// 运营活动抽奖
-BILIRET CBilibiliUserInfo::_APIv1YunYing(int rid, int raffleId) {
-	int ret;
-	_httppackweb->url = _urlapi + "/activity/v1/Raffle/join";
-	std::string postData;
-	postData = "roomid=" + std::to_string(rid) + "&raffleId=" + std::to_string(raffleId);
-	_httppackweb->strsenddata = postData;
-	_httppackweb->ClearHeader();
-	_httppackweb->AddHeaderManual("Accept: application/json, text/javascript, */*; q=0.01");
-	_httppackweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=UTF-8");
-	_httppackweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
-	_httppackweb->AddHeaderManual(URL_DEFAULT_REFERER);
-	ret = toollib::HttpPostEx(curlweb, _httppackweb);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-#ifdef _DEBUG
-	printf("%s[User%d] ActYunYing %s \n", _tool.GetTimeString().c_str(), _useropt.fileid, _httppackweb->strrecdata);
-#endif
-
-	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
-	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
-		return BILIRET::JSON_ERROR;
-	}
-
-	// 0成功 -400已领取或被封禁 -500系统繁忙
-	int icode = doc["code"].GetInt();
-	std::string tmpstr;
-	if (doc.HasMember("message") && doc["message"].IsString())
-		tmpstr = _strcoding.UTF_8ToString(doc["message"].GetString());
-	printf("%s[User%d] Raffle %s \n", _tool.GetTimeString().c_str(), _useropt.fileid, tmpstr.c_str());
-	// 检查是否被封禁
-	if (icode == 400) {
-		if (tmpstr.find("访问被拒绝") != -1) {
-			this->SetBanned();
-			return BILIRET::NOFAULT;
-		}
-	}
-	if (icode) {
-		return BILIRET::JOINEVENT_FAILED;
-	}
-	return BILIRET::NOFAULT;
-}
-
 // 银瓜子验证码
 BILIRET CBilibiliUserInfo::_APIv1SilverCaptcha() const {
 	_httppackweb->url = _urlapi + "/lottery/v1/SilverBox/getCaptcha?ts=" + std::to_string((long long)_tool.GetTimeStamp()) + "537";
@@ -1073,38 +980,6 @@ BILIRET CBilibiliUserInfo::_APIv1RoomEntry(int room) const {
 	if (ret) {
 		return BILIRET::HTTP_ERROR;
 	}
-
-	return BILIRET::NOFAULT;
-}
-
-BILIRET CBilibiliUserInfo::APIv1YunYingGift(int rid) const {
-	int ret;
-	_httppackweb->url = _urlapi + "/activity/v1/Common/getReceiveGift?roomid=" + std::to_string(rid);
-	_httppackweb->ClearHeader();
-	_httppackweb->AddHeaderManual("Accept: application/json, text/javascript, */*; q=0.01");
-	_httppackweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=UTF-8");
-	_httppackweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
-	_httppackweb->AddHeaderManual(URL_DEFAULT_REFERER);
-	ret = toollib::HttpGetEx(curlweb, _httppackweb);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-#ifdef _DEBUG
-	printf("%s[User%d] ActYunYing Daily Gift %s \n", _tool.GetTimeString().c_str(), _useropt.fileid, _httppackweb->strrecdata);
-#endif
-
-	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
-	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()
-		|| !doc.HasMember("message") || !doc["message"].IsString()) {
-		return BILIRET::JSON_ERROR;
-	}
-
-	std::string tmpstr;
-	int icode = doc["code"].GetInt();
-	tmpstr = doc["message"].GetString();
-	tmpstr = _strcoding.UTF_8ToString(tmpstr.c_str());
-	printf("%s[User%d] YunYing Daily Gift %s \n", _tool.GetTimeString().c_str(), _useropt.fileid, tmpstr.c_str());
 
 	return BILIRET::NOFAULT;
 }
@@ -1498,48 +1373,6 @@ BILIRET CBilibiliUserInfo::_APIAndv1StormJoin(long long cid) {
 	}
 	msg = _strcoding.UTF_8ToString(doc["data"]["mobile_content"].GetString());
 	printf("%s[User%d] Storm %s \n", _tool.GetTimeString().c_str(), _useropt.fileid, msg.c_str());
-
-	return BILIRET::NOFAULT;
-}
-
-// 活动抽奖
-BILIRET CBilibiliUserInfo::_APIAndv1YunYing(std::string eventname, int rid, int raffleId) {
-	_httppackapp->url = _urlapi + "/YunYing/roomEvent?";
-	char datastr[400] = "";
-	sprintf_s(datastr, sizeof(datastr), "access_key=%s&actionKey=appkey&appkey=%s&build=5230002&device=android&event_type=%s-%d&mobi_app=android&platform=android&room_id=%d&ts=%I64d", 
-		_useropt.tokena.c_str(), APP_KEY, eventname.c_str(), raffleId, rid, _tool.GetTimeStamp());
-	std::string sign;
-	this->_GetMD5Sign(datastr, sign);
-	_httppackapp->url += datastr;
-	_httppackapp->url += "&sign=" + sign;
-	_httppackapp->ClearHeader();
-	int ret = toollib::HttpGetEx(curlapp, _httppackapp);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	rapidjson::Document doc;
-	doc.Parse(_httppackapp->strrecdata);
-	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
-		return BILIRET::JSON_ERROR;
-	}
-	ret = doc["code"].GetInt();
-	std::string msg;
-	if (ret) {
-		msg = _strcoding.UTF_8ToString(doc["msg"].GetString());
-		printf("%s[User%d] YunYing %d %s \n", _tool.GetTimeString().c_str(), _useropt.fileid, ret, msg.c_str());
-
-		// 检查是否被封禁
-		if (ret == 400) {
-			if (msg.find("访问被拒绝") != -1) {
-				this->SetBanned();
-				return BILIRET::NOFAULT;
-			}
-		}
-		return BILIRET::JOINEVENT_FAILED;
-	}
-	msg = _strcoding.UTF_8ToString(doc["data"]["gift_desc"].GetString());
-	printf("%s[User%d] YunYing %s \n", _tool.GetTimeString().c_str(), _useropt.fileid, msg.c_str());
 
 	return BILIRET::NOFAULT;
 }

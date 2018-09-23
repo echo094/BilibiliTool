@@ -18,7 +18,6 @@ CBilibiliMain::CBilibiliMain(CURL *pcurl){
 	_tcpdanmu = nullptr;
 	_wsdanmu = nullptr;
 	_lotterytv = std::make_unique<CBilibiliSmallTV>();
-	_lotteryyy = std::make_unique<CBilibiliYunYing>();
 	_lotterygu = std::make_unique<CBilibiliGuard>();
 	_apilive = std::make_unique<CBilibiliLive>();
 	_userlist = std::make_unique<CBilibiliUserList>();
@@ -30,7 +29,6 @@ CBilibiliMain::~CBilibiliMain() {
 	_tcpdanmu = nullptr;
 	_wsdanmu = nullptr;
 	_lotterytv = nullptr;
-	_lotteryyy = nullptr;
 	_lotterygu = nullptr;
 	_apilive = nullptr;
 	_userlist = nullptr;
@@ -197,36 +195,6 @@ int CBilibiliMain::JoinTV(int room)
 		
 		_userlist->JoinTVALL(&pdata);
 	}
-	return 0;
-}
-
-int CBilibiliMain::JoinYunYing(int room)
-{
-	int ret = -1, count = 2;
-	ret = _lotteryyy->CheckLottery(curl, room);
-	while (ret&&count) {
-		Sleep(1000);
-		ret = _lotteryyy->CheckLottery(curl, room);
-		count--;
-	}
-	if (ret != 0)
-		return -1;
-	BILI_LOTTERYDATA pdata;
-	while (_lotteryyy->GetNextLottery(pdata) == 0) {
-		_logfile << "{time:" << _tool.GetTimeStamp()
-			<< ",type:'" << "Raffle"
-			<< "',ruid:" << pdata.rrid
-			<< ",loid:" << pdata.loid
-			<< "}," << std::endl;
-
-		_userlist->JoinYunYingALL(pdata);
-	}
-	return 0;
-}
-
-int CBilibiliMain::JoinYunYingGift(int room)
-{
-	_userlist->JoinYunYingGiftALL(room);
 	return 0;
 }
 

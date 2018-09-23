@@ -52,14 +52,6 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 			{
 				g_BilibiliMain->JoinTV(msg.wParam);
 			}
-			else if (msg.message == MSG_NEWYUNYING)
-			{
-				g_BilibiliMain->JoinYunYing(msg.wParam);
-			}
-			else if (msg.message == MSG_NEWYUNYINGDAILY)
-			{
-				g_BilibiliMain->JoinYunYingGift(msg.wParam);
-			}
 			else if (msg.message == MSG_NEWGUARD0)
 			{
 				// 房间上船事件

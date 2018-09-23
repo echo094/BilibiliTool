@@ -30,13 +30,6 @@ protected:
 	virtual void _UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid);
 };
 
-
-class CBilibiliYunYing: public CBilibiliLotteryBase
-{
-protected:
-	BILIRET _GetLotteryID(CURL *pcurl, int srid, int rrid) override;
-};
-
 class CBilibiliSmallTV : public CBilibiliLotteryBase
 {
 protected:

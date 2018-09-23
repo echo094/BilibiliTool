@@ -29,8 +29,6 @@ public:
 	// 非广播模式下更新监控的房间
 	int UpdateLiveRoom();
 	int JoinTV(int room);
-	int JoinYunYing(int room);
-	int JoinYunYingGift(int room);
 	int JoinGuardGift(int user);
 	int JoinGuardGift(BILI_LOTTERYDATA &pdata);
 	int JoinSpecialGift(int room, long long cid);
@@ -52,8 +50,6 @@ private:
 	unique_ptr<CBilibiliUserList> _userlist;
 	// 小电视信息处理类
 	unique_ptr<CBilibiliSmallTV> _lotterytv;
-	// 季节性活动信息处理类
-	unique_ptr<CBilibiliYunYing> _lotteryyy;
 	// 上船信息处理类
 	unique_ptr<CBilibiliGuard> _lotterygu;
 	// 其它API

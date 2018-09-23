@@ -303,42 +303,6 @@ int CBilibiliUserList::JoinTVALL(BILI_LOTTERYDATA *data)
 	return 0;
 }
 
-int CBilibiliUserList::JoinYunYingALL(BILI_LOTTERYDATA &data)
-{
-	printf("%s[UserList] %s Room: %d raffleId: %d \n", _tool.GetTimeString().c_str(), data.type.c_str(), data.rrid, data.loid);
-	// 当前没有用户则不领取
-	if (!_usercount)
-		return 0;
-
-	HANDLE lphandle;
-	PTHARED_DATAEX pdata = new THARED_DATAEX;
-	pdata->ptr = this;
-	pdata->str = data.type;
-	pdata->id1 = data.rrid;
-	pdata->id2 = data.loid;
-	// 配置活动ID并创建领取线程
-	EnterCriticalSection(&_csthread);
-	_threadcount++;
-	LeaveCriticalSection(&_csthread);
-	lphandle = CreateThread(NULL, 0, Thread_ActYunYing, pdata, 0, 0);
-	CloseHandle(lphandle);
-
-	return 0;
-}
-
-int CBilibiliUserList::JoinYunYingGiftALL(int rid)
-{
-	printf("%s[UserList] YunYing Daily Gift Room: %d \n", _tool.GetTimeString().c_str(), rid);
-	std::list<CBilibiliUserInfo*>::iterator itor;
-	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
-		if (!(*itor)->getLoginStatus())
-			continue;
-
-		(*itor)->APIv1YunYingGift(rid);
-	}
-	return 0;
-}
-
 int CBilibiliUserList::JoinGuardALL(BILI_LOTTERYDATA &data)
 {
 	printf("%s[UserList] Guard Room: %d Id: %d\n", _tool.GetTimeString().c_str(), data.rrid, data.loid);
@@ -463,32 +427,6 @@ DWORD CBilibiliUserList::Thread_ActTV(PVOID lpParameter)
 	pclass->_threadcount--;
 	LeaveCriticalSection(&pclass->_csthread);
 
-	return 0;
-}
-
-DWORD CBilibiliUserList::Thread_ActYunYing(PVOID lpParameter)
-{
-	PTHARED_DATAEX pdata = (PTHARED_DATAEX)lpParameter;
-	CBilibiliUserList *pclass = pdata->ptr;
-	// 等待领取
-	printf("%s[UserList] Thread wait for join yunying %d. \n", pclass->_tool.GetTimeString().c_str(), pdata->id2);
-	Sleep(pclass->_GetRand(5000, 5000));
-	// 领取为防止冲突 同一时间只能有一个用户在领取
-	// 在同一抽奖的两次抽奖之间增加间隔
-	std::list<CBilibiliUserInfo*>::iterator itor;
-	for (itor = pclass->_userlist.begin(); itor != pclass->_userlist.end(); itor++) {
-		if (!(*itor)->getLoginStatus())
-			continue;
-		Sleep(pclass->_GetRand(1000, 1500));
-		EnterCriticalSection(&pclass->_csthread);
-		(*itor)->ActYunYing(pdata->str, pdata->id1, pdata->id2);
-		LeaveCriticalSection(&pclass->_csthread);
-	}
-	delete pdata;
-	// 退出线程
-	EnterCriticalSection(&pclass->_csthread);
-	pclass->_threadcount--;
-	LeaveCriticalSection(&pclass->_csthread);
 	return 0;
 }
 
