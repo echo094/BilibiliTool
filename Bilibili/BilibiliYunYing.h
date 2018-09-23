@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <string>
 #include <list>
+#include <set>
 
 class CBilibiliLotteryBase
 {
@@ -64,6 +65,10 @@ public:
 	~CBilibiliLive() {
 		_httppack = nullptr;
 	}
-	BILIRET ApiSearchUser(CURL *pcurl, const char *user, int &rrid);
-	BILIRET ApiCheckGuard(CURL *pcurl, int rrid, int &loid);
+	BILIRET ApiSearchUser(CURL *pcurl, const char *user, int &rrid) const;
+	BILIRET ApiCheckGuard(CURL *pcurl, int rrid, int &loid) const;
+	BILIRET GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, unsigned minpop) const;
+
+private:
+	BILIRET _ApiLiveList(CURL *pcurl, rapidjson::Document &doc, int pid) const;
 };

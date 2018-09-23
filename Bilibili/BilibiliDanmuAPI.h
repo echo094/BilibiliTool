@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <map>
+#include <set>
 
 enum class DANMU_FLAG {
 	MSG_NONE = 0,
@@ -47,5 +48,6 @@ protected:
 	bool bmodedebug;
 	CTools _tool;
 	CStrConvert _strcoding;
-	std::map<int, ROOM_INFO> room_list;
+	std::set<unsigned> m_rlist;
+	std::map<unsigned, ROOM_INFO> m_rinfo;
 };

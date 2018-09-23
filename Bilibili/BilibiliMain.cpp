@@ -19,6 +19,7 @@ CBilibiliMain::CBilibiliMain(CURL *pcurl){
 	_lotterytv = std::make_unique<CBilibiliSmallTV>();
 	_lotteryyy = std::make_unique<CBilibiliYunYing>();
 	_lotterygu = std::make_unique<CBilibiliGuard>();
+	_apilive = std::make_unique<CBilibiliLive>();
 	_userlist = std::make_unique<CBilibiliUserList>();
 }
 
@@ -30,6 +31,7 @@ CBilibiliMain::~CBilibiliMain() {
 	_lotterytv = nullptr;
 	_lotteryyy = nullptr;
 	_lotterygu = nullptr;
+	_apilive = nullptr;
 	_userlist = nullptr;
 #ifdef _DEBUG
 	printf("[Main] Stop. \n");
@@ -105,15 +107,11 @@ int CBilibiliMain::StartUserHeart() {
 }
 
 int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
-	int ret = -1;
 	curmode = TOOL_EVENT::GET_SYSMSG_GIFT;
 
 	if (_wsdanmu == nullptr) {
 		_wsdanmu = std::make_unique<CWSDanmu>();
-	}
-	_roomcount++;
-	if (_roomcount == 1) {
-		ret = _wsdanmu->SetNotifyThread(pthreadid);
+		_wsdanmu->SetNotifyThread(pthreadid);
 		_wsdanmu->Init();
 	}
 
@@ -122,43 +120,28 @@ int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 	GetCurrentDirectoryA(sizeof(filepath), filepath);
 	strcat_s(filepath, DEF_CONFIGGILE_NAME);
 	int troom = ::GetPrivateProfileIntA("Global", "Room", 23058, filepath);
-	ret = _wsdanmu->ConnectToRoom(troom, DANMU_FLAG::MSG_PUBEVENT);
+
+	_roomcount++;
+	_wsdanmu->ConnectToRoom(troom, DANMU_FLAG::MSG_PUBEVENT);
 
 	printf("[Main] Curent Room Num:%d \n", _roomcount);
-	return ret;
+	return 0;
 }
 
 int CBilibiliMain::StartMonitorHiddenEvent(int pthreadid) {
-	int ret = -1, room;
 	curmode = TOOL_EVENT::GET_HIDEN_GIFT;
 
 	if (_tcpdanmu == nullptr) {
 		_tcpdanmu = std::make_unique<CBilibiliDanmu>();
+		_tcpdanmu->SetNotifyThread(pthreadid);
+		_tcpdanmu->Init(DANMU_MODE::MULTI_ROOM);
 	}
-	std::ifstream filein;
-	filein.open("BiliRoomMonitor.txt", std::ios::in);
-	if (filein.is_open()) {
-		while (!filein.eof()) {
-			filein >> room;
 
-			if (_roomcount == DEF_MAX_ROOM) {
-				break;
-			}
-			if (room < 0) {
-				continue;
-			}
-			_roomcount++;
-			if (_roomcount == 1) {
-				ret = _tcpdanmu->SetNotifyThread(pthreadid);
-				_tcpdanmu->Init(DANMU_MODE::MULTI_ROOM);
-			}
-			ret = _tcpdanmu->ConnectToRoom(room, DANMU_FLAG::MSG_SPECIALGIFT);
-			Sleep(0);
-		}
-		filein.close();
-	}
+	// 连接符合人气条件的开播房间
+	_roomcount = UpdateLiveRoom();
+
 	printf("[Main] Curent Room Num:%d \n", _roomcount);
-	return ret;
+	return 0;
 }
 
 void CBilibiliMain::SetDanmukuShow()
@@ -179,6 +162,17 @@ void CBilibiliMain::SetDanmukuHide()
 	if (curmode == TOOL_EVENT::GET_HIDEN_GIFT) {
 		_tcpdanmu->SetDanmukuOff();
 	}
+}
+
+int CBilibiliMain::UpdateLiveRoom() {
+	if (curmode != TOOL_EVENT::GET_HIDEN_GIFT) {
+		return 0;
+	}
+	std::set<unsigned> nlist;
+	_apilive->GetLiveList(curl, nlist, 500);
+	int ret = _tcpdanmu->UpdateRoom(nlist, DANMU_FLAG::MSG_SPECIALGIFT);
+
+	return ret;
 }
 
 int CBilibiliMain::JoinTV(int room)
@@ -271,6 +265,7 @@ int CBilibiliMain::Debugfun(int index)
 		}
 	}
 	if (index == 2) {
+		UpdateLiveRoom();
 	}
 	return 0;
 }

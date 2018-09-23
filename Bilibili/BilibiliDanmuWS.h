@@ -42,7 +42,7 @@ public:
 	// 关闭心跳定时器 断开所有连接
 	int Deinit();
 	// 连接一个房间
-	int ConnectToRoom(int room, DANMU_FLAG flag);
+	int ConnectToRoom(const unsigned room, DANMU_FLAG flag);
 	// 显示当前连接数
 	int ShowCount();
 

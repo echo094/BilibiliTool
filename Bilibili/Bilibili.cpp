@@ -317,6 +317,9 @@ int ProcessCommand(std::string str)
 	else if (!str.compare("90")) {
 		PostThreadMessage(threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::DEBUG1), LPARAM(0));
 	}
+	else if (!str.compare("91")) {
+		PostThreadMessage(threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::DEBUG2), LPARAM(0));
+	}
 	else {
 		printf("未知命令\n");
 	}

@@ -36,7 +36,7 @@ void CWSDanmu::on_timer(websocketpp::lib::error_code const & ec) {
 		// Connect to room again
 		// This will erase current metadata first and then create new metadata
 		// If it failed to connect, this room will lose. 
-		this->ConnectToRoom(recon_list.front(), room_list[recon_list.front()].flag);
+		this->ConnectToRoom(recon_list.front(), m_rinfo[recon_list.front()].flag);
 		recon_list.pop_front();
 	}
 
@@ -113,12 +113,15 @@ int CWSDanmu::Deinit() {
 
 	this->cancel_timer();
 	this->closeall();
+	// 清理列表
+	m_rinfo.clear();
+	m_rlist.clear();
 
 	_isworking = false;
 	return 0;
 }
 
-int CWSDanmu::ConnectToRoom(int room, DANMU_FLAG flag) {
+int CWSDanmu::ConnectToRoom(const unsigned room, DANMU_FLAG flag) {
 	int ret;
 	std::string url = DM_WSSERVER;
 	ret = this->connect(room, url);
@@ -128,13 +131,14 @@ int CWSDanmu::ConnectToRoom(int room, DANMU_FLAG flag) {
 	}
 	ROOM_INFO info;
 	info.flag = flag;
-	room_list[room] = info;
+	m_rinfo[room] = info;
+	m_rlist.insert(room);
 
 	return 0;
 }
 
 int CWSDanmu::ShowCount() {
-	printf("Map count: %d IO count: %d \n", room_list.size(), m_connection_list.size());
+	printf("Map count: %d IO count: %d \n", m_rinfo.size(), m_connection_list.size());
 	return m_connection_list.size();
 }
 

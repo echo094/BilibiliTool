@@ -303,7 +303,7 @@ void CBilibiliGuard::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, i
 	}
 }
 
-BILIRET CBilibiliLive::ApiSearchUser(CURL *pcurl, const char *user, int &rrid)
+BILIRET CBilibiliLive::ApiSearchUser(CURL *pcurl, const char *user, int &rrid) const
 {
 	int ret;
 	_httppack->url = "https://search.bilibili.com/api/search?search_type=live_user&keyword=";
@@ -334,7 +334,7 @@ BILIRET CBilibiliLive::ApiSearchUser(CURL *pcurl, const char *user, int &rrid)
 	return BILIRET::NOFAULT;
 }
 
-BILIRET CBilibiliLive::ApiCheckGuard(CURL *pcurl, int rrid, int &loid)
+BILIRET CBilibiliLive::ApiCheckGuard(CURL *pcurl, int rrid, int &loid) const
 {
 	int ret;
 	_httppack->url = URL_LIVEAPI_HEAD;
@@ -363,4 +363,50 @@ BILIRET CBilibiliLive::ApiCheckGuard(CURL *pcurl, int rrid, int &loid)
 	printf("%s[API Search] GuardID: %d \n", _tool.GetTimeString().c_str(), loid);
 
 	return BILIRET::NOFAULT;
+}
+
+BILIRET CBilibiliLive::GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, unsigned minpop) const {
+	BILIRET ret = BILIRET::NOFAULT;
+	int page = 0;
+	while (1) {
+		rapidjson::Document doc;
+		page++;
+		ret = _ApiLiveList(pcurl, doc, page);
+		if (ret != BILIRET::NOFAULT) {
+			return ret;
+		}
+		rapidjson::Value &infoArray = doc["data"];
+		unsigned pop;
+		for (auto it = infoArray.Begin(); it != infoArray.End(); it++) {
+			pop = (*it)["online"].GetUint();
+			if (pop < minpop) {
+				return BILIRET::NOFAULT;
+			}
+			rlist.insert((*it)["roomid"].GetUint());
+		}
+	}
+}
+
+BILIRET CBilibiliLive::_ApiLiveList(CURL *pcurl, rapidjson::Document &doc, int pid) const {
+	int ret;
+	std::ostringstream oss;
+	oss << URL_LIVEAPI_HEAD << "/area/liveList?area=all&order=online&page=" << pid;
+	_httppack->url = oss.str();
+	_httppack->ClearHeader();
+	_httppack->AddHeaderManual("Accept: application/json, text/plain, */*");
+	ret = toollib::HttpGetEx(pcurl, _httppack);
+	if (ret) {
+		std::cout << _tool.GetTimeString() << "[Live] Get Livelist Failed!" << std::endl;
+		return BILIRET::HTTP_ERROR;
+	}
+
+	doc.Parse(_httppack->strrecdata);
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
+		|| !doc.HasMember("data") || !doc["data"].IsArray()) {
+		std::cout << _tool.GetTimeString() << "[Live] Get Livelist Failed!" << std::endl;
+		return BILIRET::JSON_ERROR;
+	}
+
+	return BILIRET::NOFAULT;
+
 }

@@ -17,7 +17,6 @@ const char APP_SECRET[40] = "560c52ccd288fed045859ed18bffd973";
 #define URL_DEFAULT_REFERER "Referer: https://live.bilibili.com/3"
 #define URL_LIVEAPI_HEAD "https://api.live.bilibili.com"
 
-#define DEF_MAX_ROOM 1000
 #define MSG_NEWSMALLTV WM_USER + 612
 #define MSG_NEWSPECIALGIFT WM_USER + 613
 #define MSG_NEWYUNYING WM_USER + 615

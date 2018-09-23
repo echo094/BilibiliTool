@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "BilibiliDanmu.h"
 #include <ctime>
+#include <algorithm>
 #include <iostream>
 
 CBilibiliDanmu::CBilibiliDanmu() {
@@ -17,11 +18,10 @@ int CBilibiliDanmu::OnClose(PER_SOCKET_CONTEXT* pSocketContext) {
 	int room = pSocketContext->label;
 	printf("[Danmu] Worker Close Room:%d \n", room);
 	// 如果房间在列表中将其标志为需要重连
-	room_list.find(room);
-	if (room_list.find(room) == room_list.end()) {
+	if (m_rinfo.find(room) == m_rinfo.end()) {
 		return 0;
 	}
-	room_list[room].needconnect = true;
+	m_rinfo[room].needconnect = true;
 
 	return 0;
 }
@@ -122,7 +122,7 @@ int CBilibiliDanmu::OnHeart() {
 			//发送失败则断开连接 等待重连 必须保证没有Worker线程正在处理该连接的数据
 			printf("[Danmu] Heart %d failed code:%d \n", room, ret);
 			this->_DisConnectSocketHard(m_itor);
-			room_list[room].needconnect = true;
+			m_rinfo[room].needconnect = true;
 			needclean = true;
 		}
 		m_itor++;
@@ -135,8 +135,8 @@ int CBilibiliDanmu::OnHeart() {
 	}
 
 	// 扫描并重连断开的房间
-	std::map<int, ROOM_INFO>::const_iterator it;
-	for (it = room_list.begin(); it != room_list.end(); ++it) {
+	std::map<unsigned, ROOM_INFO>::const_iterator it;
+	for (it = m_rinfo.begin(); it != m_rinfo.end(); ++it) {
 		if (it->second.needconnect) {
 			this->SendConnectionInfo(it->first);
 			Sleep(0);
@@ -170,34 +170,38 @@ int CBilibiliDanmu::Deinit() {
 	// 关闭IOCP客户端
 	this->Destory();
 	// 清理列表
-	room_list.clear();
+	m_rinfo.clear();
+	m_rlist.clear();
 	_roomcount = 0;
+
 	_isworking = false;
 
 	return 0;
 }
 
-int CBilibiliDanmu::ConnectToRoom(int room, DANMU_FLAG flag) {
-	if (room_list.find(room) != room_list.end()) {
+int CBilibiliDanmu::ConnectToRoom(const unsigned room, DANMU_FLAG flag) {
+	if (m_rlist.count(room)) {
 		return -1;
 	}
 	// 添加房间至列表
 	_roomcount++;
 	ROOM_INFO info;
 	info.flag = flag;
-	room_list[room] = info;
+	m_rinfo[room] = info;
+	m_rlist.insert(room);
 	this->SendConnectionInfo(room);
 
 	return 0;
 }
 
-int CBilibiliDanmu::DisconnectFromRoom(int room) {
-	if (room_list.find(room) == room_list.end()) {
+int CBilibiliDanmu::DisconnectFromRoom(const unsigned room) {
+	if (!m_rlist.count(room)) {
 		return -1;
 	}
 	this->CloseConnectionByLabel(room);
 	// 从列表清除该房间
-	room_list.erase(room);
+	m_rinfo.erase(room);
+	m_rlist.erase(room);
 	_roomcount--;
 	return 0;
 }
@@ -209,8 +213,29 @@ long long CBilibiliDanmu::GetRUID() {
 }
 
 int CBilibiliDanmu::ShowCount() {
-	printf("Map count: %d IO count: %d \n", room_list.size(), m_arrayClientContext.size());
+	printf("Map count: %d IO count: %d \n", m_rinfo.size(), m_arrayClientContext.size());
 	return m_arrayClientContext.size();
+}
+
+int CBilibiliDanmu::UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag) {
+	using namespace std;
+	set<unsigned> dlist, ilist;
+	// 断开失效房间
+	set_difference(m_rlist.begin(), m_rlist.end(), nlist.begin(), nlist.end(), inserter(dlist, dlist.end()));
+	for (auto it = dlist.begin(); it != dlist.end(); it++) {
+		DisconnectFromRoom(*it);
+	}
+	// 连接新增房间
+	set_difference(nlist.begin(), nlist.end(), m_rlist.begin(), m_rlist.end(), inserter(ilist, ilist.end()));
+	for (auto it = ilist.begin(); it != ilist.end(); it++) {
+		ConnectToRoom(*it, flag);
+	}
+	// 输出操作概要
+	cout << "New list count: " << nlist.size() << endl;
+	cout << "Remove room count: " << dlist.size() << endl;
+	cout << "Add room count: " << ilist.size() << endl;
+	cout << "Current room count: " << m_rlist.size() << endl;
+	return m_rlist.size();
 }
 
 int CBilibiliDanmu::MakeConnectionInfo(unsigned char* str, int len, int room) {
@@ -254,10 +279,10 @@ int CBilibiliDanmu::SendConnectionInfo(int room) {
 	ret = this->Connect(2243, "livecmt-2.bilibili.com", room, cmdstr, len);
 	if (ret) {
 		//连接失败 在下一次心跳时重新连接
-		room_list[room].needconnect = true;
+		m_rinfo[room].needconnect = true;
 		return 0;
 	}
-	room_list[room].needconnect = false;
+	m_rinfo[room].needconnect = false;
 
 	return 0;
 }

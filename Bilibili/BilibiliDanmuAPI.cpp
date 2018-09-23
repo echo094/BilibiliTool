@@ -96,7 +96,7 @@ int DanmuAPI::ParseJSON(char *str, int room) {
 
 	// 节奏风暴
 	if (strtype == "SPECIAL_GIFT") {
-		if (room_list[room].flag != DANMU_FLAG::MSG_SPECIALGIFT)
+		if (m_rinfo[room].flag != DANMU_FLAG::MSG_SPECIALGIFT)
 			return 0;
 		return this->ParseSTORMMSG(doc, room);
 	}
@@ -109,13 +109,13 @@ int DanmuAPI::ParseJSON(char *str, int room) {
 	//新增活动时监控指定礼物ID即可
 	if (strtype == "SYS_GIFT") {
 		return 0;
-		if (room_list[room].flag != DANMU_FLAG::MSG_PUBEVENT)
+		if (m_rinfo[room].flag != DANMU_FLAG::MSG_PUBEVENT)
 			return 0;
 		return this->ParseSYSGIFT(doc, room);
 	}
 
 	if (strtype == "SYS_MSG") {
-		if (room_list[room].flag != DANMU_FLAG::MSG_PUBEVENT)
+		if (m_rinfo[room].flag != DANMU_FLAG::MSG_PUBEVENT)
 			return 0;
 		return this->ParseSYSMSG(doc, room);
 	}
@@ -266,7 +266,7 @@ int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, int room) {
 	}
 	int btype = doc["buy_type"].GetInt();
 	// 只需发送房间号
-	if (room_list[room].flag == DANMU_FLAG::MSG_PUBEVENT) {
+	if (m_rinfo[room].flag == DANMU_FLAG::MSG_PUBEVENT) {
 		// 处理广播事件
 		// 总督上船消息
 		if (btype == 1) {
@@ -277,7 +277,7 @@ int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, int room) {
 		}
 		return 0;
 	}
-	if (room_list[room].flag == DANMU_FLAG::MSG_SPECIALGIFT) {
+	if (m_rinfo[room].flag == DANMU_FLAG::MSG_SPECIALGIFT) {
 		// 处理非广播事件
 		// 舰长或提督上船消息
 		if (btype != 1) {

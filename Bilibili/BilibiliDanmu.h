@@ -36,11 +36,13 @@ public:
 	// 退出所有线程 断开Socket 释放所有IOCP资源
 	int Deinit();
 	// 连接一个房间
-	int ConnectToRoom(int room, DANMU_FLAG flag);
+	int ConnectToRoom(const unsigned room, DANMU_FLAG flag);
 	// 断开特定房间
-	int DisconnectFromRoom(int room);
+	int DisconnectFromRoom(const unsigned room);
 	// 显示当前连接数
 	int ShowCount();
+	// 更新房间
+	int UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag);
 
 private:
 	long long GetRUID();
