@@ -115,13 +115,13 @@ int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 	}
 
 	// 获取需要连接的房间
-	char filepath[MAX_PATH];
-	GetCurrentDirectoryA(sizeof(filepath), filepath);
-	strcat_s(filepath, DEF_CONFIGGILE_NAME);
-	int troom = ::GetPrivateProfileIntA("Global", "Room", 23058, filepath);
-
-	_roomcount++;
-	_wsdanmu->ConnectToRoom(troom, DANMU_FLAG::MSG_PUBEVENT);
+	unsigned roomid;
+	for (unsigned int i = 1; i < 5; i++) {
+		if (_apilive->PickOneRoom(curl, roomid, i) == BILIRET::NOFAULT) {
+			_roomcount++;
+			_wsdanmu->ConnectToRoom(roomid, i, DANMU_FLAG::MSG_PUBEVENT);
+		}
+	}
 
 	printf("[Main] Curent Room Num:%d \n", _roomcount);
 	return 0;
@@ -161,6 +161,20 @@ void CBilibiliMain::SetDanmukuHide()
 	if (curmode == TOOL_EVENT::GET_HIDEN_GIFT) {
 		_tcpdanmu->SetDanmukuOff();
 	}
+}
+
+int CBilibiliMain::UpdateAreaRoom(const unsigned rid, const unsigned area) {
+	if (curmode != TOOL_EVENT::GET_SYSMSG_GIFT) {
+		return 0;
+	}
+	_wsdanmu->DisconnectFromRoom(rid);
+	unsigned nrid;
+	if (_apilive->PickOneRoom(curl, nrid, area) == BILIRET::NOFAULT) {
+		_wsdanmu->ConnectToRoom(nrid, area, DANMU_FLAG::MSG_PUBEVENT);
+		return 0;
+	}
+
+	return -1;
 }
 
 int CBilibiliMain::UpdateLiveRoom() {

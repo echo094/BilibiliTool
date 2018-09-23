@@ -29,7 +29,7 @@ int CBilibiliDanmu::OnClose(PER_SOCKET_CONTEXT* pSocketContext) {
 int CBilibiliDanmu::OnReceive(PER_SOCKET_CONTEXT* pSocketContext, PER_IO_CONTEXT* pIoContext, int byteslen) {
 	int type;
 	int room = pSocketContext->label;
-	unsigned char *str = (unsigned char *)pIoContext->m_szBuffer;
+	const unsigned char *str = (unsigned char *)pIoContext->m_szBuffer;
 	int reclen = byteslen + pIoContext->m_occupy;
 	int pos = 0, i;
 	while (pos < reclen) {
@@ -84,8 +84,8 @@ int CBilibiliDanmu::OnReceive(PER_SOCKET_CONTEXT* pSocketContext, PER_IO_CONTEXT
 		}
 
 		// 转发给其它函数处理
-		str[pos + ireclen] = 0;
-		ProcessData(str + (pos + 16), ireclen - 16, room, type);
+		pIoContext->m_szBuffer[pos + ireclen] = 0;
+		ProcessData(pIoContext->m_szBuffer + (pos + 16), ireclen - 16, room, type);
 
 		// 移动指针
 		pos += ireclen;
@@ -179,13 +179,14 @@ int CBilibiliDanmu::Deinit() {
 	return 0;
 }
 
-int CBilibiliDanmu::ConnectToRoom(const unsigned room, DANMU_FLAG flag) {
+int CBilibiliDanmu::ConnectToRoom(const unsigned room, const unsigned area, const DANMU_FLAG flag) {
 	if (m_rlist.count(room)) {
 		return -1;
 	}
 	// 添加房间至列表
 	_roomcount++;
 	ROOM_INFO info;
+	info.area = area;
 	info.flag = flag;
 	m_rinfo[room] = info;
 	m_rlist.insert(room);
@@ -227,7 +228,7 @@ int CBilibiliDanmu::UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag) {
 	// 连接新增房间
 	set_difference(nlist.begin(), nlist.end(), m_rlist.begin(), m_rlist.end(), inserter(ilist, ilist.end()));
 	for (auto it = ilist.begin(); it != ilist.end(); it++) {
-		ConnectToRoom(*it, flag);
+		ConnectToRoom(*it, 0, flag);
 	}
 	// 输出操作概要
 	cout << "New list count: " << nlist.size() << endl;

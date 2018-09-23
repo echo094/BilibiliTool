@@ -339,7 +339,7 @@ BILIRET CBilibiliLive::ApiCheckGuard(CURL *pcurl, int rrid, int &loid) const
 	return BILIRET::NOFAULT;
 }
 
-BILIRET CBilibiliLive::GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, unsigned minpop) const {
+BILIRET CBilibiliLive::GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, const unsigned minpop) const {
 	BILIRET ret = BILIRET::NOFAULT;
 	int page = 0;
 	while (1) {
@@ -359,6 +359,23 @@ BILIRET CBilibiliLive::GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, unsig
 			rlist.insert((*it)["roomid"].GetUint());
 		}
 	}
+}
+
+BILIRET CBilibiliLive::PickOneRoom(CURL *pcurl, unsigned &rid, const unsigned area) const {
+	if (!area) {
+		return BILIRET::NORESULT;
+	}
+	unsigned sa = 0;
+	if (area == 1) {
+		sa = 34;
+	}
+	rapidjson::Document doc;
+	BILIRET ret = _ApiRoomArea(pcurl, doc, area, sa);
+	if (ret != BILIRET::NOFAULT) {
+		return ret;
+	}
+	rid = doc["data"][0]["roomid"].GetUint();
+	return BILIRET::NOFAULT;
 }
 
 BILIRET CBilibiliLive::_ApiLiveList(CURL *pcurl, rapidjson::Document &doc, int pid) const {
@@ -382,5 +399,29 @@ BILIRET CBilibiliLive::_ApiLiveList(CURL *pcurl, rapidjson::Document &doc, int p
 	}
 
 	return BILIRET::NOFAULT;
+}
 
+BILIRET CBilibiliLive::_ApiRoomArea(CURL *pcurl, rapidjson::Document &doc, const unsigned a1, const unsigned a2) const {
+	int ret;
+	std::ostringstream oss;
+	oss << URL_LIVEAPI_HEAD << "/room/v1/area/getRoomList?platform=web&parent_area_id=" << a1
+		<< "&cate_id=0&area_id=" << a2 
+		<< "&sort_type=online&page=1&page_size=30";
+	_httppack->url = oss.str();
+	_httppack->ClearHeader();
+	_httppack->AddHeaderManual("Accept: application/json, text/plain, */*");
+	ret = toollib::HttpGetEx(pcurl, _httppack);
+	if (ret) {
+		std::cout << _tool.GetTimeString() << "[Live] Get Livelist Failed!" << std::endl;
+		return BILIRET::HTTP_ERROR;
+	}
+
+	doc.Parse(_httppack->strrecdata);
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
+		|| !doc.HasMember("data") || !doc["data"].IsArray() || !doc["data"].Size()) {
+		std::cout << _tool.GetTimeString() << "[Live] Get RoomArea Failed!" << std::endl;
+		return BILIRET::JSON_ERROR;
+	}
+
+	return BILIRET::NOFAULT;
 }

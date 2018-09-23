@@ -36,7 +36,8 @@ void CWSDanmu::on_timer(websocketpp::lib::error_code const & ec) {
 		// Connect to room again
 		// This will erase current metadata first and then create new metadata
 		// If it failed to connect, this room will lose. 
-		this->ConnectToRoom(recon_list.front(), m_rinfo[recon_list.front()].flag);
+		int rid = recon_list.front();
+		this->ConnectToRoom(rid, m_rinfo[rid].area, m_rinfo[rid].flag);
 		recon_list.pop_front();
 	}
 
@@ -59,9 +60,9 @@ void CWSDanmu::on_close(connection_metadata *it) {
 
 void CWSDanmu::on_message(connection_metadata *it, std::string &msg, int len) {
 	int label = it->get_id();
-	const unsigned char *precv = (const unsigned char *)msg.c_str();
 	int pos = 0, ireclen;
 	while (pos < len) {
+		const unsigned char *precv = (const unsigned char *)msg.c_str();
 		if (len < pos + 16) {
 			printf("[WSDanmu] Warning: Header missing len: %d \n", len);
 			if (pos) {
@@ -91,7 +92,7 @@ void CWSDanmu::on_message(connection_metadata *it, std::string &msg, int len) {
 			return;
 		}
 		msg.append(1, 0);
-		ProcessData((const unsigned char *)msg.c_str() + pos + 16, ireclen - 16, label, type);
+		ProcessData(msg.c_str() + pos + 16, ireclen - 16, label, type);
 		pos += ireclen;
 	}
 	msg.clear();
@@ -122,7 +123,7 @@ int CWSDanmu::Deinit() {
 	return 0;
 }
 
-int CWSDanmu::ConnectToRoom(const unsigned room, DANMU_FLAG flag) {
+int CWSDanmu::ConnectToRoom(const unsigned room, const unsigned area, const DANMU_FLAG flag) {
 	int ret;
 	std::string url = DM_WSSERVER;
 	ret = this->connect(room, url);
@@ -131,6 +132,7 @@ int CWSDanmu::ConnectToRoom(const unsigned room, DANMU_FLAG flag) {
 		return -1;
 	}
 	ROOM_INFO info;
+	info.area = area;
 	info.flag = flag;
 	m_rinfo[room] = info;
 	m_rlist.insert(room);

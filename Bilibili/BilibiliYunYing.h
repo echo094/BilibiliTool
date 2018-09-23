@@ -60,8 +60,12 @@ public:
 	}
 	BILIRET ApiSearchUser(CURL *pcurl, const char *user, int &rrid) const;
 	BILIRET ApiCheckGuard(CURL *pcurl, int rrid, int &loid) const;
-	BILIRET GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, unsigned minpop) const;
+	// 获取人气满足一定条件的房间列表
+	BILIRET GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, const unsigned minpop) const;
+	// 获取指定分区的一个房间
+	BILIRET PickOneRoom(CURL *pcurl, unsigned &rid, const unsigned area) const;
 
 private:
 	BILIRET _ApiLiveList(CURL *pcurl, rapidjson::Document &doc, int pid) const;
+	BILIRET _ApiRoomArea(CURL *pcurl, rapidjson::Document &doc, const unsigned a1, const unsigned a2) const;
 };

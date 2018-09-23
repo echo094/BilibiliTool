@@ -70,6 +70,11 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 				g_BilibiliMain->JoinSpecialGift(pinfo->rid, pinfo->loidl);
 				delete pinfo;
 			}
+			else if (msg.message == MSG_CHANGEROOM)
+			{
+				// 房间下播
+				g_BilibiliMain->UpdateAreaRoom(msg.wParam, msg.lParam);
+			}
 			else if (msg.message == WM_TIMER)
 			{
 				if (msg.wParam == hearttimer) {

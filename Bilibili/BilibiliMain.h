@@ -26,6 +26,8 @@ public:
 	int StartMonitorHiddenEvent(int pthreadid);
 	void SetDanmukuShow();
 	void SetDanmukuHide();
+	// 广播模式下更新监控的房间
+	int UpdateAreaRoom(const unsigned rid, const unsigned area);
 	// 非广播模式下更新监控的房间
 	int UpdateLiveRoom();
 	int JoinTV(int room);

@@ -36,7 +36,7 @@ public:
 	// 退出所有线程 断开Socket 释放所有IOCP资源
 	int Deinit();
 	// 连接一个房间
-	int ConnectToRoom(const unsigned room, DANMU_FLAG flag);
+	int ConnectToRoom(const unsigned room, const unsigned area, const DANMU_FLAG flag);
 	// 断开特定房间
 	int DisconnectFromRoom(const unsigned room);
 	// 更新房间
