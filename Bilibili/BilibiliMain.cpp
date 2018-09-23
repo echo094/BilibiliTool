@@ -245,10 +245,20 @@ int CBilibiliMain::JoinGuardGift(int room)
 	return 0;
 }
 
-int CBilibiliMain::JoinSpecialGift(int room, long long cid, std::string str)
+int CBilibiliMain::JoinGuardGift(BILI_LOTTERYDATA &pdata)
+{
+	sprintf_s(_logbuff, sizeof(_logbuff), "{time:%I64d,type:'%s_%d',ruid:%d,loid:%d},\n", _tool.GetTimeStamp(), pdata.type.c_str(), pdata.exinfo, pdata.rrid, pdata.loid);
+	_logfile.write(_logbuff, strlen(_logbuff));
+
+	_userlist->JoinGuardALL(pdata);
+
+	return 0;
+}
+
+int CBilibiliMain::JoinSpecialGift(int room, long long cid)
 {
 	int ret;
-	ret = _userlist->JoinSpecialGiftALL(room, cid, str);
+	ret = _userlist->JoinSpecialGiftALL(room, cid);
 	sprintf_s(_logbuff, sizeof(_logbuff), "{time:%I64d,type:'storm',ruid:%d,loid:%I64d},\n", _tool.GetTimeStamp(), room, cid);
 	_logfile.write(_logbuff, strlen(_logbuff));
 	return 0;

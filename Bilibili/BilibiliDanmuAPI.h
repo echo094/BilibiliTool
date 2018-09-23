@@ -41,6 +41,7 @@ protected:
 	int ParseSYSGIFT(rapidjson::Document &doc, int room);
 	int ParseSYSMSG(rapidjson::Document &doc, int room);
 	int ParseGUARDMSG(rapidjson::Document &doc, int room);
+	int ParseGUARDLO(rapidjson::Document &doc, int room);
 
 protected:
 	DWORD parentthreadid;//上级消息线程

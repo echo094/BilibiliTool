@@ -60,15 +60,23 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 			{
 				g_BilibiliMain->JoinYunYingGift(msg.wParam);
 			}
-			else if (msg.message == MSG_NEWGUARD)
+			else if (msg.message == MSG_NEWGUARD0)
 			{
+				// 房间上船事件
+				BILI_LOTTERYDATA *pinfo = (BILI_LOTTERYDATA *)msg.wParam;
+				g_BilibiliMain->JoinGuardGift(*pinfo);
+				delete pinfo;
+			}
+			else if (msg.message == MSG_NEWGUARD1)
+			{
+				// 广播上船事件
 				g_BilibiliMain->JoinGuardGift(msg.wParam);
 			}
 			else if (msg.message == MSG_NEWSPECIALGIFT)
 			{
-				tagSPECIALGIFT *tspecialgift = (tagSPECIALGIFT *)msg.lParam;
-				g_BilibiliMain->JoinSpecialGift(msg.wParam, tspecialgift->id, tspecialgift->content);
-				delete tspecialgift;
+				BILI_ROOMEVENT *pinfo = (BILI_ROOMEVENT *)msg.wParam;
+				g_BilibiliMain->JoinSpecialGift(pinfo->rid, pinfo->loidl);
+				delete pinfo;
 			}
 			else if (msg.message == WM_TIMER)
 			{

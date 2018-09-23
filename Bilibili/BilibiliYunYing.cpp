@@ -259,25 +259,29 @@ void CBilibiliGuard::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, i
 	long long curtime = _tool.GetTimeStamp();
 	unsigned int i;
 	std::string tid;
-	int tmpid;
+	int tloid, ttype;
 	std::list<PBILI_LOTTERYDATA> tlist;
 	PBILI_LOTTERYDATA pdata;
 
 	// 将所有上船ID放入临时列表
 	for (i = 0; i < infoArray.Size(); i++) {
 		if (infoArray[i]["id"].IsInt()) {
-			tmpid = infoArray[i]["id"].GetInt();
+			tloid = infoArray[i]["id"].GetInt();
 		}
 		else {
+			continue;
+		}
+		ttype = infoArray[i]["privilege_type"].GetInt();
+		if (ttype != 1) {
 			continue;
 		}
 		pdata = new BILI_LOTTERYDATA;
 		pdata->srid = srid;
 		pdata->rrid = rrid;
-		pdata->loid = tmpid;
+		pdata->loid = tloid;
 		pdata->type = infoArray[i]["keyword"].GetString();
 		pdata->time = curtime + infoArray[i]["time"].GetInt();
-		pdata->exinfo = infoArray[i]["privilege_type"].GetInt();
+		pdata->exinfo = ttype;
 		tlist.push_back(pdata);
 	}
 	// 排序

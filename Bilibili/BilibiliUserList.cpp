@@ -352,7 +352,7 @@ int CBilibiliUserList::JoinGuardALL(BILI_LOTTERYDATA &data)
 	return 0;
 }
 
-int CBilibiliUserList::JoinSpecialGiftALL(int roomID, long long cid, std::string msg)
+int CBilibiliUserList::JoinSpecialGiftALL(int roomID, long long cid)
 {
 	printf("%s[UserList] SpecialGift Room: %d \n", _tool.GetTimeString().c_str(), roomID);
 	// 当前没有用户则不领取
@@ -505,7 +505,7 @@ DWORD CBilibiliUserList::Thread_ActStorm(PVOID lpParameter)
 	for (itor = pclass->_userlist.begin(); itor != pclass->_userlist.end(); itor++) {
 		if (!(*itor)->getLoginStatus())
 			continue;
-		// Sleep(pclass->_GetRand(1000, 1500));
+		Sleep(pclass->_GetRand(1000, 1500));
 		EnterCriticalSection(&pclass->_csthread);
 		(*itor)->ActStorm(pdata->id1, pdata->id3);
 		LeaveCriticalSection(&pclass->_csthread);

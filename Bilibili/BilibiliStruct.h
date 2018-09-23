@@ -17,11 +17,12 @@ const char APP_SECRET[40] = "560c52ccd288fed045859ed18bffd973";
 #define URL_DEFAULT_REFERER "Referer: https://live.bilibili.com/3"
 #define URL_LIVEAPI_HEAD "https://api.live.bilibili.com"
 
-#define MSG_NEWSMALLTV WM_USER + 612
-#define MSG_NEWSPECIALGIFT WM_USER + 613
-#define MSG_NEWYUNYING WM_USER + 615
-#define MSG_NEWYUNYINGDAILY WM_USER + 616
-#define MSG_NEWGUARD WM_USER + 617
+const unsigned MSG_NEWSMALLTV = WM_USER + 612;
+const unsigned MSG_NEWSPECIALGIFT = WM_USER + 613;
+const unsigned MSG_NEWYUNYING = WM_USER + 615;
+const unsigned MSG_NEWYUNYINGDAILY = WM_USER + 616;
+const unsigned MSG_NEWGUARD1 = WM_USER + 617;
+const unsigned MSG_NEWGUARD0 = WM_USER + 618;
 
 enum class BILIRET {
 	NOFAULT = 0,
@@ -42,13 +43,13 @@ enum class BILIRET {
 	HTMLTEXT_ERROR
 };
 
-struct tagSPECIALGIFT
+typedef struct _BILI_ROOMEVENT
 {
-	int num = 0;
-	int rtime = 0;
-	long long id; 
-	std::string content;
-};
+	int rid = 0;
+	int loids = 0;
+	int exinfo;
+	long long loidl; 
+}BILI_ROOMEVENT;
 
 typedef struct _BILI_LOTTERYDATA
 {

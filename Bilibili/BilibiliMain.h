@@ -32,7 +32,8 @@ public:
 	int JoinYunYing(int room);
 	int JoinYunYingGift(int room);
 	int JoinGuardGift(int user);
-	int JoinSpecialGift(int room, long long cid, std::string str);
+	int JoinGuardGift(BILI_LOTTERYDATA &pdata);
+	int JoinSpecialGift(int room, long long cid);
 	int Debugfun(int index);
 
 private:

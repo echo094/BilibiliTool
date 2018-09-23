@@ -121,7 +121,17 @@ int DanmuAPI::ParseJSON(char *str, int room) {
 	}
 
 	if (strtype == "GUARD_MSG") {
+		if (m_rinfo[room].flag != DANMU_FLAG::MSG_PUBEVENT) {
+			return 0;
+		}
 		return this->ParseGUARDMSG(doc, room);
+	}
+
+	if (strtype == "GUARD_LOTTERY_START") {
+		if (m_rinfo[room].flag != DANMU_FLAG::MSG_SPECIALGIFT) {
+			return 0;
+		}
+		return this->ParseGUARDLO(doc, room);
 	}
 
 	//Exit if it is not in debug mode. 
@@ -142,19 +152,6 @@ int DanmuAPI::ParseJSON(char *str, int room) {
 		m_tmpwelcome.iguard_level = doc["data"]["guard_level"].GetInt();
 		m_tmpwelcome.struname = _strcoding.UTF_8ToWString(doc["data"]["username"].GetString());
 		printf("[DanmuAPI] WELCOME_GUARD: %d \n", m_tmpwelcome.iuid);
-	}
-	else if (strtype == "PREPARING") {
-		tagDANMUMSGSYS m_tmpsysmsg;
-		m_tmpsysmsg.itype = 1;
-		m_tmpsysmsg.iroomid = doc["roomid"].GetInt();
-		printf("[DanmuAPI] PREPARING: %d \n", m_tmpsysmsg.iroomid);
-	}
-	else if (strtype == "CUT_OFF") {
-		tagDANMUMSGSYS m_tmpsysmsg;
-		m_tmpsysmsg.itype = 2;
-		m_tmpsysmsg.iroomid = doc["roomid"].GetInt();
-		m_tmpsysmsg.msg = _strcoding.UTF_8ToString(doc["msg"].GetString());
-		printf("[DanmuAPI] CUT_OFF: %d %s \n", m_tmpsysmsg.iroomid, m_tmpsysmsg.msg.c_str());
 	}
 	else if (strtype == "TV_START") {
 		// printf("[DanmuAPI] TV_START: %d \n", roomid);
@@ -202,22 +199,22 @@ int DanmuAPI::ParseSTORMMSG(rapidjson::Document &doc, int room) {
 		if (!id) {
 			return -1;
 		}
-		tagSPECIALGIFT *tspecialgift = new tagSPECIALGIFT;
-		tspecialgift->id = id;
+		BILI_ROOMEVENT *pinfo = new BILI_ROOMEVENT;
+		pinfo->rid = room;
+		pinfo->loidl = id;
+		int num;
+		std::string content;
 		if (doc["data"]["39"].HasMember("num") && doc["data"]["39"]["num"].IsInt()) {
-			tspecialgift->num = doc["data"]["39"]["num"].GetInt();
-		}
-		if (doc["data"]["39"].HasMember("time") && doc["data"]["39"]["time"].IsInt()) {
-			tspecialgift->rtime = doc["data"]["39"]["time"].GetInt();
+			num = doc["data"]["39"]["num"].GetInt();
 		}
 		if (doc["data"]["39"].HasMember("content") && doc["data"]["39"]["content"].IsString()) {
 			tmpstr = doc["data"]["39"]["content"].GetString();
-			tspecialgift->content = _strcoding.UTF_8ToString(tmpstr.c_str());
+			content = _strcoding.UTF_8ToString(tmpstr.c_str());
 		}
 		printf("%s[DanmuAPI] Storm Room:%d ID: %I64d num: %d content: %s \n", _tool.GetTimeString().c_str(), room,
-			tspecialgift->id, tspecialgift->num, tspecialgift->content.c_str());
+			id, num, content.c_str());
 		if (parentthreadid)
-			PostThreadMessage(parentthreadid, MSG_NEWSPECIALGIFT, WPARAM((UINT)room), LPARAM(tspecialgift));
+			PostThreadMessage(parentthreadid, MSG_NEWSPECIALGIFT, WPARAM(pinfo), 0);
 		return 0;
 	}
 	if (tmpstr == "end") {
@@ -257,6 +254,7 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, int room) {
 	return 0;
 }
 
+// 处理广播事件总督上船消息
 // {"cmd":"GUARD_MSG","msg":"用户 :?[A]:? 在本房间开通了舰长","buy_type":3}
 // {"cmd":"GUARD_MSG","msg":"用户 :?[A]:? 在主播 [B] 的直播间开通了总督","msg_new":"","url":"","roomid":10116204,"buy_type":1,"broadcast_type":0}
 int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, int room) {
@@ -265,28 +263,27 @@ int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, int room) {
 		return 0;
 	}
 	int btype = doc["buy_type"].GetInt();
-	// 只需发送房间号
-	if (m_rinfo[room].flag == DANMU_FLAG::MSG_PUBEVENT) {
-		// 处理广播事件
-		// 总督上船消息
-		if (btype == 1) {
-			int rid = doc["roomid"].GetInt();
-			printf("%s[DanmuAPI] GUARD_MSG Roomid: %d Type: %d \n", _tool.GetTimeString().c_str(), rid, btype);
-			if (parentthreadid)
-				PostThreadMessage(parentthreadid, MSG_NEWGUARD, WPARAM(rid), LPARAM(btype));
-		}
-		return 0;
+	if (btype == 1) {
+		int rid = doc["roomid"].GetInt();
+		printf("%s[DanmuAPI] GUARD_MSG Roomid: %d Type: %d \n", _tool.GetTimeString().c_str(), rid, btype);
+		if (parentthreadid)
+			PostThreadMessage(parentthreadid, MSG_NEWGUARD1, WPARAM(rid), 0);
 	}
-	if (m_rinfo[room].flag == DANMU_FLAG::MSG_SPECIALGIFT) {
-		// 处理非广播事件
-		// 舰长或提督上船消息
-		if (btype != 1) {
-			printf("%s[DanmuAPI] GUARD_MSG Roomid: %d Type: %d \n", _tool.GetTimeString().c_str(), room, btype);
-			if (parentthreadid)
-				PostThreadMessage(parentthreadid, MSG_NEWGUARD, WPARAM(room), LPARAM(btype));
-		}
-		return 0;
-	}
+	return 0;
+}
 
-	return -1;
+// 处理房间事件非总督上船消息
+int DanmuAPI::ParseGUARDLO(rapidjson::Document &doc, int room) {
+	int btype = doc["data"]["privilege_type"].GetInt();
+	if (btype != 1) {
+		BILI_LOTTERYDATA *pinfo = new BILI_LOTTERYDATA;
+		pinfo->rrid = room;
+		pinfo->loid = doc["data"]["id"].GetInt();
+		pinfo->exinfo = btype;
+		pinfo->type = doc["data"]["lottery"]["keyword"].GetString();
+		printf("%s[DanmuAPI] GUARD_LOTTERY Roomid: %d Type: %d \n", _tool.GetTimeString().c_str(), room, btype);
+		if (parentthreadid)
+			PostThreadMessage(parentthreadid, MSG_NEWGUARD0, WPARAM(pinfo), 0);
+	}
+	return 0;
 }

@@ -71,7 +71,7 @@ public:
 	int JoinYunYingALL(BILI_LOTTERYDATA &data);
 	int JoinYunYingGiftALL(int);
 	int JoinGuardALL(BILI_LOTTERYDATA &data);
-	int JoinSpecialGiftALL(int roomID, long long cid, std::string msg);
+	int JoinSpecialGiftALL(int roomID, long long cid);
 	int SendDanmuku(int index, int roomID, std::string msg);
 
 protected:
