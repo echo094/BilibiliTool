@@ -33,10 +33,12 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 {
 	threadflag = true;
 	OutputDebugString(_T("BilibiliWIN32 -> Thread Start!\n"));
-	//用于线程退出循环的标志位
+	// 用于线程退出循环的标志位
 	bool runflag = true;
-	//是否有功能模块正在运行
+	// 是否有功能模块正在运行
 	bool isrunning = false;
+	// 主线程定时器
+	DWORD hearttimer;
 
 	int bRet = 0, ret;
 	MSG msg;
@@ -46,12 +48,41 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 		if ((bRet = GetMessage(&msg, NULL, 0, 0)) != 0)
 		{
 			TranslateMessage(&msg);
-			if (msg.message == ON_USER_COMMAND)
+			if (msg.message == MSG_NEWSMALLTV)
+			{
+				g_BilibiliMain->JoinTV(msg.wParam);
+			}
+			else if (msg.message == MSG_NEWYUNYING)
+			{
+				g_BilibiliMain->JoinYunYing(msg.wParam);
+			}
+			else if (msg.message == MSG_NEWYUNYINGDAILY)
+			{
+				g_BilibiliMain->JoinYunYingGift(msg.wParam);
+			}
+			else if (msg.message == MSG_NEWGUARD)
+			{
+				g_BilibiliMain->JoinGuardGift(msg.wParam);
+			}
+			else if (msg.message == MSG_NEWSPECIALGIFT)
+			{
+				tagSPECIALGIFT *tspecialgift = (tagSPECIALGIFT *)msg.lParam;
+				g_BilibiliMain->JoinSpecialGift(msg.wParam, tspecialgift->id, tspecialgift->content);
+				delete tspecialgift;
+			}
+			else if (msg.message == WM_TIMER)
+			{
+				if (msg.wParam == hearttimer) {
+					g_BilibiliMain->UpdateLiveRoom();
+				}
+			}
+			else if (msg.message == ON_USER_COMMAND)
 			{
 				TOOL_EVENT opt = static_cast<TOOL_EVENT>(msg.wParam);
 				if (msg.wParam == 0)
 					runflag = false;
 				else if (opt == TOOL_EVENT::STOP) {
+					KillTimer(NULL, hearttimer);
 					ret = g_BilibiliMain->StopMonitorALL();
 					isrunning = false;
 				}
@@ -79,6 +110,8 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 					}
 					else {
 						isrunning = true;
+						// 每5分钟刷新房间
+						hearttimer = SetTimer(NULL, 1, 300000, NULL);
 						ret = g_BilibiliMain->StartMonitorHiddenEvent(threadid);
 					}
 				}
@@ -88,32 +121,6 @@ static DWORD WINAPI Thread_BilibiliMain(PVOID lpParameter)
 				else if (opt == TOOL_EVENT::DEBUG2) {
 					g_BilibiliMain->Debugfun(2);
 				}
-			}
-			if (msg.message == MSG_NEWSMALLTV)
-			{
-				g_BilibiliMain->JoinTV(msg.wParam);
-			}
-			if (msg.message == MSG_NEWYUNYING)
-			{
-				g_BilibiliMain->JoinYunYing(msg.wParam);
-			}
-			if (msg.message == MSG_NEWYUNYINGDAILY)
-			{
-				g_BilibiliMain->JoinYunYingGift(msg.wParam);
-			}
-			if (msg.message == MSG_NEWGUARD)
-			{
-				g_BilibiliMain->JoinGuardGift(msg.wParam);
-			}
-			if (msg.message == MSG_NEWSPECIALGIFT)
-			{
-				tagSPECIALGIFT *tspecialgift = (tagSPECIALGIFT *)msg.lParam;
-				g_BilibiliMain->JoinSpecialGift(msg.wParam, tspecialgift->id, tspecialgift->content);
-				delete tspecialgift;
-			}
-			if (msg.message == WM_TIMER)
-			{
-				DispatchMessage(&msg);
 			}
 		}
 		//todo something
