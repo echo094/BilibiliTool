@@ -216,6 +216,12 @@ long long CBilibiliDanmu::GetRUID() {
 int CBilibiliDanmu::UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag) {
 	using namespace std;
 	set<unsigned> dlist, ilist;
+	// 房间下播后还会在列表存在一段时间
+	// 连接新增房间
+	set_difference(nlist.begin(), nlist.end(), m_rlist.begin(), m_rlist.end(), inserter(ilist, ilist.end()));
+	for (auto it = ilist.begin(); it != ilist.end(); it++) {
+		ConnectToRoom(*it, 0, flag);
+	}
 	// 断开关播房间
 	for (auto it = m_rlist.begin(); it != m_rlist.end(); it++) {
 		if (m_rinfo[(*it)].needclose) {
@@ -225,15 +231,10 @@ int CBilibiliDanmu::UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag) {
 	for (auto it = dlist.begin(); it != dlist.end(); it++) {
 		DisconnectFromRoom(*it);
 	}
-	// 连接新增房间
-	set_difference(nlist.begin(), nlist.end(), m_rlist.begin(), m_rlist.end(), inserter(ilist, ilist.end()));
-	for (auto it = ilist.begin(); it != ilist.end(); it++) {
-		ConnectToRoom(*it, 0, flag);
-	}
 	// 输出操作概要
 	cout << "New list count: " << nlist.size() << endl;
-	cout << "Remove room count: " << dlist.size() << endl;
 	cout << "Add room count: " << ilist.size() << endl;
+	cout << "Remove room count: " << dlist.size() << endl;
 	cout << "Current room count: " << m_rlist.size() << endl;
 	return m_rlist.size();
 }
