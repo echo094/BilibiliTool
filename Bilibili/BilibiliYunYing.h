@@ -63,7 +63,7 @@ public:
 	// 获取人气满足一定条件的房间列表
 	BILIRET GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, const unsigned minpop) const;
 	// 获取指定分区的一个房间
-	BILIRET PickOneRoom(CURL *pcurl, unsigned &rid, const unsigned area) const;
+	BILIRET PickOneRoom(CURL *pcurl, unsigned &nrid, const unsigned orid, const unsigned area) const;
 
 private:
 	BILIRET _ApiLiveList(CURL *pcurl, rapidjson::Document &doc, int pid) const;

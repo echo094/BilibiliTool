@@ -117,7 +117,7 @@ int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 	// 获取需要连接的房间
 	unsigned roomid;
 	for (unsigned int i = 1; i < 5; i++) {
-		if (_apilive->PickOneRoom(curl, roomid, i) == BILIRET::NOFAULT) {
+		if (_apilive->PickOneRoom(curl, roomid, 0, i) == BILIRET::NOFAULT) {
 			_roomcount++;
 			_wsdanmu->ConnectToRoom(roomid, i, DANMU_FLAG::MSG_PUBEVENT);
 		}
@@ -169,7 +169,7 @@ int CBilibiliMain::UpdateAreaRoom(const unsigned rid, const unsigned area) {
 	}
 	_wsdanmu->DisconnectFromRoom(rid);
 	unsigned nrid;
-	if (_apilive->PickOneRoom(curl, nrid, area) == BILIRET::NOFAULT) {
+	if (_apilive->PickOneRoom(curl, nrid, rid, area) == BILIRET::NOFAULT) {
 		_wsdanmu->ConnectToRoom(nrid, area, DANMU_FLAG::MSG_PUBEVENT);
 		return 0;
 	}

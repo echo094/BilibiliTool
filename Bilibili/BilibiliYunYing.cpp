@@ -361,7 +361,7 @@ BILIRET CBilibiliLive::GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, const
 	}
 }
 
-BILIRET CBilibiliLive::PickOneRoom(CURL *pcurl, unsigned &rid, const unsigned area) const {
+BILIRET CBilibiliLive::PickOneRoom(CURL *pcurl, unsigned &nrid, const unsigned orid, const unsigned area) const {
 	if (!area) {
 		return BILIRET::NORESULT;
 	}
@@ -374,7 +374,10 @@ BILIRET CBilibiliLive::PickOneRoom(CURL *pcurl, unsigned &rid, const unsigned ar
 	if (ret != BILIRET::NOFAULT) {
 		return ret;
 	}
-	rid = doc["data"][0]["roomid"].GetUint();
+	nrid = doc["data"][0]["roomid"].GetUint();
+	if (nrid == orid) {
+		nrid = doc["data"][1]["roomid"].GetUint();
+	}
 	return BILIRET::NOFAULT;
 }
 
@@ -418,7 +421,7 @@ BILIRET CBilibiliLive::_ApiRoomArea(CURL *pcurl, rapidjson::Document &doc, const
 
 	doc.Parse(_httppack->strrecdata);
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
-		|| !doc.HasMember("data") || !doc["data"].IsArray() || !doc["data"].Size()) {
+		|| !doc.HasMember("data") || !doc["data"].IsArray() || (doc["data"].Size() < 2)) {
 		std::cout << _tool.GetTimeString() << "[Live] Get RoomArea Failed!" << std::endl;
 		return BILIRET::JSON_ERROR;
 	}
