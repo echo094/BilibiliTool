@@ -306,13 +306,23 @@ int CBilibiliUserList::JoinTVALL(BILI_LOTTERYDATA *data)
 int CBilibiliUserList::JoinGuardALL(BILI_LOTTERYDATA &data)
 {
 	printf("%s[UserList] Guard Room: %d Id: %d\n", _tool.GetTimeString().c_str(), data.rrid, data.loid);
-	std::list<CBilibiliUserInfo*>::iterator itor;
-	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
-		if (!(*itor)->getLoginStatus())
-			continue;
+	// 当前没有用户则不领取
+	if (!_usercount)
+		return 0;
 
-		(*itor)->ActGuard(data);
-	}
+	HANDLE lphandle;
+	PTHARED_DATAEX pdata = new THARED_DATAEX;
+	pdata->ptr = this;
+	pdata->id1 = data.rrid;
+	pdata->id2 = data.loid;
+	pdata->str = data.type;
+	// 配置节奏ID并创建领取线程
+	EnterCriticalSection(&_csthread);
+	_threadcount++;
+	LeaveCriticalSection(&_csthread);
+	lphandle = CreateThread(NULL, 0, Thread_ActGuard, pdata, 0, 0);
+	CloseHandle(lphandle);
+
 	return 0;
 }
 
@@ -408,7 +418,7 @@ DWORD CBilibiliUserList::Thread_ActTV(PVOID lpParameter)
 	PTHARED_DATAEX pdata = (PTHARED_DATAEX)lpParameter;
 	CBilibiliUserList *pclass = pdata->ptr;
 	// 等待领取
-	printf("%s[UserList] Thread wait for join gift %d. \n", pclass->_tool.GetTimeString().c_str(), pdata->id2);
+	printf("%s[UserList] Thread join gift %d. \n", pclass->_tool.GetTimeString().c_str(), pdata->id2);
 	Sleep(pclass->_GetRand(5000, 5000));
 	// 领取为防止冲突 同一时间只能有一个用户在领取
 	// 在同一抽奖的两次抽奖之间增加间隔
@@ -430,12 +440,36 @@ DWORD CBilibiliUserList::Thread_ActTV(PVOID lpParameter)
 	return 0;
 }
 
+DWORD CBilibiliUserList::Thread_ActGuard(PVOID lpParameter)
+{
+	PTHARED_DATAEX pdata = (PTHARED_DATAEX)lpParameter;
+	CBilibiliUserList *pclass = pdata->ptr;
+	// 等待领取
+	printf("%s[UserList] Thread join guard %d. \n", pclass->_tool.GetTimeString().c_str(), pdata->id2);
+	Sleep(pclass->_GetRand(5000, 5000));
+	std::list<CBilibiliUserInfo*>::iterator itor;
+	for (itor = pclass->_userlist.begin(); itor != pclass->_userlist.end(); itor++) {
+		if (!(*itor)->getLoginStatus())
+			continue;
+		Sleep(pclass->_GetRand(1000, 1500));
+		EnterCriticalSection(&pclass->_csthread);
+		(*itor)->ActGuard(pdata->str, pdata->id1, pdata->id2);
+		LeaveCriticalSection(&pclass->_csthread);
+	}
+	delete pdata;
+	// 退出线程
+	EnterCriticalSection(&pclass->_csthread);
+	pclass->_threadcount--;
+	LeaveCriticalSection(&pclass->_csthread);
+	return 0;
+}
+
 DWORD CBilibiliUserList::Thread_ActStorm(PVOID lpParameter)
 {
 	PTHARED_DATAEX pdata = (PTHARED_DATAEX)lpParameter;
 	CBilibiliUserList *pclass = pdata->ptr;
 	// 等待领取
-	printf("%s[UserList] Thread wait for join storm %I64d. \n", pclass->_tool.GetTimeString().c_str(), pdata->id3);
+	printf("%s[UserList] Thread join storm %I64d. \n", pclass->_tool.GetTimeString().c_str(), pdata->id3);
 	// Sleep(pclass->_GetRand(8000, 4000));
 	// 领取为防止冲突 同一时间只能有一个用户在领取
 	// 在同一抽奖的两次抽奖之间增加间隔

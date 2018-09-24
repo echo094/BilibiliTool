@@ -112,7 +112,7 @@ public:
 	// 通告礼物
 	int ActSmallTV(int rrid, int loid);
 	// 上船低保
-	int ActGuard(BILI_LOTTERYDATA &pdata);
+	int ActGuard(const std::string &type, const int rrid, const int loid);
 
 // 登录相关
 protected:
@@ -178,7 +178,7 @@ protected:
 	// 领取每日礼物
 	BILIRET _APIv2GiftDaily() const;
 	// 新通用抽奖
-	BILIRET _APIv2LotteryJoin(BILI_LOTTERYDATA &pdata);
+	BILIRET _APIv2LotteryJoin(const std::string &type, const int rrid, const int loid);
 public:
 	//赠送礼物
 	BILIRET APIv2SendGift(int giftID, int roomID, int num, bool coinType, int bagID) const;

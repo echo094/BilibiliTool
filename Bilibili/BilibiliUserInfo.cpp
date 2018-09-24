@@ -369,12 +369,12 @@ int CBilibiliUserInfo::ActSmallTV(int rrid, int loid)
 	return 0;
 }
 
-int CBilibiliUserInfo::ActGuard(BILI_LOTTERYDATA &pdata) {
+int CBilibiliUserInfo::ActGuard(const std::string &type, const int rrid, const int loid) {
 	if (_useropt.conf & 0x80) {
 		// 产生访问记录
-		_APIv1RoomEntry(pdata.rrid);
+		_APIv1RoomEntry(rrid);
 		// 网页端API
-		_APIv2LotteryJoin(pdata);
+		_APIv2LotteryJoin(type, rrid, loid);
 		return 0;
 	}
 	return 0;
@@ -1131,19 +1131,19 @@ BILIRET CBilibiliUserInfo::_APIv2GiftDaily() const {
 	return BILIRET::NOFAULT;
 }
 
-BILIRET CBilibiliUserInfo::_APIv2LotteryJoin(BILI_LOTTERYDATA &pdata) {
+BILIRET CBilibiliUserInfo::_APIv2LotteryJoin(const std::string &type, const int rrid, const int loid) {
 	int ret;
 	_httppackweb->url = _urlapi + "/lottery/v2/Lottery/join";
 	char datastr[400] = "";
 	sprintf_s(datastr, sizeof(datastr), "roomid=%d&id=%d&type=%s&csrf_token=%s&visit_id=%s",
-		pdata.rrid, pdata.loid, pdata.type.c_str(), _useropt.tokenjct.c_str(), _useropt.visitid.c_str());
+		rrid, loid, type.c_str(), _useropt.tokenjct.c_str(), _useropt.visitid.c_str());
 	_httppackweb->strsenddata = datastr;
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept: application/json, text/plain, */*");
 	_httppackweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded");
 	_httppackweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
 	std::string strreffer(URL_DEFAULT_REFERERBASE);
-	strreffer += std::to_string(pdata.rrid);
+	strreffer += std::to_string(rrid);
 	_httppackweb->AddHeaderManual(strreffer.c_str());
 	ret = toollib::HttpPostEx(curlweb, _httppackweb);
 	if (ret) {

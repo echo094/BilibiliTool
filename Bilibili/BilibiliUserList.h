@@ -79,6 +79,8 @@ protected:
 	int _HeartExp(int firsttime = 0);
 	// 小电视领取线程
 	static DWORD WINAPI Thread_ActTV(PVOID lpParameter);
+	// 舰队低保领取线程
+	static DWORD WINAPI Thread_ActGuard(PVOID lpParameter);
 	// 节奏领取线程
 	static DWORD WINAPI Thread_ActStorm(PVOID lpParameter);
 	// 消息线程
