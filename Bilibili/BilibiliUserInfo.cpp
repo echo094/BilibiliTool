@@ -1003,7 +1003,7 @@ BILIRET CBilibiliUserInfo::_APIv2CheckHeartGift() {
 		printf("%s[User%d] FreeGiftInfo: %s \n", _tool.GetTimeString().c_str(), _useropt.fileid, _httppackweb->strrecdata);
 		return BILIRET::JSON_ERROR;
 	}
-	if (doc["data"]["heart_status"].GetInt()) {
+	if (doc["data"]["heart_status"].GetInt() && doc["data"]["gift_list"].Size()) {
 		_heartopt.freegift = 3;
 		printf("%s[User%d] FreeGift: Start getting. \n", _tool.GetTimeString().c_str(), _useropt.fileid);
 	}
@@ -1033,8 +1033,10 @@ BILIRET CBilibiliUserInfo::_APIv2GetHeartGift() {
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
 		return BILIRET::JSON_ERROR;
 	}
+	// 进小黑屋后无法领取
 	if (doc["code"].GetInt()) {
 		printf("%s[User%d] EventRoomHeart ERROR: %s \n", _tool.GetTimeString().c_str(), _useropt.fileid, _httppackweb->strrecdata);
+		_heartopt.freegift = 0;
 		return BILIRET::JSON_ERROR;
 	}
 	if (!doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("gift_list")) {
