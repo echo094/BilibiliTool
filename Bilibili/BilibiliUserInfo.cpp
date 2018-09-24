@@ -118,7 +118,7 @@ LOGINRET CBilibiliUserInfo::Login(int index, std::string username, std::string p
 		_useropt.uid = "";
 	// 默认开启所有功能
 	if (_useropt.conf == 0) {
-		_useropt.conf = 0b1001111;
+		_useropt.conf = 0xd1;
 	}
 	_useropt.islogin = true;
 
@@ -1155,9 +1155,17 @@ BILIRET CBilibiliUserInfo::_APIv2LotteryJoin(BILI_LOTTERYDATA &pdata) {
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
 		return BILIRET::JSON_ERROR;
 	}
+
 	std::string tmpstr;
-	if (doc["code"].GetInt()) {
-		tmpstr = doc["message"].GetString();
+	int icode = doc["code"].GetInt();
+	if (icode) {
+		// 检查是否被封禁
+		if (icode == 400) {
+			this->SetBanned();
+		}
+		if (doc.HasMember("message") && doc["message"].IsString()) {
+			tmpstr = doc["message"].GetString();
+		}
 	}
 	else {
 		tmpstr = doc["data"]["message"].GetString();
