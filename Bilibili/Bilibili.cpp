@@ -204,6 +204,9 @@ int GetPassword(std::string &psd)
 
 	while (1) {
 		ich = _getch();
+		if (!ich) {
+			continue;
+		}
 		//case cursor move
 		if (ich == 224) {
 			ch = _getch();
