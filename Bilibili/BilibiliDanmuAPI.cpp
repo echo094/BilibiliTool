@@ -215,14 +215,15 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, int room) {
 	}
 	int rrid = doc["real_roomid"].GetInt();
 
-	// 如果是全区广播（小电视）需要过滤重复消息
+	// 检测是否为分区广播
+	// 如果是全区广播需要过滤重复消息
 	std::string tstr;
 	tstr = doc["msg"].GetString();
 	std::wstring wmsg = _strcoding.UTF_8ToWString(tstr.c_str());
-	int ret = -1;
-	ret = wmsg.find(L"小电视飞船");
-	if ((ret != -1) && (m_rinfo[room].area != 1)) {
-		return 0;
+	if ((wmsg.find(L"摩天大楼") == -1) && (wmsg.find(L"小金人") == -1)) {
+		if (m_rinfo[room].area != 1) {
+			return 0;
+		}
 	}
 
 	// 有房间号就进行抽奖
