@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <time.h>
 
 CBilibiliMain::CBilibiliMain(CURL *pcurl){
 	curmode = TOOL_EVENT::STOP;
@@ -58,6 +59,17 @@ int CBilibiliMain::SaveLogFile() {
 	return ret;
 }
 
+// 在1点和10点之间不参加抽奖
+bool CBilibiliMain::isSkip() {
+	time_t time;
+	std::time(&time);
+	// 需要考虑时区
+	auto sec = (time + 28800) % 86400;
+	if ((sec > 3600) && (sec < 36000)) {
+		return true;
+	}
+	return false;
+}
 
 int CBilibiliMain::StopMonitorALL() {
 	if (curmode == TOOL_EVENT::STOP)
@@ -207,6 +219,9 @@ int CBilibiliMain::JoinTV(int room)
 			<< ",loid:" << pdata.loid
 			<< "}," << std::endl;
 		
+		if (isSkip()) {
+			continue;
+		}
 		_userlist->JoinTVALL(&pdata);
 	}
 	return 0;
@@ -230,7 +245,10 @@ int CBilibiliMain::JoinGuardGift(int room)
 			<< "',ruid:" << pdata.rrid
 			<< ",loid:" << pdata.loid
 			<< "}," << std::endl;
-		
+
+		if (isSkip()) {
+			continue;
+		}
 		_userlist->JoinGuardALL(pdata);
 	}
 
@@ -239,26 +257,32 @@ int CBilibiliMain::JoinGuardGift(int room)
 
 int CBilibiliMain::JoinGuardGift(BILI_LOTTERYDATA &pdata)
 {
-	_userlist->JoinGuardALL(pdata);
-
 	_logfile << "{time:" << _tool.GetTimeStamp()
 		<< ",type:'" << pdata.type << '_' << pdata.exinfo
 		<< "',ruid:" << pdata.rrid
 		<< ",loid:" << pdata.loid
 		<< "}," << std::endl;
 
+	if (isSkip()) {
+		return 0;
+	}
+	_userlist->JoinGuardALL(pdata);
+
 	return 0;
 }
 
 int CBilibiliMain::JoinSpecialGift(int room, long long cid)
 {
-	_userlist->JoinSpecialGiftALL(room, cid);
-
 	_logfile << "{time:" << _tool.GetTimeStamp()
 		<< ",type:'" << "storm"
 		<< "',ruid:" << room
 		<< ",loid:" << cid
 		<< "}," << std::endl;
+
+	if (isSkip()) {
+		return 0;
+	}
+	_userlist->JoinSpecialGiftALL(room, cid);
 
 	return 0;
 }

@@ -19,6 +19,8 @@ public:
 	int SetCURLHandle(CURL *pcurl);
 	unique_ptr<CBilibiliUserList> &GetUserList(int index = 0);
 	int SaveLogFile();
+	// 是否跳过此次操作
+	bool isSkip();
 
 	int StopMonitorALL();
 	int StartUserHeart();
@@ -31,7 +33,9 @@ public:
 	// 非广播模式下更新监控的房间
 	int UpdateLiveRoom();
 	int JoinTV(int room);
-	int JoinGuardGift(int user);
+	// 上船消息通告只含有房间号
+	int JoinGuardGift(int room);
+	// 上船抽奖事件通告含有完整抽奖信息
 	int JoinGuardGift(BILI_LOTTERYDATA &pdata);
 	int JoinSpecialGift(int room, long long cid);
 	int Debugfun(int index);
