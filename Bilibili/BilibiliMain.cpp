@@ -187,7 +187,7 @@ int CBilibiliMain::UpdateLiveRoom() {
 		return 0;
 	}
 	std::set<unsigned> nlist;
-	_apilive->GetLiveList(curl, nlist, 500);
+	_apilive->GetLiveList(curl, nlist, 400);
 	int ret = _tcpdanmu->UpdateRoom(nlist, DANMU_FLAG::MSG_SPECIALGIFT);
 
 	return ret;
