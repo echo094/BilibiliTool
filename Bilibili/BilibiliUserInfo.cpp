@@ -337,6 +337,8 @@ int CBilibiliUserInfo::ActHeart() {
 int CBilibiliUserInfo::ActStorm(int roid, long long cid) {
 	// 风暴只领取一次 不管成功与否
 	if (_useropt.conf & 0x10) {
+		// 产生访问记录
+		_APIv1RoomEntry(roid);
 		// 网页端API
 		_APIv1StormJoin(roid, cid, "", "");
 		return 0;

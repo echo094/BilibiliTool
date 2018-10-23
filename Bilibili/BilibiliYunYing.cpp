@@ -309,7 +309,7 @@ BILIRET CBilibiliLive::ApiCheckGuard(CURL *pcurl, int rrid, int &loid) const
 
 BILIRET CBilibiliLive::GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, const unsigned minpop) const {
 	BILIRET ret = BILIRET::NOFAULT;
-	int page = 0;
+	int page = 0, err = 10;
 	while (1) {
 		rapidjson::Document doc;
 		page++;
@@ -322,7 +322,11 @@ BILIRET CBilibiliLive::GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, const
 		for (auto it = infoArray.Begin(); it != infoArray.End(); it++) {
 			pop = (*it)["online"].GetUint();
 			if (pop < minpop) {
-				return BILIRET::NOFAULT;
+				// 可能会有人气小的房间跑到前面去的情况
+				err--;
+				if (!err) {
+					return BILIRET::NOFAULT;
+				}
 			}
 			rlist.insert((*it)["roomid"].GetUint());
 		}
