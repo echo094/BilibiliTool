@@ -11,7 +11,6 @@ public:
 
 protected:
 	CTools _tool;
-	CStrConvert _strcoding;
 	unique_ptr<CHTTPPack> _httppack;
 	int _curid;
 	std::list<PBILI_LOTTERYDATA> _bili_lotteryactive;
@@ -49,7 +48,6 @@ class CBilibiliLive
 {
 protected:
 	CTools _tool;
-	CStrConvert _strcoding;
 	unique_ptr<CHTTPPack> _httppack;
 public:
 	CBilibiliLive() {
@@ -58,7 +56,6 @@ public:
 	~CBilibiliLive() {
 		_httppack = nullptr;
 	}
-	BILIRET ApiSearchUser(CURL *pcurl, const char *user, int &rrid) const;
 	BILIRET ApiCheckGuard(CURL *pcurl, int rrid, int &loid) const;
 	// 获取人气满足一定条件的房间列表
 	BILIRET GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, const unsigned minpop) const;

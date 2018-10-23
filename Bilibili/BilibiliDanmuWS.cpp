@@ -1,10 +1,9 @@
 ﻿#include "stdafx.h"
 #include "BilibiliDanmuWS.h"
+#include "log.h"
 #include <ctime>
-using namespace rapidjson;
 #include <iostream>
 #include <list>
-using namespace std;
 
 CWSDanmu::CWSDanmu() {
 	_isworking = false;
@@ -46,16 +45,16 @@ void CWSDanmu::on_timer(websocketpp::lib::error_code const & ec) {
 }
 
 void CWSDanmu::on_open(connection_metadata *it) {
-	printf("[WSDanmu] WebSocket Open: %d\n", it->get_id());
+	BOOST_LOG_SEV(g_logger::get(), info) << "[WSDanmu] WebSocket Open: " << it->get_id();
 	SendConnectionInfo(it);
 }
 
 void CWSDanmu::on_fail(connection_metadata *it) {
-	printf("[WSDanmu] WebSocket Error: %s\n", it->get_error_reason().c_str());
+	BOOST_LOG_SEV(g_logger::get(), warning) << "[WSDanmu] WebSocket Error: " << it->get_id() << " " << it->get_error_reason();
 }
 
 void CWSDanmu::on_close(connection_metadata *it) {
-	printf("[WSDanmu] WebSocket Close: %s\n", it->get_error_reason().c_str());
+	BOOST_LOG_SEV(g_logger::get(), info) << "[WSDanmu] WebSocket Close: " << it->get_id() << " " << it->get_error_reason();
 }
 
 void CWSDanmu::on_message(connection_metadata *it, std::string &msg, int len) {
@@ -64,7 +63,7 @@ void CWSDanmu::on_message(connection_metadata *it, std::string &msg, int len) {
 	while (pos < len) {
 		const unsigned char *precv = (const unsigned char *)msg.c_str();
 		if (len < pos + 16) {
-			printf("[WSDanmu] Warning: Header missing len: %d \n", len);
+			BOOST_LOG_SEV(g_logger::get(), warning) << "[WSDanmu] Header missing len: " << len;
 			if (pos) {
 				msg = msg.substr(pos, len - pos);
 			}
@@ -73,12 +72,12 @@ void CWSDanmu::on_message(connection_metadata *it, std::string &msg, int len) {
 		ireclen = precv[pos + 1] << 16 | precv[pos + 2] << 8 | precv[pos + 3];
 		if (ireclen < 16 || ireclen > 5000) {
 			// The length of datapack is abnormal
-			printf("[WSDanmu] Error: Data pack is oversize: %d \n", ireclen);
+			BOOST_LOG_SEV(g_logger::get(), error) << "[WSDanmu] Data pack is oversize: " << ireclen;
 			msg.clear();
 			return;
 		}
 		if (len < pos + ireclen) {
-			printf("[WSDanmu] Warning: Data pack missing: %d:%d \n", len - pos, ireclen);
+			BOOST_LOG_SEV(g_logger::get(), warning) << "[WSDanmu] Data pack missing: " << len - pos << ":" << ireclen;
 			if (pos) {
 				msg = msg.substr(pos, len - pos);
 			}
@@ -87,7 +86,7 @@ void CWSDanmu::on_message(connection_metadata *it, std::string &msg, int len) {
 		int type = CheckMessage(precv + pos);
 		if (type == -1) {
 			// The header is wrong
-			printf("[WSDanmu] Error: Data pack check failed! \n");
+			BOOST_LOG_SEV(g_logger::get(), error) << "[WSDanmu] Data pack check failed!";
 			msg.clear();
 			return;
 		}
@@ -128,7 +127,7 @@ int CWSDanmu::ConnectToRoom(const unsigned room, const unsigned area, const DANM
 	std::string url = DM_WSSERVER;
 	ret = this->connect(room, url);
 	if (ret) {
-		printf("[WSDanmu] Connect to %d failed\n", room);
+		BOOST_LOG_SEV(g_logger::get(), error) << "[WSDanmu] Connect to " << room  << " failed!";
 		return -1;
 	}
 	ROOM_INFO info;
@@ -197,7 +196,7 @@ int CWSDanmu::SendConnectionInfo(connection_metadata *it) {
 	websocketpp::lib::error_code ec;
 	m_client.send(it->get_hdl(), cmdstr, len, websocketpp::frame::opcode::binary, ec);
 	if (ec) {
-		std::cout << "[WSDanmu] Error sending connection message: " << ec.message() << std::endl;
+		BOOST_LOG_SEV(g_logger::get(), error) << "[WSDanmu] Error sending connection message: " << ec.message();
 		return -1;
 	}
 
@@ -210,7 +209,7 @@ int CWSDanmu::SendHeartInfo(connection_metadata &it) {
 	websocketpp::lib::error_code ec;
 	m_client.send(it.get_hdl(), cmdstr, len, websocketpp::frame::opcode::binary, ec);
 	if (ec) {
-		std::cout << "[WSDanmu] Error sending heart message: " << ec.message() << std::endl;
+		BOOST_LOG_SEV(g_logger::get(), error) << "[WSDanmu] Error sending heart message: " << ec.message();
 		return -1;
 	}
 

@@ -164,6 +164,7 @@
     <ClInclude Include="BilibiliUserInfo.h" />
     <ClInclude Include="BilibiliUserList.h" />
     <ClInclude Include="httpex.h" />
+    <ClInclude Include="log.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="sslex.h" />
     <ClInclude Include="stdafx.h" />
@@ -181,6 +182,7 @@
     <ClCompile Include="BilibiliUserInfo.cpp" />
     <ClCompile Include="BilibiliUserList.cpp" />
     <ClCompile Include="httpex.cpp" />
+    <ClCompile Include="log.cpp" />
     <ClCompile Include="sslex.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

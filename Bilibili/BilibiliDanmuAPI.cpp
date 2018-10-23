@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "BilibiliDanmuAPI.h"
+#include "log.h"
 
 struct tagDANMUMSGDANMU
 {
@@ -49,22 +50,22 @@ int DanmuAPI::ProcessData(const char* str, int len, int room, int type)
 	switch (type) {
 	case 0x03: {
 		// int value = str[1] << 16 | str[2] << 8 | str[3];
-		// printf("[DanmuAPI] Roomid: %d Popular:%d \n", room, value);
+		// BOOST_LOG_SEV(g_logger::get(), trace) << "[DanmuAPI] " << room << " Popular:" << value;
 		break;
 	}
 	case 0x05: {
 		ret = ParseJSON(str, room);
 		if (ret) {
-			printf("[DanmuAPI] ERROR: %s \n", str);
+			BOOST_LOG_SEV(g_logger::get(), error) << "[DanmuAPI] " << room << " MSG: " << str;
 		}
 		break;
 	}
 	case 0x08: {
-		printf("[DanmuAPI] Roomid: %d Link start... \n", room);
+		BOOST_LOG_SEV(g_logger::get(), info) << "[DanmuAPI] " << room << " Link start...";
 		break;
 	}
 	default: {
-		printf("[DanmuAPI] ERROR: Unknown Type %d \n", type);
+		BOOST_LOG_SEV(g_logger::get(), error) << "[DanmuAPI] " << room << " Unknown msg type: " << type;
 		break;
 	}
 	}
@@ -76,7 +77,7 @@ int DanmuAPI::ParseJSON(const char *str, int room) {
 	doc.Parse(str);
 
 	if (!doc.IsObject() || !doc.HasMember("cmd") || !doc["cmd"].IsString()) {
-		printf("[DanmuAPI] Error: %d JSON Wrong. \n", room);
+		BOOST_LOG_SEV(g_logger::get(), error) << "[DanmuAPI] " << room << " JSON Wrong.";
 		return -1;
 	}
 	std::string strtype = doc["cmd"].GetString();
@@ -126,7 +127,7 @@ int DanmuAPI::ParseJSON(const char *str, int room) {
 	if ((strtype == "PREPARING") || (strtype == "CUT_OFF")) {
 		// 标记为需关闭
 		m_rinfo[room].needclose = true;
-		printf("%s[DanmuAPI] Roomid: %d Notice Close \n", _tool.GetTimeString().c_str(), room);
+		BOOST_LOG_SEV(g_logger::get(), trace) << "[DanmuAPI] " << room << " Notice Close.";
 		if (m_rinfo[room].flag == DANMU_FLAG::MSG_PUBEVENT) {
 			// 监测广播事件的房间需要立即更换
 			if (parentthreadid) {
@@ -142,7 +143,7 @@ int DanmuAPI::ParseJSON(const char *str, int room) {
 		}
 		// 取消需要关闭的标记
 		m_rinfo[room].needclose = false;
-		printf("%s[DanmuAPI] Roomid: %d Notice Open \n", _tool.GetTimeString().c_str(), room);
+		BOOST_LOG_SEV(g_logger::get(), trace) << "[DanmuAPI] " << room << " Notice Open.";
 		return 0;
 	}
 
@@ -157,7 +158,8 @@ int DanmuAPI::ParseDANMUMSG(rapidjson::Document &doc, int room) {
 	m_tmpdanmu.strmsg = _strcoding.UTF_8ToString(tmpstr.c_str());
 	tmpstr = doc["info"][2][1].GetString();
 	m_tmpdanmu.struname = _strcoding.UTF_8ToString(tmpstr.c_str());
-	printf("[DanmuAPI] DANMU_MSG %d Roomid: %d %s:%s\n", (int)m_tmpdanmu.time, room, m_tmpdanmu.struname.c_str(), m_tmpdanmu.strmsg.c_str());
+	BOOST_LOG_SEV(g_logger::get(), info) << "[DanmuAPI] " << room 
+		<< " DANMU_MSG: " << m_tmpdanmu.struname << ":" << m_tmpdanmu.strmsg;
 	return 0;
 }
 
@@ -194,15 +196,16 @@ int DanmuAPI::ParseSTORMMSG(rapidjson::Document &doc, int room) {
 			tmpstr = doc["data"]["39"]["content"].GetString();
 			content = _strcoding.UTF_8ToString(tmpstr.c_str());
 		}
-		printf("%s[DanmuAPI] Storm Room:%d ID: %I64d num: %d content: %s \n", _tool.GetTimeString().c_str(), room,
-			id, num, content.c_str());
+		BOOST_LOG_SEV(g_logger::get(), info) << "[DanmuAPI] " << room
+			<< " Storm: ID:" << id << " num:" << num << " content:" << content;
 		if (parentthreadid) {
 			PostThreadMessage(parentthreadid, MSG_NEWSPECIALGIFT, WPARAM(pinfo), 0);
 		}
 		return 0;
 	}
 	if (tmpstr == "end") {
-		printf("%s[DanmuAPI] Storm Room:%d End \n", _tool.GetTimeString().c_str(), room);
+		BOOST_LOG_SEV(g_logger::get(), info) << "[DanmuAPI] " << room
+			<< " Storm: end ";
 		return 0;
 	}
 	return -1;
@@ -244,8 +247,12 @@ int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, int room) {
 	}
 	int btype = doc["buy_type"].GetInt();
 	if (btype == 1) {
+		if (m_rinfo[room].area != 1) {
+			return 0;
+		}
 		int rid = doc["roomid"].GetInt();
-		printf("%s[DanmuAPI] GUARD_MSG Roomid: %d Type: %d \n", _tool.GetTimeString().c_str(), rid, btype);
+		BOOST_LOG_SEV(g_logger::get(), info) << "[DanmuAPI] " << room
+			<< " GUARD_MSG: Type: " << btype << " rid:" << rid;
 		if (parentthreadid) {
 			PostThreadMessage(parentthreadid, MSG_NEWGUARD1, WPARAM(rid), 0);
 		}
@@ -262,7 +269,8 @@ int DanmuAPI::ParseGUARDLO(rapidjson::Document &doc, int room) {
 		pinfo->loid = doc["data"]["id"].GetInt();
 		pinfo->exinfo = btype;
 		pinfo->type = doc["data"]["lottery"]["keyword"].GetString();
-		printf("%s[DanmuAPI] GUARD_LOTTERY Roomid: %d Type: %d \n", _tool.GetTimeString().c_str(), room, btype);
+		BOOST_LOG_SEV(g_logger::get(), info) << "[DanmuAPI] " << room
+			<< " GUARD_LOTTERY: Type: " << btype;
 		if (parentthreadid) {
 			PostThreadMessage(parentthreadid, MSG_NEWGUARD0, WPARAM(pinfo), 0);
 		}

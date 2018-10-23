@@ -58,6 +58,5 @@ protected:
 	std::map<unsigned, ROOM_INFO> m_rinfo;
 
 	bool bdanmukuon;
-	CTools _tool;
 	CStrConvert _strcoding;
 };

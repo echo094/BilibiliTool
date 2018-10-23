@@ -33,7 +33,6 @@ private:
 	TOOL_EVENT m_workmode;//工作模式
 
 private:
-	CTools _tool;
 	char _cfgfile[MAX_PATH];
 	std::list<CBilibiliUserInfo*> _userlist;
 	int _usercount;

@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "BilibiliDanmu.h"
+#include "log.h"
 #include <ctime>
 #include <algorithm>
 #include <iostream>
@@ -16,7 +17,7 @@ CBilibiliDanmu::~CBilibiliDanmu() {
 // 函数退出后相关IO被自动清理
 int CBilibiliDanmu::OnClose(PER_SOCKET_CONTEXT* pSocketContext) {
 	int room = pSocketContext->label;
-	printf("[Danmu] Worker Close Room:%d \n", room);
+	BOOST_LOG_SEV(g_logger::get(), info) << "[Danmu] Worker Close Room: " << room;
 	// 如果房间在列表中将其标志为需要重连
 	if (m_rinfo.find(room) == m_rinfo.end()) {
 		return 0;
@@ -36,8 +37,9 @@ int CBilibiliDanmu::OnReceive(PER_SOCKET_CONTEXT* pSocketContext, PER_IO_CONTEXT
 		// 通过前四个字节的数据计算当前数据包长度
 		if (pos + 4 > reclen) {
 			// 无法获得数据包长度
-			printf("[Danmu] Warning: %d Recv bytes last:sum:remain:need %d:%d:%d:%d \n",
-				room, pIoContext->m_occupy, reclen, reclen - pos, 4);
+			BOOST_LOG_SEV(g_logger::get(), warning) << "[Danmu] " << room 
+				<< " Recv bytes last:" << pIoContext->m_occupy << " sum:" << reclen
+				<< " remain:" << reclen - pos << " need:" << 4;
 			pIoContext->m_occupy = reclen - pos;
 			if (!pos)
 				return 0;
@@ -54,8 +56,9 @@ int CBilibiliDanmu::OnReceive(PER_SOCKET_CONTEXT* pSocketContext, PER_IO_CONTEXT
 		// 当消息类型为SEND_GIFT时在同时赠送5个小电视的情况下数据包长度会大于3500个字节
 		if (ireclen < 16 || ireclen > 5000) {
 			// 数据包错误
-			printf("[Danmu] Error: %d Recv bytes last:sum:remain:need %d:%d:%d:%d \n",
-				room, pIoContext->m_occupy, reclen, reclen - pos, ireclen);
+			BOOST_LOG_SEV(g_logger::get(), error) << "[Danmu] " << room
+				<< " Recv bytes last:" << pIoContext->m_occupy << " sum:" << reclen
+				<< " remain:" << reclen - pos << " need:" << ireclen;
 			pIoContext->m_occupy = 0;
 			return -1;
 		}
@@ -64,18 +67,18 @@ int CBilibiliDanmu::OnReceive(PER_SOCKET_CONTEXT* pSocketContext, PER_IO_CONTEXT
 			type = CheckMessage(str + pos);
 			if (type == -1) {
 				// 数据包校验失败
-				printf("[Danmu] Error: %d Recv bytes last:sum:remain:need %d:%d:%d:%d \n",
-					room, pIoContext->m_occupy, reclen, reclen - pos, ireclen);
+				BOOST_LOG_SEV(g_logger::get(), error) << "[Danmu] " << room
+					<< " Recv bytes last:" << pIoContext->m_occupy << " sum:" << reclen
+					<< " remain:" << reclen - pos << " need:" << ireclen;
 				pIoContext->m_occupy = 0;
 				return -1;
 			}
 		}
 		// 数据包正确但不完整
 		if (pos + int(ireclen) > reclen ) {
-#ifdef _DEBUG
-			printf("[Danmu] Leave: %d Recv bytes last:sum:remain:need %d:%d:%d:%d \n", 
-				room, pIoContext->m_occupy, reclen, reclen - pos, ireclen);
-#endif
+			BOOST_LOG_SEV(g_logger::get(), debug) << "[Danmu] " << room
+				<< " Leave Recv bytes last:" << pIoContext->m_occupy << " sum:" << reclen
+				<< " remain:" << reclen - pos << " need:" << ireclen;
 			pIoContext->m_occupy = reclen - pos;
 			for (i = 0; i < pIoContext->m_occupy; i++) {
 				pIoContext->m_szBuffer[i] = pIoContext->m_szBuffer[pos + i];
@@ -95,10 +98,9 @@ int CBilibiliDanmu::OnReceive(PER_SOCKET_CONTEXT* pSocketContext, PER_IO_CONTEXT
 	// 当指针正好指向末尾时才会跳出while语句执行到此处
 	// 遗留数据处理完毕
 	if (pIoContext->m_occupy) {
-#ifdef _DEBUG
-		printf("[Danmu] Clear: %d Recv bytes last:sum:remain %d:%d:%d \n", 
-			room, pIoContext->m_occupy, reclen, pos - reclen);
-#endif
+		BOOST_LOG_SEV(g_logger::get(), debug) << "[Danmu] " << room
+			<< " Clear Recv bytes last:" << pIoContext->m_occupy << " sum:" << reclen
+			<< " remain:" << pos - reclen;
 		pIoContext->m_occupy = 0;
 	}
 
@@ -120,7 +122,8 @@ int CBilibiliDanmu::OnHeart() {
 		ret = _PostSend(*m_itor, cmdstr, len);
 		if (ret) {
 			//发送失败则断开连接 等待重连 必须保证没有Worker线程正在处理该连接的数据
-			printf("[Danmu] Heart %d failed code:%d \n", room, ret);
+			BOOST_LOG_SEV(g_logger::get(), warning) << "[Danmu] " << room
+				<< " Heart failed code:" << ret;
 			this->_DisConnectSocketHard(m_itor);
 			m_rinfo[room].needconnect = true;
 			needclean = true;
@@ -232,10 +235,11 @@ int CBilibiliDanmu::UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag) {
 		DisconnectFromRoom(*it);
 	}
 	// 输出操作概要
-	cout << "New list count: " << nlist.size() << endl;
-	cout << "Add room count: " << ilist.size() << endl;
-	cout << "Remove room count: " << dlist.size() << endl;
-	cout << "Current room count: " << m_rlist.size() << endl;
+	BOOST_LOG_SEV(g_logger::get(), info) << "[Danmu] Status:"
+		<< " New: " << nlist.size()
+		<< " Add: " << ilist.size()
+		<< " Remove: " << dlist.size()
+		<< " Current: " << m_rlist.size();
 	return m_rlist.size();
 }
 

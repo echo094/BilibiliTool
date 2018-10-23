@@ -50,8 +50,6 @@ private:
 
 	// 当前模式
 	TOOL_EVENT curmode;
-	// 当前连接的房间数
-	int _roomcount;
 	// 账户列表类
 	unique_ptr<CBilibiliUserList> _userlist;
 	// 小电视信息处理类

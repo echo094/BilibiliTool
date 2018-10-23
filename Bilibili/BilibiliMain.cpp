@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "BilibiliMain.h"
+#include "log.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -15,7 +16,6 @@ CBilibiliMain::CBilibiliMain(CURL *pcurl){
 	_logfile.close();
 	_logfile.open(name, std::ios::in | std::ios::out);
 
-	_roomcount = 0;
 	_tcpdanmu = nullptr;
 	_wsdanmu = nullptr;
 	_lotterytv = std::make_unique<CBilibiliSmallTV>();
@@ -33,9 +33,7 @@ CBilibiliMain::~CBilibiliMain() {
 	_lotterygu = nullptr;
 	_apilive = nullptr;
 	_userlist = nullptr;
-#ifdef _DEBUG
-	printf("[Main] Stop. \n");
-#endif
+	BOOST_LOG_SEV(g_logger::get(), debug) << "[Main] Stop.";
 }
 
 int CBilibiliMain::SetCURLHandle(CURL *pcurl) {
@@ -78,31 +76,29 @@ int CBilibiliMain::StopMonitorALL() {
 
 	if (curmode == TOOL_EVENT::ONLINE) {
 		ret = _userlist->StopUserHeart();
-		printf("[Main] Heart stopped.\n");
+		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Heart stopped.";
 	}
 	if (curmode == TOOL_EVENT::GET_SYSMSG_GIFT) {
-		printf("[Main] Closing ws threads...\n");
+		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Closing ws threads...";
 
 		_wsdanmu->SetNotifyThread(0);
 		ret = _wsdanmu->Deinit();
 		_wsdanmu = nullptr;
 
-		_roomcount = 0;
-		printf("[Main] Monitor stopped.\n");
+		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Monitor stopped.";
 		ret = _userlist->WaitActThreadStop();
-		printf("[Main] User Thread Clear.\n");
+		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] User Thread Clear.";
 	}
 	if (curmode == TOOL_EVENT::GET_HIDEN_GIFT) {
-		printf("[Main] Closing socket threads...\n");
+		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Closing socket threads...";
 
 		_tcpdanmu->SetNotifyThread(0);
 		ret = _tcpdanmu->Deinit();
 		_tcpdanmu = nullptr;
 
-		_roomcount = 0;
-		printf("[Main] Monitor stopped.\n");
+		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Monitor stopped.";
 		ret = _userlist->WaitActThreadStop();
-		printf("[Main] User Thread Clear.\n");
+		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] User Thread Clear.";
 	}
 	curmode = TOOL_EVENT::STOP;
 
@@ -130,12 +126,10 @@ int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 	unsigned roomid;
 	for (unsigned int i = 1; i < 5; i++) {
 		if (_apilive->PickOneRoom(curl, roomid, 0, i) == BILIRET::NOFAULT) {
-			_roomcount++;
 			_wsdanmu->ConnectToRoom(roomid, i, DANMU_FLAG::MSG_PUBEVENT);
 		}
 	}
 
-	printf("[Main] Curent Room Num:%d \n", _roomcount);
 	return 0;
 }
 
@@ -149,9 +143,8 @@ int CBilibiliMain::StartMonitorHiddenEvent(int pthreadid) {
 	}
 
 	// 连接符合人气条件的开播房间
-	_roomcount = UpdateLiveRoom();
+	UpdateLiveRoom();
 
-	printf("[Main] Curent Room Num:%d \n", _roomcount);
 	return 0;
 }
 
