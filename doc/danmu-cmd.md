@@ -242,9 +242,49 @@
 
 
 
-1 公告。
+1 广播的公告。
 
-2 抽奖消息。
+```json
+{
+	"full": {
+		"head_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/b049ac07021f3e4269d22a79ca53e6e7815af9ba.png",
+		"tail_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/822da481fdaba986d738db5d8fd469ffa95a8fa1.webp",
+		"head_icon_fa": "http:\/\/i0.hdslb.com\/bfs\/live\/b049ac07021f3e4269d22a79ca53e6e7815af9ba.png",
+		"tail_icon_fa": "http:\/\/i0.hdslb.com\/bfs\/live\/38cb2a9f1209b16c0f15162b0b553e3b28d9f16f.png",
+		"head_icon_fan": 1,
+		"tail_icon_fan": 4,
+		"background": "#FFE6BDFF",
+		"color": "#9D5412FF",
+		"highlight": "#FF6933FF",
+		"time": 10
+	},
+	"half": {
+		"head_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/4db5bf9efcac5d5928b6040038831ffe85a91883.png",
+		"tail_icon": "",
+		"background": "#FFE6BDFF",
+		"color": "#9D5412FF",
+		"highlight": "#FF6933FF",
+		"time": 8
+	},
+	"side": {
+		"head_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/fa323d24f448d670bcc3dc59996d17463860a6b3.png",
+		"background": "#F5EBDDFF",
+		"color": "#DA9F77FF",
+		"highlight": "#C67137FF",
+		"border": "#ECDDC0FF"
+	},
+	"msg_type": 1,
+	"msg_common": "用沉船告诉你，如何成为最非主播。",
+	"msg_self": "用沉船告诉你，如何成为最非主播。",
+	"real_roomid": 451,
+	"link_url": "https:\/\/live.bilibili.com\/451?from=28003&extra_jump_from=28003",
+	"shield_uid": -1,
+	"cmd": "NOTICE_MSG",
+	"roomid": 0
+}
+```
+
+2 广播的抽奖消息。
 
 ```json
 {
@@ -326,9 +366,46 @@
 	"msg_type": 3,
 	"shield_uid": -1
 }
+{
+	"cmd": "NOTICE_MSG",
+	"full": {
+		"head_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/d63e78ade2319108390b1d6a59a81b2abe46925d.png",
+		"tail_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/822da481fdaba986d738db5d8fd469ffa95a8fa1.webp",
+		"head_icon_fa": "http:\/\/i0.hdslb.com\/bfs\/live\/d63e78ade2319108390b1d6a59a81b2abe46925d.png",
+		"tail_icon_fa": "http:\/\/i0.hdslb.com\/bfs\/live\/38cb2a9f1209b16c0f15162b0b553e3b28d9f16f.png",
+		"head_icon_fan": 1,
+		"tail_icon_fan": 4,
+		"background": "#FFB03CFF",
+		"color": "#FFFFFFFF",
+		"highlight": "#B25AC1FF",
+		"time": 10
+	},
+	"half": {
+		"head_icon": "",
+		"tail_icon": "",
+		"background": "",
+		"color": "",
+		"highlight": "",
+		"time": 8
+	},
+	"side": {
+		"head_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/17c5353140045345f31c7475432920df08351837.png",
+		"background": "#FFE9C8FF",
+		"color": "#EF903AFF",
+		"highlight": "#D54900FF",
+		"border": "#FFCFA4FF"
+	},
+	"roomid": 425315,
+	"real_roomid": 425315,
+	"msg_common": "<%太太太太太了%> 在 <%Dae-天涯ovo%> 的房间开通了总督并触发了抽奖，点击前往TA的房间去抽奖吧",
+	"msg_self": "<%太太太太太了%> 在本房间开通了总督并触发了抽奖，快来抽奖吧",
+	"link_url": "https:\/\/live.bilibili.com\/425315?live_lottery_type=2&broadcast_type=0&from=28003&extra_jump_from=28003",
+	"msg_type": 3,
+	"shield_uid": -1
+}
 ```
 
-4 房间内总督上船欢迎消息。
+4 房间内总督进房间欢迎消息。
 
 ```json
 {
@@ -412,7 +489,47 @@
 }
 ```
 
-6 20倍节奏风暴。
+6 广播的20倍节奏风暴。
+
+```json
+{
+	"full": {
+		"head_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/6fb61c0b149b46571b7945ba4e7561b92929bd04.webp",
+		"tail_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/822da481fdaba986d738db5d8fd469ffa95a8fa1.webp",
+		"head_icon_fa": "http:\/\/i0.hdslb.com\/bfs\/live\/88b6e816855fdaedb5664359d8b5a5ae7de39807.png",
+		"tail_icon_fa": "http:\/\/i0.hdslb.com\/bfs\/live\/38cb2a9f1209b16c0f15162b0b553e3b28d9f16f.png",
+		"head_icon_fan": 24,
+		"tail_icon_fan": 4,
+		"background": "#5E769FFF",
+		"color": "#FFFFFFFF",
+		"highlight": "#FFF77FFF",
+		"time": 10
+	},
+	"half": {
+		"head_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/4db5bf9efcac5d5928b6040038831ffe85a91883.png",
+		"tail_icon": "",
+		"background": "#8DA3C7FF",
+		"color": "#FFFFFFFF",
+		"highlight": "#FFF77FFF",
+		"time": 8
+	},
+	"msg_type": 6,
+	"roomid": 5540554,
+	"real_roomid": 5540554,
+	"msg_common": "<%Eli大老师%> 在直播间 <%5540554%> 使用了 <%20%> 倍节奏风暴，大家快去跟风领取奖励吧！",
+	"msg_self": "<%Eli大老师%> 在直播间 <%5540554%> 使用了 <%20%> 倍节奏风暴，大家快去跟风领取奖励吧！",
+	"link_url": "http:\/\/live.bilibili.com\/5540554?broadcast_type=-1&from=28003&extra_jump_from=28003",
+	"cmd": "NOTICE_MSG",
+	"side": {
+		"head_icon": "",
+		"background": "",
+		"color": "",
+		"highlight": "",
+		"border": ""
+	},
+	"shield_uid": -1
+}
+```
 
 
 
@@ -464,7 +581,7 @@
 
 
 
-### PK模式相关(14)
+### PK模式相关(15)
 
 #### PK_INVITE_INIT
 
@@ -529,6 +646,19 @@
 {
 	"cmd": "PK_INVITE_SWITCH_OPEN",
 	"roomid": 1542742
+}
+```
+
+
+
+#### PK_INVITE_SWITCH_CLOSE
+
+无需响应。
+
+```json
+{
+	"cmd": "PK_INVITE_SWITCH_CLOSE",
+	"roomid": 81697
 }
 ```
 
@@ -1080,6 +1210,62 @@
 		"privilege_type": 3,
 		"face": "http:\/\/i1.hdslb.com\/bfs\/face\/855cf5155c3122b15b5c57bd4ddd4c94c0841e12.jpg"
 	}
+}
+```
+
+
+
+### LOTTERY_START
+
+旧的房间内抽奖消息。
+
+```json
+{
+	"cmd": "LOTTERY_START",
+	"data": {
+		"id": 531692,
+		"roomid": 425315,
+		"message": "澶お澶お澶簡 鍦ㄣ€?25315銆戣喘涔颁簡鎬荤潱锛岃鍓嶅線鎶藉",
+		"type": "guard",
+		"privilege_type": 1,
+		"link": "https:\/\/live.bilibili.com\/425315",
+		"payflow_id": "web_d0de2bfd7e7dde8b86_201810",
+		"lottery": {
+			"id": 531692,
+			"sender": {
+				"uid": 738417,
+				"uname": "澶お澶お澶簡",
+				"face": "http:\/\/i1.hdslb.com\/bfs\/face\/f8eeeaf0e46329359eb6cfb8960a92ada9f0ea6f.jpg"
+			},
+			"keyword": "guard",
+			"privilege_type": 1,
+			"time": 86400,
+			"status": 1,
+			"mobile_display_mode": 2,
+			"mobile_static_asset": "",
+			"mobile_animation_asset": ""
+		}
+	}
+}
+```
+
+
+
+### SYS_GIFT
+
+旧的全区礼物赠送消息。
+
+```json
+{
+	"cmd": "SYS_GIFT",
+	"msg": "Eli大老师:? 在直播间 :?5540554:? 使用了 20 倍节奏风暴，大家快去跟风领取奖励吧！",
+	"tips": "【Eli大老师】在直播间【5540554】使用了 20 倍节奏风暴，大家快去跟风领取奖励吧！",
+	"msg_text": "【Eli大老师】在直播间【5540554】使用了 20 倍节奏风暴，大家快去跟风领取奖励吧！",
+	"giftId": 39,
+	"msgTips": 1,
+	"url": "http:\/\/live.bilibili.com\/5540554",
+	"roomid": 5540554,
+	"rnd": 1540374323
 }
 ```
 

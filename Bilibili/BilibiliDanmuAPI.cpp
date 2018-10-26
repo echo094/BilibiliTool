@@ -52,12 +52,15 @@ enum {
 	DM_PK_INVITE_FAIL,
 	DM_PK_INVITE_CANCEL,
 	DM_PK_INVITE_SWITCH_OPEN,
+	DM_PK_INVITE_SWITCH_CLOSE,
 	DM_PK_INVITE_REFUSE,
 	DM_PK_CLICK_AGAIN,
 
 	DM_COMBO_END,
 	DM_ENTRY_EFFECT,
 	DM_GUARD_MSG,
+	DM_LOTTERY_START,
+	DM_SYS_GIFT,
 	DM_SYS_MSG
 };
 
@@ -118,6 +121,7 @@ void DanmuAPI::InitCMD() {
 	m_cmdid["PK_INVITE_FAIL"] = DM_PK_INVITE_FAIL;
 	m_cmdid["PK_INVITE_CANCEL"] = DM_PK_INVITE_CANCEL;
 	m_cmdid["PK_INVITE_SWITCH_OPEN"] = DM_PK_INVITE_SWITCH_OPEN;
+	m_cmdid["PK_INVITE_SWITCH_CLOSE"] = DM_PK_INVITE_SWITCH_CLOSE;
 	m_cmdid["PK_INVITE_REFUSE"] = DM_PK_INVITE_REFUSE;
 	m_cmdid["PK_MATCH"] = DM_PK_MATCH;
 	m_cmdid["PK_PRE"] = DM_PK_PRE;
@@ -143,6 +147,8 @@ void DanmuAPI::InitCMD() {
 	m_cmdid["COMBO_END"] = DM_COMBO_END;
 	m_cmdid["ENTRY_EFFECT"] = DM_ENTRY_EFFECT;
 	m_cmdid["GUARD_MSG"] = DM_GUARD_MSG;
+	m_cmdid["LOTTERY_START"] = DM_LOTTERY_START;
+	m_cmdid["SYS_GIFT"] = DM_SYS_GIFT;
 	m_cmdid["SYS_MSG"] = DM_SYS_MSG;
 }
 
@@ -329,8 +335,10 @@ int DanmuAPI::ParseNOTICEMSG(rapidjson::Document &doc, int room) {
 	case 3: {
 		return ParseGUARDMSG(doc, room);
 	}
+	case 1:
 	case 4:
-	case 5: {
+	case 5:
+	case 6: {
 		return 0;
 	}
 	}
@@ -383,7 +391,7 @@ int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, int room) {
 		PostThreadMessage(parentthreadid, MSG_NEWGUARD1, WPARAM(rid), 0);
 	}
 
-	return -1;
+	return 0;
 }
 
 // 处理房间事件非总督上船消息
