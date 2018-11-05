@@ -141,7 +141,7 @@ void DanmuAPI::InitCMD() {
 	m_cmdid["SPECIAL_GIFT"] = DM_SPECIAL_GIFT;
 	m_cmdid["WIN_ACTIVITY"] = DM_WIN_ACTIVITY;
 	m_cmdid["WISH_BOTTLE"] = DM_WISH_BOTTLE;
-	// m_cmdid["LOL_ACTIVITY"] = DM_LOL_ACTIVITY;
+	m_cmdid["LOL_ACTIVITY"] = DM_LOL_ACTIVITY;
 	m_cmdid["ACTIVITY_EVENT"] = DM_ACTIVITY_EVENT;
 
 	m_cmdid["COMBO_END"] = DM_COMBO_END;

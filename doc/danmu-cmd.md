@@ -1,4 +1,4 @@
-# 弹幕指令说明
+﻿# 弹幕指令说明
 
 
 
@@ -1142,6 +1142,29 @@
 
 
 #### LOL_ACTIVITY
+
+房间内LOL竞猜（仅限房间7734200）。
+
+```json
+{
+	"cmd": "LOL_ACTIVITY",
+	"data": {
+		"action": "vote_begin",
+		"match_id": 4193,
+		"timestamp": 1540627015,
+		"guess_info": null
+	}
+}
+{
+	"cmd": "LOL_ACTIVITY",
+	"data": {
+		"action": "vote_end",
+		"match_id": 4193,
+		"timestamp": 1540630432,
+		"guess_info": null
+	}
+}
+```
 
 
 
