@@ -5,55 +5,17 @@
 #include <iostream>
 using namespace rapidjson;
 
-/*
-{
-	"code": 0,
-	"msg": "OK",
-	"message": "OK",
-	"data": [{
-		"raffleId": 28800,
-		"type": "small_tv",
-		"from": "鏃鸿€佸笀涓婄嚎",
-		"from_user": {
-			"uname": "鏃鸿€佸笀涓婄嚎",
-			"face": "https://i1.hdslb.com/bfs/face/aa4ee339e405701d1d79ee6334cdc9b482a80268.jpg"
-		},
-		"time": 180,
-		"status": 1
-	}]
-}
-{
-	"code":0,
-	"msg":"success",
-	"message":"success",
-	"data":[
-		{
-			"raffleId":26065,
-			"type":"flower_rain",
-			"from":"椋庝箣寰姺",
-			"from_user": {
-				"uname":"椋庝箣寰姺",
-				"face":"https://i1.hdslb.com/bfs/face/3e8d6513393cfa30027c9719ab85a4e73459276d.jpg"
-			},
-			"time":59,
-			"status":1
-		}
-	]
-}
-*/
-
-bool sortbiliyunyingdata(const PBILI_LOTTERYDATA & item1, const PBILI_LOTTERYDATA & item2)
-{
+bool sortbiliyunyingdata(const PBILI_LOTTERYDATA & item1, const PBILI_LOTTERYDATA & item2) {
 	return item1->loid < item2->loid;
 }
 
 CBilibiliLotteryBase::CBilibiliLotteryBase() {
-	_httppack = std::make_unique<CHTTPPack>();
-	_curid = 0;
+	m_httppack = std::make_unique<CHTTPPack>();
+	m_curid = 0;
 }
 
 CBilibiliLotteryBase::~CBilibiliLotteryBase() {
-	_httppack = nullptr;
+	m_httppack = nullptr;
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[Lottery] Stop.";
 }
 
@@ -79,30 +41,42 @@ int CBilibiliLotteryBase::CheckLottery(CURL *pcurl, int room)
 
 int CBilibiliLotteryBase::GetNextLottery(BILI_LOTTERYDATA &plo)
 {
-	if (_bili_lotteryactive.empty()) {
+	if (m_lotteryactive.empty()) {
 		return -1;
 	}
-	PBILI_LOTTERYDATA pdata = _bili_lotteryactive.front();
+	PBILI_LOTTERYDATA pdata = m_lotteryactive.front();
 	plo = *pdata;
 	delete pdata;
-	_bili_lotteryactive.pop_front();
+	m_lotteryactive.pop_front();
 	return 0;
+}
+
+void CBilibiliLotteryBase::ShowMissingLottery() {
+	BOOST_LOG_SEV(g_logger::get(), info) << "Missing lottery list: ";
+	for (auto it = m_missingid.begin(); it != m_missingid.end(); it++) {
+		BOOST_LOG_SEV(g_logger::get(), info) << *it;
+	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "End of list. ";
+}
+
+void CBilibiliLotteryBase::ClearMissingLottery() {
+	m_missingid.clear();
 }
 
 BILIRET CBilibiliLotteryBase::_CheckRoom(CURL *pcurl, int srid, int &rrid) {
 	int ret;
-	_httppack->url = URL_LIVEAPI_HEAD;
-	_httppack->url += "/room/v1/Room/room_init?id=" + std::to_string(srid);
-	_httppack->ClearHeader();
-	_httppack->AddHeaderManual("Accept: application/json, text/plain, */*");
-	ret = toollib::HttpGetEx(pcurl, _httppack);
+	m_httppack->url = URL_LIVEAPI_HEAD;
+	m_httppack->url += "/room/v1/Room/room_init?id=" + std::to_string(srid);
+	m_httppack->ClearHeader();
+	m_httppack->AddHeaderManual("Accept: application/json, text/plain, */*");
+	ret = toollib::HttpGetEx(pcurl, m_httppack);
 	if (ret) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[Lottery] Get RealRoomID Failed!";
 		return BILIRET::HTTP_ERROR;
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppack->strrecdata);
+	doc.Parse(m_httppack->strrecdata);
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsObject()
 		|| !doc["data"].HasMember("room_id") || !doc["data"]["room_id"].IsInt()) {
@@ -119,7 +93,33 @@ BILIRET CBilibiliLotteryBase::_CheckRoom(CURL *pcurl, int srid, int &rrid) {
 	return BILIRET::NOFAULT;
 }
 
-void CBilibiliLotteryBase::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid)
+BILIRET CBilibiliSmallTV::_GetLotteryID(CURL *pcurl, int srid, int rrid)
+{
+	int ret;
+	m_httppack->url = URL_LIVEAPI_HEAD;
+	m_httppack->url += "/gift/v3/smalltv/check?roomid=" + std::to_string(rrid);
+	m_httppack->ClearHeader();
+	ret = toollib::HttpGetEx(pcurl, m_httppack);
+	if (ret) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[SmallTV] HTTP GET Failed!";
+		return BILIRET::HTTP_ERROR;
+	}
+
+	//开始处理小电视信息
+	rapidjson::Document doc;
+	doc.Parse(m_httppack->strrecdata);
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
+		|| !doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("list") || !doc["data"]["list"].IsArray()) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[SmallTV] ERROR:" << doc["code"].GetInt();
+		return BILIRET::JSON_ERROR;
+	}
+	// 处理并添加新的抽奖信息
+	this->_UpdateLotteryList(doc["data"]["list"], srid, rrid);
+
+	return BILIRET::NOFAULT;
+}
+
+void CBilibiliSmallTV::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid)
 {
 	long long curtime = GetTimeStamp();
 	unsigned int i;
@@ -154,14 +154,13 @@ void CBilibiliLotteryBase::_UpdateLotteryList(rapidjson::Value &infoArray, int s
 	int flag = 0;
 	std::list<PBILI_LOTTERYDATA>::iterator itor;
 	for (itor = tlist.begin(); itor != tlist.end();) {
-		if ((*itor)->loid <= _curid) {
-			delete (*itor);
+		if (_CheckLoid((*itor)->loid)) {
+			flag++;
+			m_lotteryactive.push_back(*itor);
+			BOOST_LOG_SEV(g_logger::get(), info) << "[Lottery] Type: " << (*itor)->type << " Id: " << m_curid;
 		}
 		else {
-			flag++;
-			_curid = (*itor)->loid;
-			_bili_lotteryactive.push_back(*itor);
-			BOOST_LOG_SEV(g_logger::get(), info) << "[Lottery] Type: " << (*itor)->type << " Id: " << _curid;
+			delete (*itor);
 		}
 		itor = tlist.erase(itor);
 	}
@@ -170,30 +169,32 @@ void CBilibiliLotteryBase::_UpdateLotteryList(rapidjson::Value &infoArray, int s
 	}
 }
 
-BILIRET CBilibiliSmallTV::_GetLotteryID(CURL *pcurl, int srid, int rrid)
-{
-	int ret;
-	_httppack->url = URL_LIVEAPI_HEAD;
-	_httppack->url += "/gift/v3/smalltv/check?roomid=" + std::to_string(rrid);
-	_httppack->ClearHeader();
-	ret = toollib::HttpGetEx(pcurl, _httppack);
-	if (ret) {
-		BOOST_LOG_SEV(g_logger::get(), error) << "[SmallTV] HTTP GET Failed!";
-		return BILIRET::HTTP_ERROR;
+bool CBilibiliSmallTV::_CheckLoid(const int id) {
+	if (m_curid == 0) {
+		// 第一次
+		m_curid = id;
+		return true;
 	}
-
-	//开始处理小电视信息
-	rapidjson::Document doc;
-	doc.Parse(_httppack->strrecdata);
-	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
-		|| !doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("list") || !doc["data"]["list"].IsArray()) {
-		BOOST_LOG_SEV(g_logger::get(), error) << "[SmallTV] ERROR:" << doc["code"].GetInt();
-		return BILIRET::JSON_ERROR;
+	if (id == m_curid + 1) {
+		// 没有漏掉
+		m_curid = id;
+		return true;
 	}
-	// 处理并添加新的抽奖信息
-	this->_UpdateLotteryList(doc["data"]["list"], srid, rrid);
-
-	return BILIRET::NOFAULT;
+	if (id > m_curid) {
+		// 有漏掉 进行记录
+		for (int i = m_curid + 1; i < id; i++) {
+			m_missingid.insert(i);
+		}
+		m_curid = id;
+		return true;
+	}
+	// id <= m_curid
+	// 判断是否是漏掉的
+	if (m_missingid.count(id)) {
+		m_missingid.erase(id);
+		return true;
+	}
+	return false;
 }
 
 BILIRET CBilibiliGuard::_GetLotteryID(CURL *pcurl, int srid, int rrid)
@@ -201,9 +202,9 @@ BILIRET CBilibiliGuard::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 	int ret;
 	std::ostringstream oss;
 	oss << URL_LIVEAPI_HEAD << "/lottery/v1/Lottery/check_guard?roomid=" << rrid;
-	_httppack->url = oss.str();
-	_httppack->ClearHeader();
-	ret = toollib::HttpGetEx(pcurl, _httppack);
+	m_httppack->url = oss.str();
+	m_httppack->ClearHeader();
+	ret = toollib::HttpGetEx(pcurl, m_httppack);
 	if (ret) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[Guard] HTTP GET Failed!";
 		return BILIRET::HTTP_ERROR;
@@ -211,7 +212,7 @@ BILIRET CBilibiliGuard::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 
 	// 开始处理上船信息
 	rapidjson::Document doc;
-	doc.Parse(_httppack->strrecdata);
+	doc.Parse(m_httppack->strrecdata);
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsArray()) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[SmallTV] ERROR:" << doc["code"].GetInt();
@@ -259,14 +260,14 @@ void CBilibiliGuard::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, i
 	int flag = 0;
 	std::list<PBILI_LOTTERYDATA>::iterator itor;
 	for (itor = tlist.begin(); itor != tlist.end();) {
-		if ((*itor)->loid <= _curid) {
+		if ((*itor)->loid <= m_curid) {
 			delete (*itor);
 		}
 		else {
 			flag++;
-			_curid = (*itor)->loid;
-			_bili_lotteryactive.push_back(*itor);
-			BOOST_LOG_SEV(g_logger::get(), info) << "[Guard] Type: " << (*itor)->type << " Id: " << _curid
+			m_curid = (*itor)->loid;
+			m_lotteryactive.push_back(*itor);
+			BOOST_LOG_SEV(g_logger::get(), info) << "[Guard] Type: " << (*itor)->type << " Id: " << m_curid
 				<< " GType: " << (*itor)->exinfo;
 		}
 		itor = tlist.erase(itor);

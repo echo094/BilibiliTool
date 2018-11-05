@@ -122,6 +122,9 @@ int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 		_wsdanmu->Init();
 	}
 
+	// 清空错过抽奖列表
+	_lotterytv->ClearMissingLottery();
+
 	// 获取需要连接的房间
 	unsigned roomid;
 	for (unsigned int i = 1; i < 5; i++) {
@@ -291,7 +294,12 @@ int CBilibiliMain::Debugfun(int index)
 		}
 	}
 	if (index == 2) {
-		UpdateLiveRoom();
+		if (curmode == TOOL_EVENT::GET_SYSMSG_GIFT) {
+			_lotterytv->ShowMissingLottery();
+		}
+		if (curmode == TOOL_EVENT::GET_HIDEN_GIFT) {
+			UpdateLiveRoom();
+		}
 	}
 	return 0;
 }

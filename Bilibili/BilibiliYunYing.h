@@ -3,35 +3,47 @@
 #include <list>
 #include <set>
 
+// 目前不支持多线程操作
 class CBilibiliLotteryBase
 {
 public:
 	CBilibiliLotteryBase();
 	virtual ~CBilibiliLotteryBase();
 
-protected:
-	unique_ptr<CHTTPPack> _httppack;
-	int _curid;
-	std::list<PBILI_LOTTERYDATA> _bili_lotteryactive;
-
 public:
 	// 查询抽奖入口函数
 	int CheckLottery(CURL *pcurl, int room);
 	// 获取最近的一条抽奖信息
 	int GetNextLottery(BILI_LOTTERYDATA &pla);
+	// 显示漏掉的抽奖事件
+	void ShowMissingLottery();
+	// 清空漏掉的抽奖事件
+	void ClearMissingLottery();
+
 protected:
 	// 需要在类中实例化的查询API
 	virtual BILIRET _GetLotteryID(CURL *pcurl, int srid, int rrid) = 0;
 	// 检测房间号以及房间状态
 	BILIRET _CheckRoom(CURL *pcurl, int srid, int &rrid);
 	// 更新待抽奖列表
-	virtual void _UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid);
+	virtual void _UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid) = 0;
+
+protected:
+	unique_ptr<CHTTPPack> m_httppack;
+	int m_curid;
+	std::list<PBILI_LOTTERYDATA> m_lotteryactive;
+	std::set<int> m_missingid;
 };
 
 class CBilibiliSmallTV : public CBilibiliLotteryBase
 {
 protected:
 	BILIRET _GetLotteryID(CURL *pcurl, int srid, int rrid) override;
+	// 更新待抽奖列表
+	void _UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid) override;
+
+private:
+	bool _CheckLoid(const int id);
 };
 
 class CBilibiliGuard : public CBilibiliLotteryBase
