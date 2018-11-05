@@ -40,7 +40,7 @@ public:
 	// 断开特定房间
 	int DisconnectFromRoom(const unsigned room);
 	// 更新房间
-	int UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag);
+	void UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag);
 	// 显示当前连接数
 	int ShowCount();
 
@@ -52,5 +52,4 @@ private:
 
 private:
 	bool _isworking;
-	int _roomcount;
 };

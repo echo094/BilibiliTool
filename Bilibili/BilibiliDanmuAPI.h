@@ -17,12 +17,15 @@ typedef struct _ROOM_INFO {
 	bool needconnect;
 	// 需要关闭（下播时）
 	bool needclose;
+	// 需要删除（主动断开连接时）
+	bool needclear;
 
 	_ROOM_INFO() :
 		flag(DANMU_FLAG::MSG_NONE),
 		area(0),
 		needconnect(false),
-		needclose(false) {}
+		needclose(false),
+		needclear(false) {}
 
 }ROOM_INFO;
 

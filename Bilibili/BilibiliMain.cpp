@@ -191,9 +191,9 @@ int CBilibiliMain::UpdateLiveRoom() {
 	}
 	std::set<unsigned> nlist;
 	_apilive->GetLiveList(curl, nlist, 400);
-	int ret = _tcpdanmu->UpdateRoom(nlist, DANMU_FLAG::MSG_SPECIALGIFT);
+	_tcpdanmu->UpdateRoom(nlist, DANMU_FLAG::MSG_SPECIALGIFT);
 
-	return ret;
+	return 0;
 }
 
 int CBilibiliMain::JoinTV(int room)

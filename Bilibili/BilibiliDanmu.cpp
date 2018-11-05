@@ -7,7 +7,6 @@
 
 CBilibiliDanmu::CBilibiliDanmu() {
 	_isworking = false;
-	_roomcount = 0;
 }
 
 CBilibiliDanmu::~CBilibiliDanmu() {
@@ -18,11 +17,19 @@ CBilibiliDanmu::~CBilibiliDanmu() {
 int CBilibiliDanmu::OnClose(PER_SOCKET_CONTEXT* pSocketContext) {
 	int room = pSocketContext->label;
 	BOOST_LOG_SEV(g_logger::get(), info) << "[Danmu] Worker Close Room: " << room;
-	// 如果房间在列表中将其标志为需要重连
 	if (m_rinfo.find(room) == m_rinfo.end()) {
 		return 0;
 	}
-	m_rinfo[room].needconnect = true;
+	// 房间在列表中
+	if (m_rinfo[room].needclear) {
+		// 主动关闭 从列表清除该房间
+		m_rinfo.erase(room);
+		m_rlist.erase(room);
+	}
+	else {
+		// 意外关闭 将其标志为需要重连
+		m_rinfo[room].needconnect = true;
+	}
 
 	return 0;
 }
@@ -108,6 +115,7 @@ int CBilibiliDanmu::OnReceive(PER_SOCKET_CONTEXT* pSocketContext, PER_IO_CONTEXT
 }
 
 int CBilibiliDanmu::OnHeart() {
+	BOOST_LOG_SEV(g_logger::get(), debug) << "[Danmu] Heart start. ";
 	//所有在线连接发送心跳包
 	int ret, len, room;
 	char cmdstr[60];
@@ -145,6 +153,7 @@ int CBilibiliDanmu::OnHeart() {
 			Sleep(0);
 		}
 	}
+	BOOST_LOG_SEV(g_logger::get(), debug) << "[Danmu] Heart finish. ";
 
 	return 0;
 }
@@ -175,7 +184,6 @@ int CBilibiliDanmu::Deinit() {
 	// 清理列表
 	m_rinfo.clear();
 	m_rlist.clear();
-	_roomcount = 0;
 
 	_isworking = false;
 
@@ -187,7 +195,6 @@ int CBilibiliDanmu::ConnectToRoom(const unsigned room, const unsigned area, cons
 		return -1;
 	}
 	// 添加房间至列表
-	_roomcount++;
 	ROOM_INFO info;
 	info.area = area;
 	info.flag = flag;
@@ -202,11 +209,9 @@ int CBilibiliDanmu::DisconnectFromRoom(const unsigned room) {
 	if (!m_rlist.count(room)) {
 		return -1;
 	}
+	m_rinfo[room].needclear = true;
 	this->CloseConnectionByLabel(room);
-	// 从列表清除该房间
-	m_rinfo.erase(room);
-	m_rlist.erase(room);
-	_roomcount--;
+
 	return 0;
 }
 
@@ -216,31 +221,34 @@ long long CBilibiliDanmu::GetRUID() {
 	return static_cast <long long> (val);
 }
 
-int CBilibiliDanmu::UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag) {
+void CBilibiliDanmu::UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag) {
 	using namespace std;
+	BOOST_LOG_SEV(g_logger::get(), debug) << "[Danmu] Update start. ";
 	set<unsigned> dlist, ilist;
 	// 房间下播后还会在列表存在一段时间
-	// 连接新增房间
+	// 生成新增房间列表
 	set_difference(nlist.begin(), nlist.end(), m_rlist.begin(), m_rlist.end(), inserter(ilist, ilist.end()));
-	for (auto it = ilist.begin(); it != ilist.end(); it++) {
-		ConnectToRoom(*it, 0, flag);
-	}
-	// 断开关播房间
+	// 生成关播房间列表
 	for (auto it = m_rlist.begin(); it != m_rlist.end(); it++) {
 		if (m_rinfo[(*it)].needclose) {
 			dlist.insert(*it);
 		}
 	}
+	// 输出操作概要
+	BOOST_LOG_SEV(g_logger::get(), info) << "[Danmu] Status:"
+		<< " Current: " << m_rlist.size()
+		<< " New: " << nlist.size()
+		<< " Add: " << ilist.size()
+		<< " Remove: " << dlist.size();
+	// 断开关播房间
 	for (auto it = dlist.begin(); it != dlist.end(); it++) {
 		DisconnectFromRoom(*it);
 	}
-	// 输出操作概要
-	BOOST_LOG_SEV(g_logger::get(), info) << "[Danmu] Status:"
-		<< " New: " << nlist.size()
-		<< " Add: " << ilist.size()
-		<< " Remove: " << dlist.size()
-		<< " Current: " << m_rlist.size();
-	return m_rlist.size();
+	// 连接新增房间
+	for (auto it = ilist.begin(); it != ilist.end(); it++) {
+		ConnectToRoom(*it, 0, flag);
+	}
+	BOOST_LOG_SEV(g_logger::get(), debug) << "[Danmu] Update finish. ";
 }
 
 int CBilibiliDanmu::ShowCount() {
