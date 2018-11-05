@@ -329,7 +329,8 @@ int DanmuAPI::ParseNOTICEMSG(rapidjson::Document &doc, int room) {
 	}
 	int type = doc["msg_type"].GetInt();
 	switch (type) {
-	case 2: {
+	case 2:
+	case 8: {
 		return ParseSYSMSG(doc, room);
 	}
 	case 3: {
