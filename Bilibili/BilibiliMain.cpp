@@ -11,7 +11,7 @@ CBilibiliMain::CBilibiliMain(CURL *pcurl){
 	curl = pcurl;
 
 	char name[50];
-	sprintf_s(name, "[BILIMAIN]%sActHis.log", _tool.GetTimeString().c_str());
+	sprintf_s(name, "[BILIMAIN]%sActHis.log", GetTimeString().c_str());
 	_logfile.open(name, std::ios::out);
 	_logfile.close();
 	_logfile.open(name, std::ios::in | std::ios::out);
@@ -48,7 +48,7 @@ unique_ptr<CBilibiliUserList> &CBilibiliMain::GetUserList(int index) {
 int CBilibiliMain::SaveLogFile() {
 	int ret = 0;
 	char name[50];
-	sprintf_s(name, "[BILIMAIN]%sActHis.log", _tool.GetTimeString().c_str());
+	sprintf_s(name, "[BILIMAIN]%sActHis.log", GetTimeString().c_str());
 	_logfile.close();
 	_logfile.open(name, std::ios::out);
 	_logfile.close();
@@ -206,7 +206,7 @@ int CBilibiliMain::JoinTV(int room)
 		return -1;
 	BILI_LOTTERYDATA pdata;
 	while (_lotterytv->GetNextLottery(pdata) == 0) {
-		_logfile << "{time:" << _tool.GetTimeStamp()
+		_logfile << "{time:" << GetTimeStamp()
 			<< ",type:'" << pdata.type
 			<< "',ruid:" << pdata.rrid
 			<< ",loid:" << pdata.loid
@@ -233,7 +233,7 @@ int CBilibiliMain::JoinGuardGift(int room)
 		return -1;
 	BILI_LOTTERYDATA pdata;
 	while (_lotterygu->GetNextLottery(pdata) == 0) {
-		_logfile << "{time:" << _tool.GetTimeStamp()
+		_logfile << "{time:" << GetTimeStamp()
 			<< ",type:'" << pdata.type << '_' << pdata.exinfo
 			<< "',ruid:" << pdata.rrid
 			<< ",loid:" << pdata.loid
@@ -250,7 +250,7 @@ int CBilibiliMain::JoinGuardGift(int room)
 
 int CBilibiliMain::JoinGuardGift(BILI_LOTTERYDATA &pdata)
 {
-	_logfile << "{time:" << _tool.GetTimeStamp()
+	_logfile << "{time:" << GetTimeStamp()
 		<< ",type:'" << pdata.type << '_' << pdata.exinfo
 		<< "',ruid:" << pdata.rrid
 		<< ",loid:" << pdata.loid
@@ -266,7 +266,7 @@ int CBilibiliMain::JoinGuardGift(BILI_LOTTERYDATA &pdata)
 
 int CBilibiliMain::JoinSpecialGift(int room, long long cid)
 {
-	_logfile << "{time:" << _tool.GetTimeStamp()
+	_logfile << "{time:" << GetTimeStamp()
 		<< ",type:'" << "storm"
 		<< "',ruid:" << room
 		<< ",loid:" << cid

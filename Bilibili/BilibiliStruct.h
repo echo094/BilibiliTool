@@ -1,21 +1,21 @@
 ﻿#pragma once
 #include <string>
 
-#define DEF_CONFIGGILE_NAME "\\BiliConfig.ini"
-#define MSG_BILI_THREADCLOSE WM_USER + 611
+const char DEF_CONFIGGILE_NAME[] = "\\BiliConfig.ini";
+const unsigned MSG_BILI_THREADCLOSE = WM_USER + 611;
 
 const char DM_TCPSERVER[] = "livecmt-2.bilibili.com";
 const int DM_TCPPORT = 2243;
 const char DM_WSSERVER[] = "ws://broadcastlv.chat.bilibili.com:2244/sub";
 const char DM_WSSSERVER[] = "wss://broadcastlv.chat.bilibili.com:443/sub";
 
-const char APP_KEY[20] = "1d8b6e7d45233436";
-const char APP_SECRET[40] = "560c52ccd288fed045859ed18bffd973";
+const char APP_KEY[] = "1d8b6e7d45233436";
+const char APP_SECRET[] = "560c52ccd288fed045859ed18bffd973";
 
-#define URL_DEFAULT_ORIGIN "Origin: https://live.bilibili.com"
-#define URL_DEFAULT_REFERERBASE "Referer: https://live.bilibili.com/"
-#define URL_DEFAULT_REFERER "Referer: https://live.bilibili.com/3"
-#define URL_LIVEAPI_HEAD "https://api.live.bilibili.com"
+const char URL_DEFAULT_ORIGIN[] = "Origin: https://live.bilibili.com";
+const char URL_DEFAULT_REFERERBASE[] = "Referer: https://live.bilibili.com/";
+const char URL_DEFAULT_REFERER[] = "Referer: https://live.bilibili.com/3";
+const char URL_LIVEAPI_HEAD[] = "https://api.live.bilibili.com";
 
 const unsigned MSG_NEWSMALLTV = WM_USER + 612;
 const unsigned MSG_NEWSPECIALGIFT = WM_USER + 613;

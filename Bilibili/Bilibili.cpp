@@ -9,7 +9,7 @@ using namespace std;
 #include "BilibiliMain.h"
 #include "log.h"
 
-#define BILI_HEPLER_HEADER "\n Bilibili Tool \n"
+const char BILI_HEPLER_HEADER[] = "\n Bilibili Tool \n";
 
 //本软件主模块
 static unique_ptr<CBilibiliMain> g_BilibiliMain;
@@ -20,7 +20,7 @@ static bool threadflag = false;//主线程运行状态
 static DWORD threadid;//主线程序号
 static HANDLE threadhandle;//主线程句柄
 
-#define ON_USER_COMMAND WM_USER + 610 
+const unsigned ON_USER_COMMAND = WM_USER + 610;
 
 // 窗口密码输入与获取
 int GetPassword(std::string &psd);

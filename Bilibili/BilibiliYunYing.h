@@ -10,7 +10,6 @@ public:
 	virtual ~CBilibiliLotteryBase();
 
 protected:
-	CTools _tool;
 	unique_ptr<CHTTPPack> _httppack;
 	int _curid;
 	std::list<PBILI_LOTTERYDATA> _bili_lotteryactive;
@@ -47,7 +46,6 @@ protected:
 class CBilibiliLive
 {
 protected:
-	CTools _tool;
 	unique_ptr<CHTTPPack> _httppack;
 public:
 	CBilibiliLive() {

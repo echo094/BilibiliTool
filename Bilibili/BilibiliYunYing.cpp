@@ -121,7 +121,7 @@ BILIRET CBilibiliLotteryBase::_CheckRoom(CURL *pcurl, int srid, int &rrid) {
 
 void CBilibiliLotteryBase::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid)
 {
-	long long curtime = _tool.GetTimeStamp();
+	long long curtime = GetTimeStamp();
 	unsigned int i;
 	std::string tid;
 	int tmpid;
@@ -225,7 +225,7 @@ BILIRET CBilibiliGuard::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 
 void CBilibiliGuard::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid)
 {
-	long long curtime = _tool.GetTimeStamp();
+	long long curtime = GetTimeStamp();
 	unsigned int i;
 	std::string tid;
 	int tloid, ttype;

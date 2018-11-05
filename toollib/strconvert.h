@@ -9,20 +9,9 @@
 
 namespace toollib {
 
-	class CTools {
-	public:
-		//获取当前时间
-		__int64 GetTimeStamp() const;
-		std::string GetTimeString() const;
-		//查找并截取字符串
-		std::wstring findText(const std::wstring origin, const std::wstring find1, const std::wstring find2);
-		//字符串分割函数
-		std::vector<std::string> split(std::string str, std::string pattern);
-		//文本读取
-		std::wstring readFileWstring(const char* filename);
-		std::string readFileString(const char* filename);
-	};
-
+	//获取当前时间
+	long long GetTimeStamp();
+	std::string GetTimeString();
 
 	class CStrConvert
 	{

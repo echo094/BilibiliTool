@@ -43,8 +43,6 @@ public:
 private:
 	// HTTP数据收发
 	CURL *curl;
-	// 实用函数类
-	CTools _tool;
 	// 日志文件句柄
 	std::fstream _logfile;
 

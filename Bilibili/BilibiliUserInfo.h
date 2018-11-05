@@ -15,12 +15,12 @@
 #pragma once
 #include <string>
 
-#define DEF_URLLoginCaptcha "https://passport.bilibili.com/captcha?"
-#define DEF_URLLoginGweKey "https://passport.bilibili.com/login?act=getkey"
-#define DEF_URLLogin "https://passport.bilibili.com/login"
-#define DEF_URLLoginDo "https://passport.bilibili.com/login/dologin"
-#define DEF_URLLoginAJAX "https://passport.bilibili.com/ajax/miniLogin/minilogin"
-#define DEF_URLLoginMini "https://passport.bilibili.com/ajax/miniLogin/login"
+const char DEF_URLLoginCaptcha[] = "https://passport.bilibili.com/captcha?";
+const char DEF_URLLoginGweKey[] = "https://passport.bilibili.com/login?act=getkey";
+const char DEF_URLLogin[] = "https://passport.bilibili.com/login";
+const char DEF_URLLoginDo[] = "https://passport.bilibili.com/login/dologin";
+const char DEF_URLLoginAJAX[] = "https://passport.bilibili.com/ajax/miniLogin/minilogin";
+const char DEF_URLLoginMini[] = "https://passport.bilibili.com/ajax/miniLogin/login";
 
 enum class LOGINRET {
 	NOFAULT,
@@ -70,7 +70,6 @@ private:
 
 // 工具成员
 private:
-	CTools _tool;
 	CStrConvert _strcoding;
 	
 public:
@@ -179,9 +178,6 @@ protected:
 	BILIRET _APIv2GiftDaily() const;
 	// 新通用抽奖
 	BILIRET _APIv2LotteryJoin(const std::string &type, const int rrid, const int loid);
-public:
-	//赠送礼物
-	BILIRET APIv2SendGift(int giftID, int roomID, int num, bool coinType, int bagID) const;
 
 // APIv3
 protected:

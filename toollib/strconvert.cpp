@@ -8,78 +8,27 @@ using namespace toollib;
 using namespace std;
 
 
-__int64 CTools::GetTimeStamp() const {
-	time_t time;
-	std::time(&time);
-	//localtime_s(&timeinfo, &now);
-	return time;
-}
+namespace toollib {
 
-std::string CTools::GetTimeString() const {
-	time_t time;
-	std::tm tm;
-	std::time(&time);
-	localtime_s(&tm, &time);
-	std::string str;
-	char buff[25];
-	sprintf_s(buff, sizeof(buff), "[%04d%02d%02d-%02d-%02d-%02d]", 1900 + tm.tm_year, 1 + tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-	str = buff;
-	return str;
-}
-
-wstring CTools::findText(const wstring origin, const wstring find1, const wstring find2)
-{
-	size_t found1, found2;
-	found1 = origin.find(find1);
-	if ((int)found1 == 0)
-		return L"";
-	found2 = origin.find(find2, found1);
-	if ((int)found2 == 0)
-		return L"";
-	return origin.substr(found1 + find1.length(), found2 - found1 - find1.length());
-}
-
-std::vector<std::string> CTools::split(std::string str, std::string pattern)
-{
-	std::string::size_type pos;
-	std::vector<std::string> result;
-	str += pattern;//扩展字符串以方便操作
-	unsigned int size = str.size();
-
-	for (unsigned int i = 0; i<size; i++)
-	{
-		pos = str.find(pattern, i);
-		if (pos < size)
-		{
-			std::string s = str.substr(i, pos - i);
-			result.push_back(s);
-			i = pos + pattern.size() - 1;
-		}
+	long long GetTimeStamp() {
+		time_t time;
+		std::time(&time);
+		return time;
 	}
-	return result;
+
+	std::string GetTimeString() {
+		time_t time;
+		std::tm tm;
+		std::time(&time);
+		localtime_s(&tm, &time);
+		std::string str;
+		char buff[25];
+		sprintf_s(buff, sizeof(buff), "[%04d%02d%02d-%02d-%02d-%02d]", 1900 + tm.tm_year, 1 + tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+		str = buff;
+		return str;
+	}
+
 }
-
-wstring CTools::readFileWstring(const char* filename)
-{
-	std::wifstream wif(filename);
-	wif.imbue(std::locale(std::locale::empty(), new std::codecvt_utf8<wchar_t>));
-	std::wstringstream wss;
-	wss << wif.rdbuf();
-	return wss.str();
-}
-
-string CTools::readFileString(const char* filename)
-{
-	ifstream text(filename);
-	std::string str((std::istreambuf_iterator<char>(text)), std::istreambuf_iterator<char>());
-	return str;
-}
-
-
-
-
-
-
 
 
 // 需包含locale、string头文件、使用setlocale函数。
