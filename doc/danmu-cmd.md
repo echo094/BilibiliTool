@@ -970,7 +970,7 @@
 
 
 
-### 活动相关(10)
+### 活动相关(11)
 
 #### GUARD_LOTTERY_START
 
@@ -1222,6 +1222,28 @@
 		"type": "charge",
 		"limit": 500000,
 		"progress": 48280
+	}
+}
+```
+
+
+
+#### HOUR_RANK_AWARDS
+
+房间内小时榜榜首信息。
+
+```json
+{
+	"cmd": "HOUR_RANK_AWARDS",
+	"action": "all_top3",
+	"data": {
+		"roomid": 3742025,
+		"ruid": 93841264,
+		"uname": "姊﹂啋涓夌敓姊?",
+		"face": "http:\/\/i2.hdslb.com\/bfs\/face\/b30b947c58c6b1011136621a3ab54c0031c920fe.jpg",
+		"rank_desc": "http:\/\/i0.hdslb.com\/bfs\/vc\/fc85c1f7b815ea3422d4f8c0f3ed9e96c2a0a77a.png",
+		"content": "鎭枩涓绘挱鑾峰緱\n瓒呬汉姘旀帹鑽愬鍔憋紒",
+		"life_cycle": 3
 	}
 }
 ```
