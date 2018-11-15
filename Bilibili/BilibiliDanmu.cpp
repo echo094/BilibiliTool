@@ -6,29 +6,30 @@
 #include <iostream>
 
 CBilibiliDanmu::CBilibiliDanmu() {
+	InitializeCriticalSection(&m_cslist);
 	_isworking = false;
 }
 
 CBilibiliDanmu::~CBilibiliDanmu() {
 	Deinit();
+	DeleteCriticalSection(&m_cslist);
 }
 
 // 函数退出后相关IO被自动清理
 int CBilibiliDanmu::OnClose(PER_SOCKET_CONTEXT* pSocketContext) {
 	int room = pSocketContext->label;
 	BOOST_LOG_SEV(g_logger::get(), info) << "[Danmu] Worker Close Room: " << room;
-	if (m_rinfo.find(room) == m_rinfo.end()) {
+	if (m_rlist.find(room) == m_rlist.end()) {
 		return 0;
 	}
+	EnterCriticalSection(&m_cslist);
+	m_rlist.erase(room);
+	LeaveCriticalSection(&m_cslist);
 	// 房间在列表中
-	if (m_rinfo[room].needclear) {
-		// 主动关闭 从列表清除该房间
-		m_rinfo.erase(room);
-		m_rlist.erase(room);
-	}
-	else {
+	if (!m_rinfo[room].needclear) {
 		// 意外关闭 将其标志为需要重连
-		m_rinfo[room].needconnect = true;
+		BOOST_LOG_SEV(g_logger::get(), warning) << "[Danmu] Normal Close Room: " << room;
+		m_listre.push_back(room);
 	}
 
 	return 0;
@@ -116,42 +117,49 @@ int CBilibiliDanmu::OnReceive(PER_SOCKET_CONTEXT* pSocketContext, PER_IO_CONTEXT
 
 int CBilibiliDanmu::OnHeart() {
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[Danmu] Heart start. ";
-	//所有在线连接发送心跳包
 	int ret, len, room;
-	char cmdstr[60];
-	std::list<toollib::PER_SOCKET_CONTEXT*>::iterator m_itor;
-	bool needclean = false;
-
 	// 向所有活动连接发送心跳包
 	EnterCriticalSection(&m_csContextList);
+	char cmdstr[60];
+	std::list<toollib::PER_SOCKET_CONTEXT*>::iterator m_itor;
 	for (m_itor = m_arrayClientContext.begin(); m_itor != m_arrayClientContext.end();) {
+		if ((*m_itor)->isdroped) {
+			// 跳过关闭中的
+			m_itor++;
+			continue;
+		}
 		room = (*m_itor)->label;
 		len = this->MakeHeartInfo((unsigned char *)cmdstr, 60, room);
 		ret = _PostSend(*m_itor, cmdstr, len);
 		if (ret) {
-			//发送失败则断开连接 等待重连 必须保证没有Worker线程正在处理该连接的数据
+			// 发送失败则断开连接 必须保证没有Worker线程正在处理该连接的数据
 			BOOST_LOG_SEV(g_logger::get(), warning) << "[Danmu] " << room
 				<< " Heart failed code:" << ret;
+			// 清理当前连接
 			this->_DisConnectSocketHard(m_itor);
-			m_rinfo[room].needconnect = true;
-			needclean = true;
+			delete (*m_itor);
+			m_itor = m_arrayClientContext.erase(m_itor);
+			// 标记为需要重连
+			EnterCriticalSection(&m_cslist);
+			m_rlist.erase(room);
+			LeaveCriticalSection(&m_cslist);
+			m_listre.push_back(room);
+			continue;
 		}
 		m_itor++;
 	}
 	LeaveCriticalSection(&m_csContextList);
-
-	// 清理发送失败的连接
-	if (needclean) {
-		this->_CleanContextList();
-	}
-
-	// 扫描并重连断开的房间
-	std::map<unsigned, ROOM_INFO>::const_iterator it;
-	for (it = m_rinfo.begin(); it != m_rinfo.end(); ++it) {
-		if (it->second.needconnect) {
-			this->SendConnectionInfo(it->first);
-			Sleep(0);
+	// 重连断开的房间
+	// 一次心跳最多连接300个
+	int maxcount = 300;
+	while (maxcount && !m_listre.empty()) {
+		room = m_listre.front();
+		m_listre.pop_front();
+		if (m_rlist.count(room)) {
+			continue;
 		}
+		maxcount--;
+		SendConnectionInfo(room);
 	}
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[Danmu] Heart finish. ";
 
@@ -190,17 +198,13 @@ int CBilibiliDanmu::Deinit() {
 	return 0;
 }
 
-int CBilibiliDanmu::ConnectToRoom(const unsigned room, const unsigned area, const DANMU_FLAG flag) {
-	if (m_rlist.count(room)) {
-		return -1;
-	}
+int CBilibiliDanmu::AddRoom(const unsigned room, const unsigned area, const DANMU_FLAG flag) {
 	// 添加房间至列表
 	ROOM_INFO info;
 	info.area = area;
 	info.flag = flag;
 	m_rinfo[room] = info;
-	m_rlist.insert(room);
-	this->SendConnectionInfo(room);
+	m_listre.push_back(room);
 
 	return 0;
 }
@@ -225,6 +229,7 @@ void CBilibiliDanmu::UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag) {
 	using namespace std;
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[Danmu] Update start. ";
 	set<unsigned> dlist, ilist;
+	EnterCriticalSection(&m_cslist);
 	// 房间下播后还会在列表存在一段时间
 	// 生成新增房间列表
 	set_difference(nlist.begin(), nlist.end(), m_rlist.begin(), m_rlist.end(), inserter(ilist, ilist.end()));
@@ -234,6 +239,7 @@ void CBilibiliDanmu::UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag) {
 			dlist.insert(*it);
 		}
 	}
+	LeaveCriticalSection(&m_cslist);
 	// 输出操作概要
 	BOOST_LOG_SEV(g_logger::get(), info) << "[Danmu] Status:"
 		<< " Current: " << m_rlist.size()
@@ -246,14 +252,13 @@ void CBilibiliDanmu::UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag) {
 	}
 	// 连接新增房间
 	for (auto it = ilist.begin(); it != ilist.end(); it++) {
-		ConnectToRoom(*it, 0, flag);
+		AddRoom(*it, 0, flag);
 	}
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[Danmu] Update finish. ";
 }
 
-int CBilibiliDanmu::ShowCount() {
-	printf("Map count: %d IO count: %d \n", m_rinfo.size(), m_arrayClientContext.size());
-	return m_arrayClientContext.size();
+void CBilibiliDanmu::ShowCount() {
+	printf("Map count: %d Active count: %d IO count: %d \n", m_rinfo.size(), m_rlist.size(), m_arrayClientContext.size());
 }
 
 int CBilibiliDanmu::MakeConnectionInfo(unsigned char* str, int len, int room) {
@@ -289,6 +294,9 @@ int CBilibiliDanmu::MakeHeartInfo(unsigned char* str, int len, int room) {
 }
 
 int CBilibiliDanmu::SendConnectionInfo(int room) {
+	if (m_rlist.count(room)) {
+		return 0;
+	}
 	//构造发送的字符串
 	int ret, len;
 	char cmdstr[60];
@@ -297,10 +305,13 @@ int CBilibiliDanmu::SendConnectionInfo(int room) {
 	ret = this->Connect(2243, "livecmt-2.bilibili.com", room, cmdstr, len);
 	if (ret) {
 		//连接失败 在下一次心跳时重新连接
-		m_rinfo[room].needconnect = true;
+		m_listre.push_back(room);
 		return 0;
 	}
-	m_rinfo[room].needconnect = false;
+	// 连接成功
+	EnterCriticalSection(&m_cslist);
+	m_rlist.insert(room);
+	LeaveCriticalSection(&m_cslist);
 
 	return 0;
 }

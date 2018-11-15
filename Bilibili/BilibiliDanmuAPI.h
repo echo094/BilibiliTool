@@ -13,8 +13,6 @@ typedef struct _ROOM_INFO {
 	DANMU_FLAG flag;
 	// 区域
 	int area;
-	// 需要重连（心跳失败时）
-	bool needconnect;
 	// 需要关闭（下播时）
 	bool needclose;
 	// 需要删除（主动断开连接时）
@@ -23,7 +21,6 @@ typedef struct _ROOM_INFO {
 	_ROOM_INFO() :
 		flag(DANMU_FLAG::MSG_NONE),
 		area(0),
-		needconnect(false),
 		needclose(false),
 		needclear(false) {}
 

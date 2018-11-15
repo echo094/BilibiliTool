@@ -271,11 +271,6 @@ namespace toollib {
 		int _AddToContextList(PER_SOCKET_CONTEXT *pSocketContext);
 		// 含迭代器写 从列表中移除传入的连接信息成员
 		int _RemoveContextByMember(PER_SOCKET_CONTEXT *pSocketContext);
-		// 含迭代器写 根据迭代器指针从列表中移除一个指定的SocketContext
-		int _RemoveContextByItor(std::list<PER_SOCKET_CONTEXT*>::iterator &pitor);
-	protected:
-		// 含迭代器写 清除标记为丢弃的列表成员
-		int _CleanContextList();
 		// 含迭代器写 清空连接信息列表
 		int _ClearContextList();
 	// Worker线程与函数入口
@@ -373,9 +368,9 @@ namespace toollib {
 	// 各类型操作的自定义处理
 	protected:
 		virtual int OnClose(PER_SOCKET_CONTEXT* pSocketContext);
-		virtual int OnReceive(PER_SOCKET_CONTEXT* pSocketContext, PER_IO_CONTEXT* pIoContext, int byteslen);
-		virtual int OnSend(PER_SOCKET_CONTEXT* pSocketContext, int byteslen) { return 0; };
-		virtual int OnHeart() = 0;
+		virtual int OnReceive(PER_SOCKET_CONTEXT* pSocketContext, PER_IO_CONTEXT* pIoContext, int byteslen) override;
+		virtual int OnSend(PER_SOCKET_CONTEXT* pSocketContext, int byteslen) override { return 0; };
+		virtual int OnHeart() override = 0;
 
 	protected:
 		// 释放资源在所有连接关闭后执行

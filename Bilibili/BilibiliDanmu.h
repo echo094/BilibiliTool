@@ -10,6 +10,7 @@
 
 #pragma once
 #include <fstream>
+#include <deque>
 #include "BilibiliDanmuAPI.h"
 
 enum class DANMU_MODE {
@@ -35,14 +36,14 @@ public:
 	int Init(DANMU_MODE mode = DANMU_MODE::MULTI_ROOM);
 	// 退出所有线程 断开Socket 释放所有IOCP资源
 	int Deinit();
-	// 连接一个房间
-	int ConnectToRoom(const unsigned room, const unsigned area, const DANMU_FLAG flag);
+	// 连接一个房间 在心跳线程中连接
+	int AddRoom(const unsigned room, const unsigned area, const DANMU_FLAG flag);
 	// 断开特定房间
 	int DisconnectFromRoom(const unsigned room);
 	// 更新房间
 	void UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag);
 	// 显示当前连接数
-	int ShowCount();
+	void ShowCount();
 
 private:
 	long long GetRUID();
@@ -52,4 +53,8 @@ private:
 
 private:
 	bool _isworking;
+	// 需要重连的房间列表
+	std::deque<int> m_listre;
+	// 管理连接列表的互斥量
+	CRITICAL_SECTION m_cslist;
 };

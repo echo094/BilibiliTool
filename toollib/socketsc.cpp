@@ -244,26 +244,24 @@ int CIOCPBase::_CloseHeartThread()
 }
 
 //释放资源在所有连接关闭后执行
-int CIOCPBase::_DeInitialize()
-{
-	if (!isinitialized)
+int CIOCPBase::_DeInitialize() {
+	if (!isinitialized) {
 		return 0;
+	}
 
 	//先关闭心跳线程 如果在之前已调用会直接返回
 	this->_CloseHeartThread();
 
 	// 激活关闭消息通知
 	SetEvent(m_hShutdownEvent);
-	for (int i = 0; i < m_nThreads; i++)
-	{
+	for (int i = 0; i < m_nThreads; i++) {
 		// 通知所有的完成端口操作退出
 		PostQueuedCompletionStatus(m_hIOCompletionPort, 0, (DWORD)EXIT_CODE, NULL);
 	}
 	// 等待所有的客户端资源退出
 	WaitForMultipleObjects(m_nThreads, m_phWorkerThreads, TRUE, INFINITE);
 	// 释放工作者线程句柄指针
-	for (int i = 0; i<m_nThreads; i++)
-	{
+	for (int i = 0; i<m_nThreads; i++) {
 		RELEASE_HANDLE(m_phWorkerThreads[i]);
 	}
 	RELEASE(m_phWorkerThreads);
@@ -287,15 +285,14 @@ int CIOCPBase::_DeInitialize()
 }
 
 //调用shutdown关闭以connect方式建立的连接
-int CIOCPBase::_DisConnectSocketSoft(PER_SOCKET_CONTEXT* pSocketContext)
-{
+int CIOCPBase::_DisConnectSocketSoft(PER_SOCKET_CONTEXT* pSocketContext) {
+	pSocketContext->isdroped = true;
 	shutdown(pSocketContext->m_Socket, SD_BOTH);
 	return 0;
 }
 
 //调用closehandle关闭以connect方式建立的连接并标记为丢弃
-int CIOCPBase::_DisConnectSocketHard(std::list<PER_SOCKET_CONTEXT*>::iterator &pitor)
-{
+int CIOCPBase::_DisConnectSocketHard(std::list<PER_SOCKET_CONTEXT*>::iterator &pitor) {
 	(*pitor)->isdroped = true;
 	closesocket((*pitor)->m_Socket);
 	(*pitor)->m_Socket = INVALID_SOCKET;
@@ -422,8 +419,7 @@ int CIOCPBase::OnSend(PER_SOCKET_CONTEXT* pSocketContext, int byteslen)
 
 //添加新的Socket连接信息到列表m_arrayClientContext
 //在Accept和Connect函数中被调用
-int CIOCPBase::_AddToContextList(PER_SOCKET_CONTEXT *pHandleData)
-{
+int CIOCPBase::_AddToContextList(PER_SOCKET_CONTEXT *pHandleData) {
 	EnterCriticalSection(&m_csContextList);
 	m_arrayClientContext.push_back(pHandleData);
 	LeaveCriticalSection(&m_csContextList);
@@ -433,16 +429,13 @@ int CIOCPBase::_AddToContextList(PER_SOCKET_CONTEXT *pHandleData)
 //从列表m_arrayClientContext中移除传入的连接信息成员
 //delete操作触发的析构函数会自动清理socket句柄
 //目前只被Worker线程调用
-int CIOCPBase::_RemoveContextByMember(PER_SOCKET_CONTEXT *pSocketContext)
-{
+int CIOCPBase::_RemoveContextByMember(PER_SOCKET_CONTEXT *pSocketContext) {
 	//列表的end()函数会指向一个无效对象
 	//当列表为空时begin()函数会同样指向该无效对象
 	EnterCriticalSection(&m_csContextList);
 	std::list<PER_SOCKET_CONTEXT*>::iterator m_itor;
-	for (m_itor = m_arrayClientContext.begin(); m_itor != m_arrayClientContext.end(); m_itor++)
-	{
-		if (pSocketContext == *m_itor)
-		{
+	for (m_itor = m_arrayClientContext.begin(); m_itor != m_arrayClientContext.end(); m_itor++) {
+		if (pSocketContext == *m_itor) {
 			RELEASE(pSocketContext);
 			m_itor = m_arrayClientContext.erase(m_itor);
 			break;
@@ -452,51 +445,17 @@ int CIOCPBase::_RemoveContextByMember(PER_SOCKET_CONTEXT *pSocketContext)
 	return 0;
 }
 
-//根据迭代器指针从列表中移除一个指定的SocketContext
-//目前只被_CleanContextList调用
-int CIOCPBase::_RemoveContextByItor(std::list<PER_SOCKET_CONTEXT*>::iterator &pitor)
-{
-	//EnterCriticalSection(&m_csContextList);
-	RELEASE(*pitor);
-	pitor = m_arrayClientContext.erase(pitor);
-	//LeaveCriticalSection(&m_csContextList);
-	return 0;
-}
-
-//清除标记为丢弃的列表成员
-//在心跳处理函数中被调用
-int CIOCPBase::_CleanContextList()
-{
-	EnterCriticalSection(&m_csContextList);
-	std::list<PER_SOCKET_CONTEXT*>::iterator m_itor;
-	for (m_itor = m_arrayClientContext.begin(); m_itor != m_arrayClientContext.end();)
-	{
-		if ((*m_itor)->isdroped)
-		{
-			_RemoveContextByItor(m_itor);
-		}
-		else {
-			m_itor++;
-		}
-	}
-	LeaveCriticalSection(&m_csContextList);
-	return 0;
-}
-
 //清空连接信息列表
 //delete操作触发的析构函数会自动清理socket句柄
 //在关闭函数中被调用
-int CIOCPBase::_ClearContextList()
-{
+int CIOCPBase::_ClearContextList() {
 	EnterCriticalSection(&m_csContextList);
 	// 释放掉所有的IO上下文数据
 	std::list<PER_SOCKET_CONTEXT*>::iterator m_itor;
-	for (m_itor = m_arrayClientContext.begin(); !m_arrayClientContext.empty();)
-	{
+	for (m_itor = m_arrayClientContext.begin(); m_itor != m_arrayClientContext.end(); m_itor++) {
 		RELEASE(*m_itor);
-		m_arrayClientContext.erase(m_itor);
-		m_itor = m_arrayClientContext.begin();
 	}
+	m_arrayClientContext.clear();
 	LeaveCriticalSection(&m_csContextList);
 	return 0;
 }
@@ -1439,8 +1398,7 @@ int CIOCPClient::Connect(int pport, const char *paddr, int plabel, const char * 
 }
 
 //软断开一个特定的连接
-int CIOCPClient::CloseConnectionByLabel(int plabel)
-{
+int CIOCPClient::CloseConnectionByLabel(int plabel) {
 	if (m_arrayClientContext.empty()) {
 #ifdef LOG_STREAM
 		printf("[CIOCPClient][ERROR]No connection. \n");
@@ -1450,8 +1408,7 @@ int CIOCPClient::CloseConnectionByLabel(int plabel)
 	//查找连接
 	EnterCriticalSection(&m_csContextList);
 	std::list<PER_SOCKET_CONTEXT*>::iterator m_itor;
-	for (m_itor = m_arrayClientContext.begin(); m_itor != m_arrayClientContext.end(); m_itor++)
-	{
+	for (m_itor = m_arrayClientContext.begin(); m_itor != m_arrayClientContext.end(); m_itor++) {
 		if ((*m_itor)->label == plabel) {
 			_DisConnectSocketSoft(*m_itor);
 			break;
@@ -1464,8 +1421,7 @@ int CIOCPClient::CloseConnectionByLabel(int plabel)
 
 //软断开所有连接
 //正常情况下Worker线程会收到所有连接的断开消息然后清空Socket列表
-int CIOCPClient::CloseConnections()
-{
+int CIOCPClient::CloseConnections() {
 	if (m_arrayClientContext.empty()) {
 #ifdef LOG_STREAM
 		printf("[CIOCPClient][ERROR]No connection. \n");
@@ -1475,8 +1431,7 @@ int CIOCPClient::CloseConnections()
 	//发送Socket关闭信息
 	EnterCriticalSection(&m_csContextList);
 	std::list<PER_SOCKET_CONTEXT*>::iterator m_itor;
-	for (m_itor = m_arrayClientContext.begin(); m_itor != m_arrayClientContext.end(); m_itor++)
-	{
+	for (m_itor = m_arrayClientContext.begin(); m_itor != m_arrayClientContext.end(); m_itor++) {
 		_DisConnectSocketSoft(*m_itor);
 	}
 	LeaveCriticalSection(&m_csContextList);
