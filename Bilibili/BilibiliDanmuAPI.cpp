@@ -65,13 +65,6 @@ enum {
 	DM_SYS_MSG
 };
 
-struct tagDANMUMSGDANMU
-{
-	time_t time;
-	std::string strmsg, struname;
-	std::wstring wstrmsg;
-};
-
 struct tagDANMUMSGSYS
 {
 	int itype;
@@ -216,9 +209,7 @@ int DanmuAPI::ParseJSON(const char *str, int room) {
 
 	switch (cmdid) {
 	case DM_DANMU_MSG: {
-		if (!bdanmukuon)
-			return 0;
-		return this->ParseDANMUMSG(doc, room);
+		return 0;
 	}
 	case DM_SPECIAL_GIFT: {
 		if (m_rinfo[room].flag != DANMU_FLAG::MSG_SPECIALGIFT)
@@ -260,19 +251,6 @@ int DanmuAPI::ParseJSON(const char *str, int room) {
 	}
 	}
 
-	return 0;
-}
-
-int DanmuAPI::ParseDANMUMSG(rapidjson::Document &doc, int room) {
-	std::string tmpstr;
-	tagDANMUMSGDANMU m_tmpdanmu;
-	m_tmpdanmu.time = doc["info"][0][4].GetInt64();
-	tmpstr = doc["info"][1].GetString();
-	m_tmpdanmu.strmsg = _strcoding.UTF_8ToString(tmpstr.c_str());
-	tmpstr = doc["info"][2][1].GetString();
-	m_tmpdanmu.struname = _strcoding.UTF_8ToString(tmpstr.c_str());
-	BOOST_LOG_SEV(g_logger::get(), info) << "[DanmuAPI] " << room 
-		<< " DANMU_MSG: " << m_tmpdanmu.struname << ":" << m_tmpdanmu.strmsg;
 	return 0;
 }
 

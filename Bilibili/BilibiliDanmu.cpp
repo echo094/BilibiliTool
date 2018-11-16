@@ -18,8 +18,8 @@ CBilibiliDanmu::~CBilibiliDanmu() {
 // 函数退出后相关IO被自动清理
 int CBilibiliDanmu::OnClose(PER_SOCKET_CONTEXT* pSocketContext) {
 	int room = pSocketContext->label;
-	BOOST_LOG_SEV(g_logger::get(), info) << "[Danmu] Worker Close Room: " << room;
 	if (m_rlist.find(room) == m_rlist.end()) {
+		BOOST_LOG_SEV(g_logger::get(), warning) << "[Danmu] Worker Close Room: " << room;
 		return 0;
 	}
 	EnterCriticalSection(&m_cslist);
@@ -28,9 +28,10 @@ int CBilibiliDanmu::OnClose(PER_SOCKET_CONTEXT* pSocketContext) {
 	// 房间在列表中
 	if (!m_rinfo[room].needclear) {
 		// 意外关闭 将其标志为需要重连
-		BOOST_LOG_SEV(g_logger::get(), warning) << "[Danmu] Normal Close Room: " << room;
+		BOOST_LOG_SEV(g_logger::get(), warning) << "[Danmu] Abnormal Close Room: " << room;
 		m_listre.push_back(room);
 	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "[Danmu] Normal Close Room: " << room;
 
 	return 0;
 }
@@ -187,6 +188,12 @@ int CBilibiliDanmu::Init(DANMU_MODE mode) {
 int CBilibiliDanmu::Deinit() {
 	if (!_isworking)
 		return 0;
+	// 更新标识符
+	EnterCriticalSection(&m_cslist);
+	for (auto it = m_rlist.begin(); it != m_rlist.end(); it++) {
+		m_rinfo[(*it)].needclear = true;
+	}
+	LeaveCriticalSection(&m_cslist);
 	// 关闭IOCP客户端
 	this->Destory();
 	// 清理列表

@@ -5,6 +5,7 @@
 
 //功能模块编号
 enum class TOOL_EVENT {
+	EXIT = 0,
 	STOP = 10,
 	ONLINE,
 	GET_SYSMSG_GIFT,

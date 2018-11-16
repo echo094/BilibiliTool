@@ -29,15 +29,12 @@ typedef struct _ROOM_INFO {
 class DanmuAPI {
 public:
 	DanmuAPI():
-		parentthreadid(0),
-		bdanmukuon(false) {
+		parentthreadid(0) {
 		InitCMD();
 	}
 	virtual ~DanmuAPI() {}
 
 public:
-	void SetDanmukuOn() { bdanmukuon = true; }
-	void SetDanmukuOff() { bdanmukuon = false; }
 	// 设置父级线程ID
 	int SetNotifyThread(DWORD id);
 
@@ -46,7 +43,6 @@ protected:
 	int CheckMessage(const unsigned char *str);
 	int ProcessData(const char* str, int len, int room, int type);
 	int ParseJSON(const char *str, int room);
-	int ParseDANMUMSG(rapidjson::Document &doc, int room);
 	int ParseSTORMMSG(rapidjson::Document &doc, int room);
 	int ParseNOTICEMSG(rapidjson::Document &doc, int room);
 	int ParseSYSMSG(rapidjson::Document &doc, int room);
@@ -63,6 +59,5 @@ protected:
 	// 指令列表
 	std::map<std::string, int> m_cmdid;
 
-	bool bdanmukuon;
 	CStrConvert _strcoding;
 };
