@@ -379,7 +379,7 @@ int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 
 	// 获取需要连接的房间
 	unsigned roomid;
-	for (unsigned int i = 1; i < 5; i++) {
+	for (unsigned int i = 1; i < 6; i++) {
 		if (_apilive->PickOneRoom(m_curl, roomid, 0, i) == BILIRET::NOFAULT) {
 			_wsdanmu->ConnectToRoom(roomid, i, DANMU_FLAG::MSG_PUBEVENT);
 		}
