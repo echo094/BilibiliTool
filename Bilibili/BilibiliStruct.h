@@ -4,7 +4,11 @@
 const char DEF_CONFIGGILE_NAME[] = "\\BiliConfig.ini";
 const unsigned MSG_BILI_THREADCLOSE = WM_USER + 611;
 
-const char DM_TCPSERVER[] = "livecmt-2.bilibili.com";
+// 服务器地址与WS数据处理
+// https://api.live.bilibili.com/room/v1/Danmu/getConf?room_id=23058&platform=pc&player=web
+// https://s1.hdslb.com/bfs/static/blive/live-assets/player/decorator.min.js?
+
+const char DM_TCPSERVER[] = "broadcastlv.chat.bilibili.com";
 const int DM_TCPPORT = 2243;
 const char DM_WSSERVER[] = "ws://broadcastlv.chat.bilibili.com:2244/sub";
 const char DM_WSSSERVER[] = "wss://broadcastlv.chat.bilibili.com:443/sub";

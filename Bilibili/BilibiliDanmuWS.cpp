@@ -160,7 +160,7 @@ int CWSDanmu::MakeConnectionInfo(unsigned char* str, int len, int room) {
 	memset(str, 0, len);
 	int buflen;
 	//构造发送的字符串
-	buflen = sprintf_s((char*)str + 16, len - 16, "{\"uid\":0,\"roomid\":%d,\"protover\":1,\"platform\":\"web\",\"clientver\":\"1.4.6\"}", room);
+	buflen = sprintf_s((char*)str + 16, len - 16, "{\"uid\":0,\"roomid\":%d,\"protover\":1,\"platform\":\"web\",\"clientver\":\"1.5.10\"}", room);
 	if (buflen == -1) {
 		return -1;
 	}

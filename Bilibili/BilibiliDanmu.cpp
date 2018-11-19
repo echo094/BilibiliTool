@@ -309,7 +309,7 @@ int CBilibiliDanmu::SendConnectionInfo(int room) {
 	char cmdstr[60];
 	len = this->MakeConnectionInfo((unsigned char *)cmdstr, 60, room);
 	// 在添加连接信息至列表时会加线程锁
-	ret = this->Connect(2243, "livecmt-2.bilibili.com", room, cmdstr, len);
+	ret = this->Connect(DM_TCPPORT, DM_TCPSERVER, room, cmdstr, len);
 	if (ret) {
 		//连接失败 在下一次心跳时重新连接
 		m_listre.push_back(room);
