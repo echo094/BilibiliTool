@@ -218,11 +218,13 @@ int CBilibiliUserInfo::ReadFileAccount(std::string key, int index, char *addr) {
 		tmpcookie = "";
 	}
 	else {
-		ret = Decrypt_3DES_BASE64(_key_3des, enstr, tmpcookie);
+		ret = Decode_Base64(enstr, (unsigned char *)tmpch, (unsigned int *)&ilenck);
 		if (ret <= 0)
 			tmpcookie = "";
-		else
+		else {
+			tmpcookie = tmpch;
 			_httpcookie.ImportCookies(tmpcookie, curlweb);
+		}
 	}
 
 	// 移动端Token 需要加密
@@ -261,7 +263,7 @@ int CBilibiliUserInfo::WriteFileAccount(std::string key, char *addr) {
 
 	// 加密Cookie
 	_httpcookie.ExportCookies(tmpcookie, curlweb);
-	ret = Encrypt_3DES_BASE64(_key_3des, tmpcookie, enstr);
+	ret = Encode_Base64((const unsigned char *)tmpcookie.c_str(), tmpcookie.size(), enstr);
 	if (ret < 0)
 		enstr = "";
 	ret = ::WritePrivateProfileStringA(tmps.c_str(), "Cookie", enstr.c_str(), addr);

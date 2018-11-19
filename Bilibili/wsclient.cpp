@@ -93,12 +93,14 @@ context_ptr websocket_endpoint::on_tls_init(websocketpp::connection_hdl) {
 	std::cout << "> TLS init... " << std::endl;
 	// m_tls_init = std::chrono::high_resolution_clock::now();
 	context_ptr ctx = websocketpp::lib::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv12);
-
+	
 	try {
 		ctx->set_options(boost::asio::ssl::context::default_workarounds |
 			boost::asio::ssl::context::no_sslv2 |
 			boost::asio::ssl::context::no_sslv3 |
 			boost::asio::ssl::context::single_dh_use);
+
+		ctx->set_verify_mode(boost::asio::ssl::verify_none);
 	}
 	catch (std::exception& e) {
 		std::cout << e.what() << std::endl;

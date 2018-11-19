@@ -109,6 +109,7 @@ bool toollib::Decrypt_RSA_KeyFile(const char *filename, std::string& strData, st
 	return true;
 }
 
+/*
 int toollib::Encrypt_3DES(const char *key, const unsigned char * szInput, int nInLen, unsigned char *szOutput)
 {
 	int iOutLen = 0;
@@ -206,3 +207,4 @@ int toollib::Decrypt_3DES_BASE64(std::string &key, std::string &strData, std::st
 	delete[] strdesout;
 	return ret;
 }
+*/
