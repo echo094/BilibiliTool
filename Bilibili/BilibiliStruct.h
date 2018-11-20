@@ -12,6 +12,7 @@ const char DM_TCPSERVER[] = "broadcastlv.chat.bilibili.com";
 const int DM_TCPPORT = 2243;
 const char DM_WSSERVER[] = "ws://broadcastlv.chat.bilibili.com:2244/sub";
 const char DM_WSSSERVER[] = "wss://broadcastlv.chat.bilibili.com:443/sub";
+const char DM_UA[] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36";
 
 const char APP_KEY[] = "1d8b6e7d45233436";
 const char APP_SECRET[] = "560c52ccd288fed045859ed18bffd973";

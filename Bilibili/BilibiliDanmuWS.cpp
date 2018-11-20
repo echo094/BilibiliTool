@@ -124,7 +124,7 @@ int CWSDanmu::Deinit() {
 
 int CWSDanmu::ConnectToRoom(const unsigned room, const unsigned area, const DANMU_FLAG flag) {
 	int ret;
-	std::string url = DM_WSSERVER;
+	std::string url = DM_WSSSERVER;
 	ret = this->connect(room, url);
 	if (ret) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[WSDanmu] Connect to " << room  << " failed!";

@@ -52,10 +52,9 @@ websocket_endpoint::websocket_endpoint():
 
 	m_client.clear_access_channels(websocketpp::log::alevel::all);
 	m_client.clear_error_channels(websocketpp::log::elevel::all);
-	// m_client.set_access_channels(websocketpp::log::alevel::all);
 
 	m_client.init_asio();
-	m_client.set_user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36");
+	m_client.set_user_agent(DM_UA);
 #ifdef WITH_TLS
 	m_client.set_tls_init_handler(bind(&websocket_endpoint::on_tls_init, this, websocketpp::lib::placeholders::_1));
 #endif
@@ -90,8 +89,7 @@ void websocket_endpoint::cancel_timer() {
 
 #ifdef WITH_TLS
 context_ptr websocket_endpoint::on_tls_init(websocketpp::connection_hdl) {
-	std::cout << "> TLS init... " << std::endl;
-	// m_tls_init = std::chrono::high_resolution_clock::now();
+
 	context_ptr ctx = websocketpp::lib::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv12);
 	
 	try {

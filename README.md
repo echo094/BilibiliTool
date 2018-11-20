@@ -117,9 +117,13 @@ Bilibili直播站小工具
 > >
 > > > websocketpp(websocketpp include)  
 
+
+
 #### 项目配置  
 
 默认配置：Debug运行时为MDd，Release运行时为MT。  
+
+
 
 #### 依赖库  
 
@@ -127,10 +131,14 @@ Bilibili直播站小工具
 - curl  
 - openssl  
 - rapidjson  
-- websocketpp  
+- websocketpp(需要做一些修改)
 - zlib
 
-依赖库的编译参考[这里](doc/lib-build.md)
+依赖库的编译参考[doc/lib-build.md](doc/lib-build.md)
+
+**[重要]WSS相关内容参考[doc/notes-wss.md](doc/notes-wss.md)**
+
+
 
 #### 运行时库
 
@@ -140,7 +148,6 @@ Bilibili直播站小工具
 
 ## TODO
 
-- 解决Websocket在WSS连接中无法发送数据的问题(与B站WSS服务器的通信 问题不容易找)
 - 使用BOOST的asio重写Socket
 - 添加验证码识别领取瓜子(识别部分就不用C写了 是个大工程 有生之年)
 
