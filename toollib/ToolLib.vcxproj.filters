@@ -21,9 +21,6 @@
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="socketsc.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="md5.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -33,9 +30,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="socketsc.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="md5.cpp">

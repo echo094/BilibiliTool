@@ -26,7 +26,8 @@ const unsigned MSG_NEWSMALLTV = WM_USER + 612;
 const unsigned MSG_NEWSPECIALGIFT = WM_USER + 613;
 const unsigned MSG_NEWGUARD1 = WM_USER + 614;
 const unsigned MSG_NEWGUARD0 = WM_USER + 615;
-const unsigned MSG_CHANGEROOM = WM_USER + 616;
+const unsigned MSG_CHANGEROOM1 = WM_USER + 616;
+const unsigned MSG_CHANGEROOM2 = WM_USER + 617;
 
 enum class BILIRET {
 	NOFAULT = 0,
@@ -47,12 +48,40 @@ enum class BILIRET {
 	HTMLTEXT_ERROR
 };
 
+const unsigned DM_PUBEVENT = 0x10;
+const unsigned DM_HIDDENEVENT = 0x20;
+
+typedef struct _ROOM_INFO {
+	// 编号
+	unsigned id;
+	// 参数设置
+	unsigned opt;
+	// 需要关闭（下播时）
+	bool needclose;
+
+	_ROOM_INFO() :
+		id(0),
+		opt(0),
+		needclose(false) {}
+
+}ROOM_INFO;
+
+typedef struct _MSG_INFO{
+	unsigned id;
+	// 参数设置
+	unsigned opt;
+	// 消息类型
+	unsigned type;
+	// 消息内容
+	std::string msg;
+}MSG_INFO;
+
 typedef struct _BILI_ROOMEVENT
 {
 	int rid = 0;
 	int loids = 0;
-	int exinfo;
-	long long loidl; 
+	int exinfo = 0;
+	long long loidl = 0; 
 }BILI_ROOMEVENT;
 
 typedef struct _BILI_LOTTERYDATA
@@ -60,6 +89,6 @@ typedef struct _BILI_LOTTERYDATA
 	time_t time = 0;
 	int srid = 0, rrid = 0;
 	int loid = 0;
-	int exinfo;
+	int exinfo = 0;
 	std::string type;
 }BILI_LOTTERYDATA, *PBILI_LOTTERYDATA;

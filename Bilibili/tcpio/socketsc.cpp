@@ -4,7 +4,6 @@
 #ifdef _DEBUG
 #include <stdio.h>
 #endif
-using namespace toollib;
 
 // 每一个处理器上产生多少个线程(为了最大限度的提升服务器性能
 #define WORKER_THREADS_PER_PROCESSOR	2

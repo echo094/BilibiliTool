@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="source">
+      <UniqueIdentifier>{c490bf8a-dc06-466c-879a-52aa3fc0926e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tcpio">
+      <UniqueIdentifier>{43cdfccd-36e7-4cfc-b2b3-1b9fa0b49cb2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -22,9 +28,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="BilibiliDanmu.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="BilibiliMain.h">
@@ -45,12 +48,6 @@
     <ClInclude Include="BilibiliYunYing.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="wxclient.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="BilibiliDanmuWS.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="httpex.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -66,15 +63,27 @@
     <ClInclude Include="log.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="source\source_base.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\BilibiliDanmu.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\BilibiliDanmuWS.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="tcpio\wxclient.h">
+      <Filter>tcpio</Filter>
+    </ClInclude>
+    <ClInclude Include="tcpio\socketsc.h">
+      <Filter>tcpio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Bilibili.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="BilibiliDanmu.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="BilibiliMain.cpp">
@@ -87,12 +96,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="BilibiliYunYing.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="wsclient.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="BilibiliDanmuWS.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="httpex.cpp">
@@ -109,6 +112,21 @@
     </ClCompile>
     <ClCompile Include="log.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\source_base.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\BilibiliDanmu.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\BilibiliDanmuWS.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="tcpio\wsclient.cpp">
+      <Filter>tcpio</Filter>
+    </ClCompile>
+    <ClCompile Include="tcpio\socketsc.cpp">
+      <Filter>tcpio</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

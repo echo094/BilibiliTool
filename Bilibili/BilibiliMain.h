@@ -6,9 +6,14 @@ http://www.lyyyuna.com/2016/03/14/bilibili-danmu01/
 
 #pragma once
 #include "BilibiliUserList.h"
-#include "BilibiliDanmu.h"
-#include "BilibiliDanmuWS.h"
+#include "BilibiliDanmuAPI.h"
+#include "source/BilibiliDanmu.h"
+#include "source/BilibiliDanmuWS.h"
 #include "BilibiliYunYing.h"
+
+#include <memory>
+using std::unique_ptr;
+using std::shared_ptr;
 
 const unsigned ON_USER_COMMAND = WM_USER + 610;
 
@@ -43,7 +48,7 @@ private:
 	int Debugfun(int index);
 
 	// 广播模式下更新监控的房间
-	int UpdateAreaRoom(const unsigned rid, const unsigned area);
+	int UpdateAreaRoom(const unsigned rid, const unsigned area, const bool opt);
 	// 非广播模式下更新监控的房间
 	int UpdateLiveRoom();
 	// 抽奖消息
@@ -83,8 +88,8 @@ private:
 	unique_ptr<CBilibiliGuard> _lotterygu;
 	// 其它API
 	unique_ptr<CBilibiliLive> _apilive;
-	// TCP弹幕连接
-	unique_ptr<CBilibiliDanmu> _tcpdanmu;
-	// WS弹幕连接
-	unique_ptr<CWSDanmu> _wsdanmu;
+	// 弹幕API解释模块
+	shared_ptr<DanmuAPI> _apidm;
+	// 弹幕连接
+	unique_ptr<source_base> _dmsource;
 };

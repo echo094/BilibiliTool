@@ -11,16 +11,12 @@
 #pragma once
 #include <fstream>
 #include <deque>
-#include "BilibiliDanmuAPI.h"
-
-enum class DANMU_MODE {
-	SINGLE_ROOM = 1,
-	MULTI_ROOM
-};
+#include "tcpio/socketsc.h"
+#include "source/source_base.h"
 
 class CBilibiliDanmu:
-	public DanmuAPI, 
-	public toollib::CIOCPClient {
+	public source_base,
+	public CIOCPClient {
 public:
 	CBilibiliDanmu();
 	~CBilibiliDanmu();
@@ -33,20 +29,21 @@ protected:
 
 public:
 	// 开启主监视线程 初始化IOCP类
-	int Init(DANMU_MODE mode = DANMU_MODE::MULTI_ROOM);
+	int start() override;
 	// 退出所有线程 断开Socket 释放所有IOCP资源
-	int Deinit();
+	int stop() override;
 	// 连接一个房间 在心跳线程中连接
-	int AddRoom(const unsigned room, const unsigned area, const DANMU_FLAG flag);
+	int add_context(const unsigned id, const ROOM_INFO& info) override;
 	// 断开特定房间
-	int DisconnectFromRoom(const unsigned room);
+	int del_context(const unsigned id) override;
 	// 更新房间
-	void UpdateRoom(std::set<unsigned> &nlist, DANMU_FLAG flag);
+	int update_context(std::set<unsigned> &nlist, const unsigned opt) override;
 	// 显示当前连接数
-	void ShowCount();
+	void show_stat() override;
 
 private:
 	long long GetRUID();
+	int CheckMessage(const unsigned char *str);
 	int MakeConnectionInfo(unsigned char* str, int len, int room);
 	int MakeHeartInfo(unsigned char* str, int len, int room);
 	int SendConnectionInfo(int room);
@@ -54,7 +51,7 @@ private:
 private:
 	bool _isworking;
 	// 需要重连的房间列表
-	std::deque<int> m_listre;
-	// 管理连接列表的互斥量
-	CRITICAL_SECTION m_cslist;
+	std::deque<int> m_list_reconnect;
+	// 正在主动关闭的房间
+	std::set<unsigned> m_list_closing;
 };

@@ -18,8 +18,6 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include "windows.h"
-#include <memory>
-using std::unique_ptr;
 
 #include "BilibiliStruct.h"
 
@@ -27,7 +25,6 @@ using std::unique_ptr;
 #include "httpex.h"
 #include "sslex.h"
 #include "toollib/md5.h"
-#include "toollib/socketsc.h"
 #include "toollib/strconvert.h"
 using namespace toollib;
 #ifdef _DEBUG

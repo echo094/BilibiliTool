@@ -59,8 +59,8 @@ CBilibiliMain::CBilibiliMain(){
 
 	SaveLogFile();
 
-	_tcpdanmu = nullptr;
-	_wsdanmu = nullptr;
+	_dmsource = nullptr;
+	_apidm = std::make_shared<DanmuAPI>();
 	_lotterytv = std::make_unique<CBilibiliSmallTV>();
 	_lotterygu = std::make_unique<CBilibiliGuard>();
 	_apilive = std::make_unique<CBilibiliLive>();
@@ -69,11 +69,11 @@ CBilibiliMain::CBilibiliMain(){
 
 CBilibiliMain::~CBilibiliMain() {
 	_logfile.close();
-	_tcpdanmu = nullptr;
-	_wsdanmu = nullptr;
+	_dmsource = nullptr;
 	_lotterytv = nullptr;
 	_lotterygu = nullptr;
 	_apilive = nullptr;
+	_apidm = nullptr;
 	_userlist = nullptr;
 	curl_easy_cleanup(m_curl);
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[Main] Stop.";
@@ -238,9 +238,14 @@ int CBilibiliMain::ProcessModuleMSG(MSG &msg) {
 		delete pinfo;
 		break;
 	}
-	case MSG_CHANGEROOM: {
+	case MSG_CHANGEROOM1: {
 		// 房间下播
-		UpdateAreaRoom(msg.wParam, msg.lParam);
+		UpdateAreaRoom(msg.wParam, msg.lParam, true);
+		break;
+	}
+	case MSG_CHANGEROOM2: {
+		// 房间上播
+		UpdateAreaRoom(msg.wParam, msg.lParam, false);
 		break;
 	}
 	}
@@ -333,9 +338,9 @@ int CBilibiliMain::StopMonitorALL() {
 	if (curmode == TOOL_EVENT::GET_SYSMSG_GIFT) {
 		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Closing ws threads...";
 
-		_wsdanmu->SetNotifyThread(0);
-		ret = _wsdanmu->Deinit();
-		_wsdanmu = nullptr;
+		_apidm->SetNotifyThread(0);
+		ret = _dmsource->stop();
+		_dmsource = nullptr;
 
 		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Monitor stopped.";
 		ret = _userlist->WaitActThreadStop();
@@ -344,9 +349,9 @@ int CBilibiliMain::StopMonitorALL() {
 	if (curmode == TOOL_EVENT::GET_HIDEN_GIFT) {
 		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Closing socket threads...";
 
-		_tcpdanmu->SetNotifyThread(0);
-		ret = _tcpdanmu->Deinit();
-		_tcpdanmu = nullptr;
+		_apidm->SetNotifyThread(0);
+		ret = _dmsource->stop();
+		_dmsource = nullptr;
 
 		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Monitor stopped.";
 		ret = _userlist->WaitActThreadStop();
@@ -368,10 +373,13 @@ int CBilibiliMain::StartUserHeart() {
 int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 	curmode = TOOL_EVENT::GET_SYSMSG_GIFT;
 
-	if (_wsdanmu == nullptr) {
-		_wsdanmu = std::make_unique<CWSDanmu>();
-		_wsdanmu->SetNotifyThread(pthreadid);
-		_wsdanmu->Init();
+	if (_dmsource == nullptr) {
+		_dmsource = std::make_unique<CWSDanmu>();
+		_dmsource->set_msg_handler(
+			std::bind(&DanmuAPI::ProcessData, _apidm, std::placeholders::_1)
+		);
+		_apidm->SetNotifyThread(pthreadid);
+		_dmsource->start();
 	}
 
 	// 清空错过抽奖列表
@@ -381,7 +389,10 @@ int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 	unsigned roomid;
 	for (unsigned int i = 1; i < 6; i++) {
 		if (_apilive->PickOneRoom(m_curl, roomid, 0, i) == BILIRET::NOFAULT) {
-			_wsdanmu->ConnectToRoom(roomid, i, DANMU_FLAG::MSG_PUBEVENT);
+			ROOM_INFO info;
+			info.id = roomid;
+			info.opt = DM_ROOM_AREA(i) | DM_PUBEVENT;
+			_dmsource->add_context(roomid, info);
 		}
 	}
 
@@ -391,10 +402,13 @@ int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 int CBilibiliMain::StartMonitorHiddenEvent(int pthreadid) {
 	curmode = TOOL_EVENT::GET_HIDEN_GIFT;
 
-	if (_tcpdanmu == nullptr) {
-		_tcpdanmu = std::make_unique<CBilibiliDanmu>();
-		_tcpdanmu->SetNotifyThread(pthreadid);
-		_tcpdanmu->Init(DANMU_MODE::MULTI_ROOM);
+	if (_dmsource == nullptr) {
+		_dmsource = std::make_unique<CBilibiliDanmu>();
+		_dmsource->set_msg_handler(
+			std::bind(&DanmuAPI::ProcessData, _apidm, std::placeholders::_1)
+		);
+		_apidm->SetNotifyThread(pthreadid);
+		_dmsource->start();
 	}
 
 	// 连接符合人气条件的开播房间
@@ -405,11 +419,8 @@ int CBilibiliMain::StartMonitorHiddenEvent(int pthreadid) {
 
 int CBilibiliMain::Debugfun(int index) {
 	if (index == 1) {
-		if (curmode == TOOL_EVENT::GET_SYSMSG_GIFT) {
-			_wsdanmu->ShowCount();
-		}
-		if (curmode == TOOL_EVENT::GET_HIDEN_GIFT) {
-			_tcpdanmu->ShowCount();
+		if (_dmsource) {
+			_dmsource->show_stat();
 		}
 	}
 	if (index == 2) {
@@ -423,14 +434,25 @@ int CBilibiliMain::Debugfun(int index) {
 	return 0;
 }
 
-int CBilibiliMain::UpdateAreaRoom(const unsigned rid, const unsigned area) {
-	if (curmode != TOOL_EVENT::GET_SYSMSG_GIFT) {
+int CBilibiliMain::UpdateAreaRoom(const unsigned rid, const unsigned area, const bool opt) {
+	if (curmode == TOOL_EVENT::GET_SYSMSG_GIFT) {
+		_dmsource->set_con_stat(rid, opt);
+		if (!opt) {
+			return 0;
+		}
+		_dmsource->del_context(rid);
+		unsigned nrid;
+		if (_apilive->PickOneRoom(m_curl, nrid, rid, area) == BILIRET::NOFAULT) {
+			ROOM_INFO info;
+			info.id = rid;
+			info.opt = DM_ROOM_AREA(area) | DM_PUBEVENT;
+			_dmsource->add_context(nrid, info);
+			return 0;
+		}
 		return 0;
 	}
-	_wsdanmu->DisconnectFromRoom(rid);
-	unsigned nrid;
-	if (_apilive->PickOneRoom(m_curl, nrid, rid, area) == BILIRET::NOFAULT) {
-		_wsdanmu->ConnectToRoom(nrid, area, DANMU_FLAG::MSG_PUBEVENT);
+	if (curmode == TOOL_EVENT::GET_HIDEN_GIFT) {
+		_dmsource->set_con_stat(rid, opt);
 		return 0;
 	}
 
@@ -443,7 +465,7 @@ int CBilibiliMain::UpdateLiveRoom() {
 	}
 	std::set<unsigned> nlist;
 	_apilive->GetLiveList(m_curl, nlist, 400);
-	_tcpdanmu->UpdateRoom(nlist, DANMU_FLAG::MSG_SPECIALGIFT);
+	_dmsource->update_context(nlist, DM_HIDDENEVENT);
 
 	return 0;
 }

@@ -147,57 +147,39 @@ void DanmuAPI::InitCMD() {
 	m_cmdid["SYS_MSG"] = DM_SYS_MSG;
 }
 
-int DanmuAPI::CheckMessage(const unsigned char *str) {
-	int i;
-	if (str[4])
-		return -1;
-	if (str[5] - 16)
-		return -1;
-	for (i = 8; i < 11; i++) {
-		if (str[i])
-			return -1;
-	}
-	for (i = 12; i < 15; i++) {
-		if (str[i])
-			return -1;
-	}
-	return str[11];
-}
-
-int DanmuAPI::ProcessData(const char* str, int len, int room, int type)
+void DanmuAPI::ProcessData(MSG_INFO *data)
 {
 	int ret;
-	switch (type) {
+	switch (data->type) {
 	case 0x03: {
 		// int value = str[1] << 16 | str[2] << 8 | str[3];
 		// BOOST_LOG_SEV(g_logger::get(), trace) << "[DanmuAPI] " << room << " Popular:" << value;
 		break;
 	}
 	case 0x05: {
-		ret = ParseJSON(str, room);
+		ret = ParseJSON(data);
 		if (ret) {
-			BOOST_LOG_SEV(g_logger::get(), debug) << "[DanmuAPI] " << room << " DMNEW: " << str;
+			BOOST_LOG_SEV(g_logger::get(), debug) << "[DanmuAPI] " << data->id << " DMNEW: " << data->msg;
 		}
 		break;
 	}
 	case 0x08: {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[DanmuAPI] " << room << " Link start...";
+		BOOST_LOG_SEV(g_logger::get(), info) << "[DanmuAPI] " << data->id << " Link start...";
 		break;
 	}
 	default: {
-		BOOST_LOG_SEV(g_logger::get(), error) << "[DanmuAPI] " << room << " Unknown msg type: " << type;
+		BOOST_LOG_SEV(g_logger::get(), error) << "[DanmuAPI] " << data->id << " Unknown msg type: " << data->type;
 		break;
 	}
 	}
-	return 0;
 }
 
-int DanmuAPI::ParseJSON(const char *str, int room) {
+int DanmuAPI::ParseJSON(MSG_INFO *data) {
 	rapidjson::Document doc;
-	doc.Parse(str);
+	doc.Parse(data->msg.c_str());
 
 	if (!doc.IsObject() || !doc.HasMember("cmd") || !doc["cmd"].IsString()) {
-		BOOST_LOG_SEV(g_logger::get(), error) << "[DanmuAPI] " << room << " JSON Wrong.";
+		BOOST_LOG_SEV(g_logger::get(), error) << "[DanmuAPI] " << data->id << " JSON Wrong.";
 		return -1;
 	}
 	std::string strtype = doc["cmd"].GetString();
@@ -212,41 +194,36 @@ int DanmuAPI::ParseJSON(const char *str, int room) {
 		return 0;
 	}
 	case DM_SPECIAL_GIFT: {
-		if (m_rinfo[room].flag != DANMU_FLAG::MSG_SPECIALGIFT)
-			return 0;
-		return this->ParseSTORMMSG(doc, room);
+		if (data->opt & DM_HIDDENEVENT) {
+			return this->ParseSTORMMSG(doc, data->id);
+		}
+		return 0;
 	}
 	case DM_NOTICE_MSG: {
-		if (m_rinfo[room].flag != DANMU_FLAG::MSG_PUBEVENT)
-			return 0;
-		return this->ParseNOTICEMSG(doc, room);
+		if (data->opt & DM_PUBEVENT) {
+			return this->ParseNOTICEMSG(doc, data->id, DM_ROOM_AREA(data->opt));
+		}
+		return 0;
 	}
 	case DM_GUARD_LOTTERY_START: {
-		if (m_rinfo[room].flag != DANMU_FLAG::MSG_SPECIALGIFT) {
-			return 0;
+		if (data->opt & DM_HIDDENEVENT) {
+			return this->ParseGUARDLO(doc, data->id);
 		}
-		return this->ParseGUARDLO(doc, room);
+		return 0;
 	}
 	case DM_PREPARING:
 	case DM_CUT_OFF: {
-		// 标记为需关闭
-		m_rinfo[room].needclose = true;
-		BOOST_LOG_SEV(g_logger::get(), trace) << "[DanmuAPI] " << room << " Notice Close.";
-		if (m_rinfo[room].flag == DANMU_FLAG::MSG_PUBEVENT) {
-			// 监测广播事件的房间需要立即更换
-			if (parentthreadid) {
-				PostThreadMessage(parentthreadid, MSG_CHANGEROOM, WPARAM(room), LPARAM(m_rinfo[room].area));
-			}
+		BOOST_LOG_SEV(g_logger::get(), trace) << "[DanmuAPI] " << data->id << " Notice Close.";
+		if (parentthreadid) {
+			PostThreadMessage(parentthreadid, MSG_CHANGEROOM1, WPARAM(data->id), LPARAM(DM_ROOM_AREA(data->opt)));
 		}
 		return 0;
 	}
 	case DM_LIVE: {
-		if (m_rinfo[room].flag != DANMU_FLAG::MSG_SPECIALGIFT) {
-			return 0;
+		BOOST_LOG_SEV(g_logger::get(), trace) << "[DanmuAPI] " << data->id << " Notice Open.";
+		if (parentthreadid) {
+			PostThreadMessage(parentthreadid, MSG_CHANGEROOM2, WPARAM(data->id), LPARAM(DM_ROOM_AREA(data->opt)));
 		}
-		// 取消需要关闭的标记
-		m_rinfo[room].needclose = false;
-		BOOST_LOG_SEV(g_logger::get(), trace) << "[DanmuAPI] " << room << " Notice Open.";
 		return 0;
 	}
 	}
@@ -254,7 +231,7 @@ int DanmuAPI::ParseJSON(const char *str, int room) {
 	return 0;
 }
 
-int DanmuAPI::ParseSTORMMSG(rapidjson::Document &doc, int room) {
+int DanmuAPI::ParseSTORMMSG(rapidjson::Document &doc, const unsigned room) {
 	if (!doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("39")
 		|| !doc["data"]["39"].IsObject() || !doc["data"]["39"].HasMember("action")) {
 		return -1;
@@ -278,7 +255,7 @@ int DanmuAPI::ParseSTORMMSG(rapidjson::Document &doc, int room) {
 		BILI_ROOMEVENT *pinfo = new BILI_ROOMEVENT;
 		pinfo->rid = room;
 		pinfo->loidl = id;
-		int num;
+		int num = 0;
 		std::string content;
 		if (doc["data"]["39"].HasMember("num") && doc["data"]["39"]["num"].IsInt()) {
 			num = doc["data"]["39"]["num"].GetInt();
@@ -302,7 +279,7 @@ int DanmuAPI::ParseSTORMMSG(rapidjson::Document &doc, int room) {
 	return -1;
 }
 
-int DanmuAPI::ParseNOTICEMSG(rapidjson::Document &doc, int room) {
+int DanmuAPI::ParseNOTICEMSG(rapidjson::Document &doc, const unsigned room, const unsigned area) {
 	// 如果消息不含有房间ID 则说明不是抽奖信息
 	if (!doc.HasMember("msg_type") || !doc["msg_type"].IsInt()) {
 		return -1;
@@ -311,10 +288,10 @@ int DanmuAPI::ParseNOTICEMSG(rapidjson::Document &doc, int room) {
 	switch (type) {
 	case 2:
 	case 8: {
-		return ParseSYSMSG(doc, room);
+		return ParseSYSMSG(doc, room, area);
 	}
 	case 3: {
-		return ParseGUARDMSG(doc, room);
+		return ParseGUARDMSG(doc, room, area);
 	}
 	case 1:
 	case 4:
@@ -327,7 +304,7 @@ int DanmuAPI::ParseNOTICEMSG(rapidjson::Document &doc, int room) {
 	return -1;
 }
 
-int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, int room) {
+int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, const unsigned room, const unsigned area) {
 	// 如果消息不含有房间ID 则说明不是抽奖信息
 	if (!doc.HasMember("real_roomid") || !doc["real_roomid"].IsInt()) {
 		return -1;
@@ -339,7 +316,7 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, int room) {
 	tstr = doc["msg_common"].GetString();
 	std::wstring wmsg = _strcoding.UTF_8ToWString(tstr.c_str());
 	if (wmsg.find(L"全区广播") != -1) {
-		if (m_rinfo[room].area != 1) {
+		if (area != 1) {
 			return 0;
 		}
 	}
@@ -353,7 +330,7 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, int room) {
 }
 
 // 处理广播事件总督上船消息
-int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, int room) {
+int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, const unsigned room, const unsigned area) {
 	// 过滤当前房间的开通信息
 	std::string tstr;
 	tstr = doc["msg_common"].GetString();
@@ -362,7 +339,7 @@ int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, int room) {
 		return 0;
 	}
 	// 全区广播只需通知一次
-	if (m_rinfo[room].area != 1) {
+	if (area != 1) {
 		return 0;
 	}
 	int rid = doc["real_roomid"].GetInt();
@@ -376,7 +353,7 @@ int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, int room) {
 }
 
 // 处理房间事件非总督上船消息
-int DanmuAPI::ParseGUARDLO(rapidjson::Document &doc, int room) {
+int DanmuAPI::ParseGUARDLO(rapidjson::Document &doc, const unsigned room) {
 	int btype = doc["data"]["privilege_type"].GetInt();
 	if (btype != 1) {
 		BILI_LOTTERYDATA *pinfo = new BILI_LOTTERYDATA;

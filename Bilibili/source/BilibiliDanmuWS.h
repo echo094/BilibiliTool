@@ -24,11 +24,11 @@ API中的map信息与WS中的连接map相独立
 
 #pragma once
 #include <fstream>
-#include "wxclient.h"
-#include "BilibiliDanmuAPI.h"
+#include "tcpio/wxclient.h"
+#include "source/source_base.h"
 
 class CWSDanmu: 
-	public DanmuAPI,
+	public source_base,
 	public websocket_endpoint {
 public:
 	CWSDanmu();
@@ -45,17 +45,20 @@ public:
 
 public:
 	// 开启心跳定时器
-	int Init();
+	int start() override;
 	// 关闭心跳定时器 断开所有连接
-	int Deinit();
+	int stop() override;
 	// 连接一个房间
-	int ConnectToRoom(const unsigned room, const unsigned area, const DANMU_FLAG flag);
+	int add_context(const unsigned id, const ROOM_INFO& info) override;
 	// 断开特定房间
-	int DisconnectFromRoom(const unsigned room);
+	int del_context(const unsigned id) override;
+	// 更新房间
+	int update_context(std::set<unsigned> &nlist, const unsigned opt) override;
 	// 显示当前连接数
-	int ShowCount();
+	void show_stat() override;
 
 private:
+	int CheckMessage(const unsigned char *str);
 	int MakeConnectionInfo(unsigned char* str, int len, int room);
 	int MakeHeartInfo(unsigned char* str, int len);
 	int SendConnectionInfo(connection_metadata *it);

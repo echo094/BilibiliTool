@@ -28,6 +28,8 @@
 #endif
 
 #include <string>
+#include <memory>
+using std::unique_ptr;
 
 #define MAX_COOKIE_NUM 30U
 #define MAX_COOKIE_NAMELEN 50U

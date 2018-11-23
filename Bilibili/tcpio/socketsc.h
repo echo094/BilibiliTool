@@ -75,23 +75,22 @@ http://blog.csdn.net/ylj135cool/article/details/46875799
 
 #define MSG_IOCPTHREADCLOSE WM_USER + 600
 
-namespace toollib {
-	// 在回调函数中区别消息类型
-	typedef enum _CALLBACK_TYPE
-	{
-		SOCKET_CLOSE,   
-		SOCKET_RECEIVE, 
-		SOCKET_SEND,    
-	}CALLBACK_TYPE;
-	// 方法未执行成功时的返回代码
-	typedef enum _SOCKET_ERROR_TYPE
-	{
-		SOCKETERR_ERRORCODE_START = -200,
-		SOCKETERR_INIT_FAILED,
-		SOCKETERR_CONNECT_FAILED,
-		SOCKETERR_SEND_PENDING,
-		SOCKETERR_SEND_FAILED
-	}SOCKET_ERROR_TYPE;
+// 在回调函数中区别消息类型
+typedef enum _CALLBACK_TYPE
+{
+	SOCKET_CLOSE,   
+	SOCKET_RECEIVE, 
+	SOCKET_SEND,    
+}CALLBACK_TYPE;
+// 方法未执行成功时的返回代码
+typedef enum _SOCKET_ERROR_TYPE
+{
+	SOCKETERR_ERRORCODE_START = -200,
+	SOCKETERR_INIT_FAILED,
+	SOCKETERR_CONNECT_FAILED,
+	SOCKETERR_SEND_PENDING,
+	SOCKETERR_SEND_FAILED
+}SOCKET_ERROR_TYPE;
 
 	// 在完成端口上投递的I/O操作的类型
 	typedef enum _OPERATION_TYPE
@@ -398,5 +397,5 @@ namespace toollib {
 		// 含迭代器读 软断开所有连接
 		int CloseConnections();
 	};
-}
+
 #endif
