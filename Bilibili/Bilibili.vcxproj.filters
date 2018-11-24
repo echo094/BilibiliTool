@@ -78,6 +78,12 @@
     <ClInclude Include="tcpio\socketsc.h">
       <Filter>tcpio</Filter>
     </ClInclude>
+    <ClInclude Include="tcpio\asioclient.h">
+      <Filter>tcpio</Filter>
+    </ClInclude>
+    <ClInclude Include="source\source_dmasio.h">
+      <Filter>source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -127,6 +133,12 @@
     </ClCompile>
     <ClCompile Include="tcpio\socketsc.cpp">
       <Filter>tcpio</Filter>
+    </ClCompile>
+    <ClCompile Include="tcpio\asioclient.cpp">
+      <Filter>tcpio</Filter>
+    </ClCompile>
+    <ClCompile Include="source\source_dmasio.cpp">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

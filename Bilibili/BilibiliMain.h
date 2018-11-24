@@ -9,6 +9,7 @@ http://www.lyyyuna.com/2016/03/14/bilibili-danmu01/
 #include "BilibiliDanmuAPI.h"
 #include "source/BilibiliDanmu.h"
 #include "source/BilibiliDanmuWS.h"
+#include "source/source_dmasio.h"
 #include "BilibiliYunYing.h"
 
 #include <memory>

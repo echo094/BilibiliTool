@@ -10,6 +10,7 @@ const unsigned MSG_BILI_THREADCLOSE = WM_USER + 611;
 
 const char DM_TCPSERVER[] = "broadcastlv.chat.bilibili.com";
 const int DM_TCPPORT = 2243;
+const char DM_TCPPORTSTR[] = "2243";
 const char DM_WSSERVER[] = "ws://broadcastlv.chat.bilibili.com:2244/sub";
 const char DM_WSSSERVER[] = "wss://broadcastlv.chat.bilibili.com:443/sub";
 const char DM_UA[] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36";

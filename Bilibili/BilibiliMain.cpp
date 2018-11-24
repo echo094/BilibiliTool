@@ -403,7 +403,7 @@ int CBilibiliMain::StartMonitorHiddenEvent(int pthreadid) {
 	curmode = TOOL_EVENT::GET_HIDEN_GIFT;
 
 	if (_dmsource == nullptr) {
-		_dmsource = std::make_unique<CBilibiliDanmu>();
+		_dmsource = std::make_unique<source_dmasio>();
 		_dmsource->set_msg_handler(
 			std::bind(&DanmuAPI::ProcessData, _apidm, std::placeholders::_1)
 		);
