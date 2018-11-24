@@ -162,12 +162,13 @@ copy $(SolutionDir)..\share\openssl\bin\libssl-1_1.dll $(SolutionDir)build\$(Con
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="base64.h" />
-    <ClInclude Include="BilibiliDanmuAPI.h" />
     <ClInclude Include="BilibiliMain.h" />
     <ClInclude Include="BilibiliYunYing.h" />
     <ClInclude Include="BilibiliStruct.h" />
     <ClInclude Include="BilibiliUserInfo.h" />
     <ClInclude Include="BilibiliUserList.h" />
+    <ClInclude Include="event\BilibiliDanmuAPI.h" />
+    <ClInclude Include="event\event_base.h" />
     <ClInclude Include="httpex.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="resource.h" />
@@ -185,11 +186,12 @@ copy $(SolutionDir)..\share\openssl\bin\libssl-1_1.dll $(SolutionDir)build\$(Con
   <ItemGroup>
     <ClCompile Include="base64.cpp" />
     <ClCompile Include="Bilibili.cpp" />
-    <ClCompile Include="BilibiliDanmuAPI.cpp" />
     <ClCompile Include="BilibiliMain.cpp" />
     <ClCompile Include="BilibiliYunYing.cpp" />
     <ClCompile Include="BilibiliUserInfo.cpp" />
     <ClCompile Include="BilibiliUserList.cpp" />
+    <ClCompile Include="event\BilibiliDanmuAPI.cpp" />
+    <ClCompile Include="event\event_base.cpp" />
     <ClCompile Include="httpex.cpp" />
     <ClCompile Include="log.cpp" />
     <ClCompile Include="source\BilibiliDanmu.cpp" />

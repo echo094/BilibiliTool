@@ -338,7 +338,7 @@ int CBilibiliMain::StopMonitorALL() {
 	if (curmode == TOOL_EVENT::GET_SYSMSG_GIFT) {
 		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Closing ws threads...";
 
-		_apidm->SetNotifyThread(0);
+		_apidm->set_notify_thread(0);
 		ret = _dmsource->stop();
 		_dmsource = nullptr;
 
@@ -349,7 +349,7 @@ int CBilibiliMain::StopMonitorALL() {
 	if (curmode == TOOL_EVENT::GET_HIDEN_GIFT) {
 		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Closing socket threads...";
 
-		_apidm->SetNotifyThread(0);
+		_apidm->set_notify_thread(0);
 		ret = _dmsource->stop();
 		_dmsource = nullptr;
 
@@ -376,9 +376,9 @@ int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 	if (_dmsource == nullptr) {
 		_dmsource = std::make_unique<CWSDanmu>();
 		_dmsource->set_msg_handler(
-			std::bind(&DanmuAPI::ProcessData, _apidm, std::placeholders::_1)
+			std::bind(&event_base::process_data, _apidm, std::placeholders::_1)
 		);
-		_apidm->SetNotifyThread(pthreadid);
+		_apidm->set_notify_thread(pthreadid);
 		_dmsource->start();
 	}
 
@@ -405,9 +405,9 @@ int CBilibiliMain::StartMonitorHiddenEvent(int pthreadid) {
 	if (_dmsource == nullptr) {
 		_dmsource = std::make_unique<source_dmasio>();
 		_dmsource->set_msg_handler(
-			std::bind(&DanmuAPI::ProcessData, _apidm, std::placeholders::_1)
+			std::bind(&event_base::process_data, _apidm, std::placeholders::_1)
 		);
-		_apidm->SetNotifyThread(pthreadid);
+		_apidm->set_notify_thread(pthreadid);
 		_dmsource->start();
 	}
 

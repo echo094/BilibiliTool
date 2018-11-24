@@ -6,7 +6,7 @@ http://www.lyyyuna.com/2016/03/14/bilibili-danmu01/
 
 #pragma once
 #include "BilibiliUserList.h"
-#include "BilibiliDanmuAPI.h"
+#include "event/BilibiliDanmuAPI.h"
 #include "source/BilibiliDanmu.h"
 #include "source/BilibiliDanmuWS.h"
 #include "source/source_dmasio.h"
@@ -90,7 +90,7 @@ private:
 	// 其它API
 	unique_ptr<CBilibiliLive> _apilive;
 	// 弹幕API解释模块
-	shared_ptr<DanmuAPI> _apidm;
+	shared_ptr<event_base> _apidm;
 	// 弹幕连接
 	unique_ptr<source_base> _dmsource;
 };

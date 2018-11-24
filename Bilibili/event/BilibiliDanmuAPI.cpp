@@ -1,5 +1,5 @@
 ﻿#include "stdafx.h"
-#include "BilibiliDanmuAPI.h"
+#include "event/BilibiliDanmuAPI.h"
 #include "log.h"
 
 enum {
@@ -76,13 +76,6 @@ struct tagDANMUMSGSYS
 	std::string url;
 };
 
-int DanmuAPI::SetNotifyThread(DWORD id) {
-	if (id >= 0) {
-		parentthreadid = id;
-	}
-	return 0;
-}
-
 void DanmuAPI::InitCMD() {
 	m_cmdid["CHANGE_ROOM_INFO"] = DM_CHANGE_ROOM_INFO;
 	m_cmdid["CUT_OFF"] = DM_CUT_OFF;
@@ -147,7 +140,7 @@ void DanmuAPI::InitCMD() {
 	m_cmdid["SYS_MSG"] = DM_SYS_MSG;
 }
 
-void DanmuAPI::ProcessData(MSG_INFO *data)
+void DanmuAPI::process_data(MSG_INFO *data)
 {
 	int ret;
 	switch (data->type) {
@@ -213,17 +206,11 @@ int DanmuAPI::ParseJSON(MSG_INFO *data) {
 	}
 	case DM_PREPARING:
 	case DM_CUT_OFF: {
-		BOOST_LOG_SEV(g_logger::get(), trace) << "[DanmuAPI] " << data->id << " Notice Close.";
-		if (parentthreadid) {
-			PostThreadMessage(parentthreadid, MSG_CHANGEROOM1, WPARAM(data->id), LPARAM(DM_ROOM_AREA(data->opt)));
-		}
+		event_base::post_close_msg(data->id, DM_ROOM_AREA(data->opt));
 		return 0;
 	}
 	case DM_LIVE: {
-		BOOST_LOG_SEV(g_logger::get(), trace) << "[DanmuAPI] " << data->id << " Notice Open.";
-		if (parentthreadid) {
-			PostThreadMessage(parentthreadid, MSG_CHANGEROOM2, WPARAM(data->id), LPARAM(DM_ROOM_AREA(data->opt)));
-		}
+		event_base::post_open_msg(data->id, DM_ROOM_AREA(data->opt));
 		return 0;
 	}
 	}
@@ -236,9 +223,9 @@ int DanmuAPI::ParseSTORMMSG(rapidjson::Document &doc, const unsigned room) {
 		|| !doc["data"]["39"].IsObject() || !doc["data"]["39"].HasMember("action")) {
 		return -1;
 	}
-	std::string tmpstr;
-	tmpstr = doc["data"]["39"]["action"].GetString();
-	if (tmpstr == "start") {
+	std::string tstr;
+	tstr = doc["data"]["39"]["action"].GetString();
+	if (tstr == "start") {
 		if (!doc["data"]["39"].HasMember("id")) {
 			return -1;
 		}
@@ -261,19 +248,14 @@ int DanmuAPI::ParseSTORMMSG(rapidjson::Document &doc, const unsigned room) {
 			num = doc["data"]["39"]["num"].GetInt();
 		}
 		if (doc["data"]["39"].HasMember("content") && doc["data"]["39"]["content"].IsString()) {
-			tmpstr = doc["data"]["39"]["content"].GetString();
-			content = _strcoding.UTF_8ToString(tmpstr.c_str());
+			content = doc["data"]["39"]["content"].GetString();
 		}
-		BOOST_LOG_SEV(g_logger::get(), info) << "[DanmuAPI] " << room
-			<< " Storm: ID:" << id << " num:" << num << " content:" << content;
-		if (parentthreadid) {
-			PostThreadMessage(parentthreadid, MSG_NEWSPECIALGIFT, WPARAM(pinfo), 0);
-		}
+		BOOST_LOG_SEV(g_logger::get(), trace) << "[DanmuAPI] storm " << room
+			<< " num:" << num << " content:" << content;
+		event_base::post_storm_msg(pinfo);
 		return 0;
 	}
-	if (tmpstr == "end") {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[DanmuAPI] " << room
-			<< " Storm: end ";
+	if (tstr == "end") {
 		return 0;
 	}
 	return -1;
@@ -322,9 +304,7 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, const unsigned room, const u
 	}
 
 	// 有房间号就进行抽奖
-	if (parentthreadid) {
-		PostThreadMessage(parentthreadid, MSG_NEWSMALLTV, WPARAM(rrid), LPARAM(0));
-	}
+	event_base::post_lottery_msg(rrid);
 
 	return 0;
 }
@@ -343,11 +323,7 @@ int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, const unsigned room, const
 		return 0;
 	}
 	int rid = doc["real_roomid"].GetInt();
-	BOOST_LOG_SEV(g_logger::get(), info) << "[DanmuAPI] " << room
-		<< " GUARD_MSG: " << " rid:" << rid;
-	if (parentthreadid) {
-		PostThreadMessage(parentthreadid, MSG_NEWGUARD1, WPARAM(rid), 0);
-	}
+	event_base::post_guard1_msg(rid);
 
 	return 0;
 }
@@ -361,11 +337,7 @@ int DanmuAPI::ParseGUARDLO(rapidjson::Document &doc, const unsigned room) {
 		pinfo->loid = doc["data"]["id"].GetInt();
 		pinfo->exinfo = btype;
 		pinfo->type = doc["data"]["lottery"]["keyword"].GetString();
-		BOOST_LOG_SEV(g_logger::get(), info) << "[DanmuAPI] " << room
-			<< " GUARD_LOTTERY: Type: " << btype;
-		if (parentthreadid) {
-			PostThreadMessage(parentthreadid, MSG_NEWGUARD0, WPARAM(pinfo), 0);
-		}
+		event_base::post_guard23_msg(pinfo);
 	}
 	return 0;
 }

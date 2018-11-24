@@ -23,13 +23,6 @@ const char URL_DEFAULT_REFERERBASE[] = "Referer: https://live.bilibili.com/";
 const char URL_DEFAULT_REFERER[] = "Referer: https://live.bilibili.com/3";
 const char URL_LIVEAPI_HEAD[] = "https://api.live.bilibili.com";
 
-const unsigned MSG_NEWSMALLTV = WM_USER + 612;
-const unsigned MSG_NEWSPECIALGIFT = WM_USER + 613;
-const unsigned MSG_NEWGUARD1 = WM_USER + 614;
-const unsigned MSG_NEWGUARD0 = WM_USER + 615;
-const unsigned MSG_CHANGEROOM1 = WM_USER + 616;
-const unsigned MSG_CHANGEROOM2 = WM_USER + 617;
-
 enum class BILIRET {
 	NOFAULT = 0,
 	// 查询结果为0
@@ -48,24 +41,6 @@ enum class BILIRET {
 	JSON_ERROR,
 	HTMLTEXT_ERROR
 };
-
-const unsigned DM_PUBEVENT = 0x10;
-const unsigned DM_HIDDENEVENT = 0x20;
-
-typedef struct _ROOM_INFO {
-	// 编号
-	unsigned id;
-	// 参数设置
-	unsigned opt;
-	// 需要关闭（下播时）
-	bool needclose;
-
-	_ROOM_INFO() :
-		id(0),
-		opt(0),
-		needclose(false) {}
-
-}ROOM_INFO;
 
 typedef struct _MSG_INFO{
 	unsigned id;

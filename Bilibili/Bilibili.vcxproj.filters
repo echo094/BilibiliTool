@@ -19,6 +19,9 @@
     <Filter Include="tcpio">
       <UniqueIdentifier>{43cdfccd-36e7-4cfc-b2b3-1b9fa0b49cb2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="event">
+      <UniqueIdentifier>{8a62a421-4c5d-4755-933d-d08ce6e79b16}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -57,9 +60,6 @@
     <ClInclude Include="base64.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="BilibiliDanmuAPI.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="log.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -83,6 +83,12 @@
     </ClInclude>
     <ClInclude Include="source\source_dmasio.h">
       <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="event\BilibiliDanmuAPI.h">
+      <Filter>event</Filter>
+    </ClInclude>
+    <ClInclude Include="event\event_base.h">
+      <Filter>event</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -113,9 +119,6 @@
     <ClCompile Include="base64.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="BilibiliDanmuAPI.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="log.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -139,6 +142,12 @@
     </ClCompile>
     <ClCompile Include="source\source_dmasio.cpp">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="event\BilibiliDanmuAPI.cpp">
+      <Filter>event</Filter>
+    </ClCompile>
+    <ClCompile Include="event\event_base.cpp">
+      <Filter>event</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

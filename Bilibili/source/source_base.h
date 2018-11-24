@@ -3,6 +3,21 @@
 #include <map>
 #include <set>
 
+typedef struct _ROOM_INFO {
+	// 编号
+	unsigned id;
+	// 参数设置
+	unsigned opt;
+	// 需要关闭（下播时）
+	bool needclose;
+
+	_ROOM_INFO() :
+		id(0),
+		opt(0),
+		needclose(false) {}
+
+}ROOM_INFO;
+
 class source_base {
 public:
 	typedef std::function<void(MSG_INFO *)> msg_handler;
