@@ -5,6 +5,9 @@ http://www.lyyyuna.com/2016/03/14/bilibili-danmu01/
 */
 
 #pragma once
+#include <functional>
+#include <memory>
+#include <boost/asio.hpp>
 #include "BilibiliUserList.h"
 #include "event/BilibiliDanmuAPI.h"
 #include "source/BilibiliDanmu.h"
@@ -16,8 +19,6 @@ http://www.lyyyuna.com/2016/03/14/bilibili-danmu01/
 using std::unique_ptr;
 using std::shared_ptr;
 
-const unsigned ON_USER_COMMAND = WM_USER + 610;
-
 class CBilibiliMain {
 public:
 	explicit CBilibiliMain();
@@ -28,23 +29,25 @@ public:
 	void PrintHelp();
 	// 初始化
 	int Run();
-	// 消息线程
-	static DWORD WINAPI ThreadEntry(PVOID lpParameter);
-	// 消息处理
-	void ThreadHandler();
+	// 消息回调
+	void post_msg(unsigned msg, WPARAM wp, LPARAM lp);
 
 private:
-	// 处理用户指令
-	int ProcessUserMSG(TOOL_EVENT &msg);
+	// Stert heart timer
+	void start_timer(unsigned sec);
+	// Heart timer
+	void on_timer(boost::system::error_code ec);
+
+private:
 	// 处理模块事件
-	int ProcessModuleMSG(MSG &msg);
+	int ProcessModuleMSG(unsigned msg, WPARAM wp, LPARAM lp);
 	// 处理用户指令
 	int ProcessCommand(std::string str);
 
 	int StopMonitorALL();
 	int StartUserHeart();
-	int StartMonitorPubEvent(int pthreadid);
-	int StartMonitorHiddenEvent(int pthreadid);
+	int StartMonitorPubEvent();
+	int StartMonitorHiddenEvent();
 	// 调试函数
 	int Debugfun(int index);
 
@@ -67,20 +70,20 @@ private:
 	int SaveLogFile();
 
 private:
-	// 日志文件句柄
-	std::fstream _logfile;
+	// IO serverce
+	boost::asio::io_context io_context_;
+	// Heart Timer
+	boost::asio::deadline_timer heart_timer_;
+	// Maintenance worker
+	std::shared_ptr<boost::asio::io_context::work> pwork_;
+	// Main thread
+	std::shared_ptr<std::thread> thread_main_;
 	// 当前模式
 	TOOL_EVENT curmode;
 	// HTTP数据收发
 	CURL *m_curl;
-	// 主线程运行状态
-	bool m_threadstat;
-	//主线程序号
-	DWORD m_threadid;
-	//主线程句柄
-	HANDLE m_threadhandle;
-	// 主线程定时器
-	DWORD m_timer;
+	// 日志文件句柄
+	std::fstream _logfile;
 	// 账户列表类
 	unique_ptr<CBilibiliUserList> _userlist;
 	// 小电视信息处理类

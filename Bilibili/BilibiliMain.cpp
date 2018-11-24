@@ -7,6 +7,8 @@
 #include <time.h>
 #include <conio.h> //getch()
 
+const int HEART_INTERVAL = 300;
+
 int GetPassword(std::string &psd) {
 	using namespace std;
 
@@ -52,29 +54,30 @@ int GetPassword(std::string &psd) {
 	return 0;
 }
 
-CBilibiliMain::CBilibiliMain(){
+CBilibiliMain::CBilibiliMain():
+	io_context_(),
+	heart_timer_(io_context_),
+	_dmsource(nullptr),
+	_apidm(new DanmuAPI()),
+	_lotterytv(new CBilibiliSmallTV()),
+	_lotterygu(new CBilibiliGuard()),
+	_apilive(new CBilibiliLive()),
+	_userlist(new CBilibiliUserList()) {
+
 	curmode = TOOL_EVENT::STOP;
 	m_curl = curl_easy_init();
-	m_threadstat = false;
 
 	SaveLogFile();
-
-	_dmsource = nullptr;
-	_apidm = std::make_shared<DanmuAPI>();
-	_lotterytv = std::make_unique<CBilibiliSmallTV>();
-	_lotterygu = std::make_unique<CBilibiliGuard>();
-	_apilive = std::make_unique<CBilibiliLive>();
-	_userlist = std::make_unique<CBilibiliUserList>();
 }
 
 CBilibiliMain::~CBilibiliMain() {
 	_logfile.close();
-	_dmsource = nullptr;
-	_lotterytv = nullptr;
-	_lotterygu = nullptr;
-	_apilive = nullptr;
-	_apidm = nullptr;
-	_userlist = nullptr;
+	_dmsource.reset();
+	_lotterytv.reset();
+	_lotterygu.reset();
+	_apilive.reset();
+	_apidm.reset();
+	_userlist.reset();
 	curl_easy_cleanup(m_curl);
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[Main] Stop.";
 }
@@ -101,151 +104,106 @@ void CBilibiliMain::PrintHelp() {
 
 int CBilibiliMain::Run() {
 	using namespace std;
-;
-	// 辅助线程
-	m_threadhandle = CreateThread(NULL, 0, ThreadEntry, this, 0, &m_threadid);
-	if (!m_threadhandle) {
-		m_threadhandle = INVALID_HANDLE_VALUE;
-		return -1;
-	}
+	
+	// Create the worker threads
+	pwork_ = std::make_shared< boost::asio::io_context::work>(io_context_);
+	// Create thread
+	thread_main_ = std::make_shared< std::thread>(
+		boost::bind(&boost::asio::io_service::run, &io_context_)
+		);
+
+	_apidm->set_event_handler(
+		std::bind(
+			&CBilibiliMain::post_msg,
+			this,
+			std::placeholders::_1,
+			std::placeholders::_2,
+			std::placeholders::_3
+		));
+
 	PrintHelp();
 
 	string command;
 	int ret = 1;
 	while (ret) {
-		printf("> ");
 		while (getline(cin, command) && !command.size());
 		ret = ProcessCommand(command);
 	}
 	BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Waiting to exit...";
-	while (m_threadstat) {
-		Sleep(100);
-	}
+
+	// Stop
+	pwork_.reset();
+	thread_main_->join();
+	thread_main_.reset();
 
 	return 0;
 }
 
-DWORD CBilibiliMain::ThreadEntry(PVOID lpParameter) {
-	CBilibiliMain *self = (CBilibiliMain *)lpParameter;
-	self->m_threadstat = true;
-	BOOST_LOG_SEV(g_logger::get(), debug) << "[Main] Thread Start.";
-	self->ThreadHandler();
-	BOOST_LOG_SEV(g_logger::get(), debug) << "[Main] Thread Stop.";
-	self->m_threadstat = false;
-	return 0;
+void CBilibiliMain::post_msg(unsigned msg, WPARAM wp, LPARAM lp) {
+	boost::asio::post(
+		io_context_,
+		boost::bind(
+			&CBilibiliMain::ProcessModuleMSG,
+			this,
+			msg,
+			wp,
+			lp
+		)
+	);
 }
 
-void CBilibiliMain::ThreadHandler() {
-	m_timer = 0;
-	MSG msg;
-	// 用于线程退出循环的标志位
-	int runflag = 0;
-	while (!runflag) {
-		//Peek不阻塞但占用内存,如果使用GetMessage会阻塞
-		if (GetMessage(&msg, NULL, 0, 0) == 0) {
-			continue;
-		}
-		TranslateMessage(&msg);
-		if (msg.message == WM_TIMER) {
-			if (msg.wParam == m_timer) {
-				UpdateLiveRoom();
-			}
-		}
-		else if (msg.message == ON_USER_COMMAND) {
-			TOOL_EVENT opt = static_cast<TOOL_EVENT>(msg.wParam);
-			runflag = ProcessUserMSG(opt);
-		}
-		else {
-			runflag = ProcessModuleMSG(msg);
-		}
-		Sleep(0);
-	}
+void CBilibiliMain::start_timer(unsigned sec) {
+	heart_timer_.expires_from_now(boost::posix_time::seconds(sec));
+	heart_timer_.async_wait(
+		boost::bind(
+			&CBilibiliMain::on_timer,
+			this,
+			boost::asio::placeholders::error
+		)
+	);
 }
 
-int CBilibiliMain::ProcessUserMSG(TOOL_EVENT &msg) {
-	int ret = 0;
-	if (msg == TOOL_EVENT::EXIT) {
-		ret = -1;
-		if (m_timer) {
-			KillTimer(NULL, m_timer);
-			m_timer = 0;
-		}
-		StopMonitorALL();
+void CBilibiliMain::on_timer(boost::system::error_code ec) {
+	if (ec) {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Timer: " << ec;
+		return;
 	}
-	else if (msg == TOOL_EVENT::STOP) {
-		if (m_timer) {
-			KillTimer(NULL, m_timer);
-			m_timer = 0;
-		}
-		StopMonitorALL();
-	}
-	else if (msg == TOOL_EVENT::ONLINE) {
-		if (curmode != TOOL_EVENT::STOP) {
-			printf("Another task is working. \n");
-		}
-		else {
-			StartUserHeart();
-		}
-	}
-	else if (msg == TOOL_EVENT::GET_SYSMSG_GIFT) {
-		if (curmode != TOOL_EVENT::STOP) {
-			printf("Another task is working. \n");
-		}
-		else {
-			StartMonitorPubEvent(m_threadid);
-		}
-	}
-	else if (msg == TOOL_EVENT::GET_HIDEN_GIFT) {
-		if (curmode != TOOL_EVENT::STOP) {
-			printf("Another task is working. \n");
-		}
-		else {
-			// 每5分钟刷新房间
-			m_timer = SetTimer(NULL, 1, 300000, NULL);
-			StartMonitorHiddenEvent(m_threadid);
-		}
-	}
-	else if (msg == TOOL_EVENT::DEBUG1) {
-		Debugfun(1);
-	}
-	else if (msg == TOOL_EVENT::DEBUG2) {
-		Debugfun(2);
-	}
-	return ret;
+	start_timer(HEART_INTERVAL);
+	UpdateLiveRoom();
 }
 
-int CBilibiliMain::ProcessModuleMSG(MSG &msg) {
-	switch (msg.message) {
+int CBilibiliMain::ProcessModuleMSG(unsigned msg, WPARAM wp, LPARAM lp) {
+	switch (msg) {
 	case MSG_NEWSMALLTV: {
-		JoinTV(msg.wParam);
+		JoinTV(wp);
 		break;
 	}
 	case MSG_NEWGUARD0: {
 		// 房间上船事件
-		BILI_LOTTERYDATA *pinfo = (BILI_LOTTERYDATA *)msg.wParam;
+		BILI_LOTTERYDATA *pinfo = (BILI_LOTTERYDATA *)wp;
 		JoinGuardGift(*pinfo);
 		delete pinfo;
 		break;
 	}
 	case MSG_NEWGUARD1: {
 		// 广播上船事件
-		JoinGuardGift(msg.wParam);
+		JoinGuardGift(wp);
 		break;
 	}
 	case MSG_NEWSPECIALGIFT: {
-		BILI_ROOMEVENT *pinfo = (BILI_ROOMEVENT *)msg.wParam;
+		BILI_ROOMEVENT *pinfo = (BILI_ROOMEVENT *)wp;
 		JoinSpecialGift(pinfo->rid, pinfo->loidl);
 		delete pinfo;
 		break;
 	}
 	case MSG_CHANGEROOM1: {
 		// 房间下播
-		UpdateAreaRoom(msg.wParam, msg.lParam, true);
+		UpdateAreaRoom(wp, lp, true);
 		break;
 	}
 	case MSG_CHANGEROOM2: {
 		// 房间上播
-		UpdateAreaRoom(msg.wParam, msg.lParam, false);
+		UpdateAreaRoom(wp, lp, false);
 		break;
 	}
 	}
@@ -259,8 +217,7 @@ int CBilibiliMain::ProcessCommand(std::string str) {
 		return 1;
 	}
 	if (!str.compare("exit")) {
-		CloseHandle(m_threadhandle);
-		PostThreadMessage(m_threadid, ON_USER_COMMAND, WPARAM(0), LPARAM(0));
+		StopMonitorALL();
 		return 0;
 	}
 	if (!str.compare("help")) {
@@ -299,26 +256,26 @@ int CBilibiliMain::ProcessCommand(std::string str) {
 		_userlist->GetUserInfoALL();
 	}
 	else if (!str.compare("10") || !str.compare("stopall")) {
-		PostThreadMessage(m_threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::STOP), LPARAM(0));
+		StopMonitorALL();
 	}
 	else if (!str.compare("11") || !str.compare("userexp")) {
-		PostThreadMessage(m_threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::ONLINE), LPARAM(0));
+		StartUserHeart();
 	}
 	else if (!str.compare("12") || !str.compare("startlp")) {
-		PostThreadMessage(m_threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::GET_SYSMSG_GIFT), LPARAM(0));
+		StartMonitorPubEvent();
 	}
 	else if (!str.compare("13") || !str.compare("startlh")) {
-		PostThreadMessage(m_threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::GET_HIDEN_GIFT), LPARAM(0));
+		StartMonitorHiddenEvent();
 	}
 	else if (!str.compare("21")) {
 		printf("Saving lottery history... \n");
 		SaveLogFile();
 	}
 	else if (!str.compare("90")) {
-		PostThreadMessage(m_threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::DEBUG1), LPARAM(0));
+		Debugfun(1);
 	}
 	else if (!str.compare("91")) {
-		PostThreadMessage(m_threadid, ON_USER_COMMAND, WPARAM(TOOL_EVENT::DEBUG2), LPARAM(0));
+		Debugfun(2);
 	}
 	else {
 		printf("未知命令\n");
@@ -338,7 +295,6 @@ int CBilibiliMain::StopMonitorALL() {
 	if (curmode == TOOL_EVENT::GET_SYSMSG_GIFT) {
 		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Closing ws threads...";
 
-		_apidm->set_notify_thread(0);
 		ret = _dmsource->stop();
 		_dmsource = nullptr;
 
@@ -349,7 +305,7 @@ int CBilibiliMain::StopMonitorALL() {
 	if (curmode == TOOL_EVENT::GET_HIDEN_GIFT) {
 		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Closing socket threads...";
 
-		_apidm->set_notify_thread(0);
+		heart_timer_.cancel();
 		ret = _dmsource->stop();
 		_dmsource = nullptr;
 
@@ -363,14 +319,23 @@ int CBilibiliMain::StopMonitorALL() {
 }
 
 int CBilibiliMain::StartUserHeart() {
-	int ret = 0;
+	if (curmode != TOOL_EVENT::STOP) {
+		printf("Another task is working. \n");
+		return 0;
+	}
 	curmode = TOOL_EVENT::ONLINE;
+
+	int ret = 0;
 	ret = _userlist->StartUserHeart();
 
 	return ret;
 }
 
-int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
+int CBilibiliMain::StartMonitorPubEvent() {
+	if (curmode != TOOL_EVENT::STOP) {
+		printf("Another task is working. \n");
+		return 0;
+	}
 	curmode = TOOL_EVENT::GET_SYSMSG_GIFT;
 
 	if (_dmsource == nullptr) {
@@ -378,7 +343,6 @@ int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 		_dmsource->set_msg_handler(
 			std::bind(&event_base::process_data, _apidm, std::placeholders::_1)
 		);
-		_apidm->set_notify_thread(pthreadid);
 		_dmsource->start();
 	}
 
@@ -399,15 +363,20 @@ int CBilibiliMain::StartMonitorPubEvent(int pthreadid) {
 	return 0;
 }
 
-int CBilibiliMain::StartMonitorHiddenEvent(int pthreadid) {
+int CBilibiliMain::StartMonitorHiddenEvent() {
+	if (curmode != TOOL_EVENT::STOP) {
+		printf("Another task is working. \n");
+		return 0;
+	}
 	curmode = TOOL_EVENT::GET_HIDEN_GIFT;
+
+	start_timer(HEART_INTERVAL);
 
 	if (_dmsource == nullptr) {
 		_dmsource = std::make_unique<source_dmasio>();
 		_dmsource->set_msg_handler(
 			std::bind(&event_base::process_data, _apidm, std::placeholders::_1)
 		);
-		_apidm->set_notify_thread(pthreadid);
 		_dmsource->start();
 	}
 
