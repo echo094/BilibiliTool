@@ -57,6 +57,7 @@ int GetPassword(std::string &psd) {
 CBilibiliMain::CBilibiliMain():
 	io_context_(),
 	heart_timer_(io_context_),
+	heart_flag_(false),
 	_dmsource(nullptr),
 	_apidm(new DanmuAPI()),
 	_lotterytv(new CBilibiliSmallTV()),
@@ -65,7 +66,8 @@ CBilibiliMain::CBilibiliMain():
 	_userlist(new CBilibiliUserList()) {
 
 	curmode = TOOL_EVENT::STOP;
-	m_curl = curl_easy_init();
+	curl_main_ = curl_easy_init();
+	curl_heart_ = curl_easy_init();
 
 	SaveLogFile();
 }
@@ -78,7 +80,8 @@ CBilibiliMain::~CBilibiliMain() {
 	_apilive.reset();
 	_apidm.reset();
 	_userlist.reset();
-	curl_easy_cleanup(m_curl);
+	curl_easy_cleanup(curl_main_);
+	curl_easy_cleanup(curl_heart_);
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[Main] Stop.";
 }
 
@@ -168,8 +171,18 @@ void CBilibiliMain::on_timer(boost::system::error_code ec) {
 		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Timer: " << ec;
 		return;
 	}
+	if (thread_heart_ && thread_heart_->joinable()) {
+		thread_heart_->join();
+	}
+	if (heart_flag_) {
+		// 在停止时定时器会延迟收到取消信号
+		// 若两操作同时发生 可能会有问题
+		return;
+	}
 	start_timer(HEART_INTERVAL);
-	UpdateLiveRoom();
+	thread_heart_.reset(new std::thread(
+		&CBilibiliMain::UpdateLiveRoom, this
+	));
 }
 
 int CBilibiliMain::ProcessModuleMSG(unsigned msg, WPARAM wp, LPARAM lp) {
@@ -305,7 +318,11 @@ int CBilibiliMain::StopMonitorALL() {
 	if (curmode == TOOL_EVENT::GET_HIDEN_GIFT) {
 		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Closing socket threads...";
 
+		heart_flag_ = true;
 		heart_timer_.cancel();
+		if (thread_heart_ && thread_heart_->joinable()) {
+			thread_heart_->join();
+		}
 		ret = _dmsource->stop();
 		_dmsource = nullptr;
 
@@ -352,7 +369,7 @@ int CBilibiliMain::StartMonitorPubEvent() {
 	// 获取需要连接的房间
 	unsigned roomid;
 	for (unsigned int i = 1; i < 6; i++) {
-		if (_apilive->PickOneRoom(m_curl, roomid, 0, i) == BILIRET::NOFAULT) {
+		if (_apilive->PickOneRoom(curl_main_, roomid, 0, i) == BILIRET::NOFAULT) {
 			ROOM_INFO info;
 			info.id = roomid;
 			info.opt = DM_ROOM_AREA(i) | DM_PUBEVENT;
@@ -370,6 +387,7 @@ int CBilibiliMain::StartMonitorHiddenEvent() {
 	}
 	curmode = TOOL_EVENT::GET_HIDEN_GIFT;
 
+	heart_flag_ = false;
 	start_timer(HEART_INTERVAL);
 
 	if (_dmsource == nullptr) {
@@ -411,7 +429,7 @@ int CBilibiliMain::UpdateAreaRoom(const unsigned rid, const unsigned area, const
 		}
 		_dmsource->del_context(rid);
 		unsigned nrid;
-		if (_apilive->PickOneRoom(m_curl, nrid, rid, area) == BILIRET::NOFAULT) {
+		if (_apilive->PickOneRoom(curl_main_, nrid, rid, area) == BILIRET::NOFAULT) {
 			ROOM_INFO info;
 			info.id = rid;
 			info.opt = DM_ROOM_AREA(area) | DM_PUBEVENT;
@@ -433,7 +451,7 @@ int CBilibiliMain::UpdateLiveRoom() {
 		return 0;
 	}
 	std::set<unsigned> nlist;
-	_apilive->GetLiveList(m_curl, nlist, 400);
+	_apilive->GetLiveList(curl_heart_, nlist, 400);
 	_dmsource->update_context(nlist, DM_HIDDENEVENT);
 
 	return 0;
@@ -442,10 +460,10 @@ int CBilibiliMain::UpdateLiveRoom() {
 int CBilibiliMain::JoinTV(int room)
 {
 	int ret = -1, count = 2;
-	ret = _lotterytv->CheckLottery(m_curl, room);
+	ret = _lotterytv->CheckLottery(curl_main_, room);
 	while (ret&&count) {
 		Sleep(1000);
-		ret = _lotterytv->CheckLottery(m_curl, room);
+		ret = _lotterytv->CheckLottery(curl_main_, room);
 		count--;
 	}
 	if (ret != 0)
@@ -469,10 +487,10 @@ int CBilibiliMain::JoinTV(int room)
 int CBilibiliMain::JoinGuardGift(int room)
 {
 	int ret = -1, count = 2;
-	ret = _lotterygu->CheckLottery(m_curl, room);
+	ret = _lotterygu->CheckLottery(curl_main_, room);
 	while (ret&&count) {
 		Sleep(1000);
-		ret = _lotterygu->CheckLottery(m_curl, room);
+		ret = _lotterygu->CheckLottery(curl_main_, room);
 		count--;
 	}
 	if (ret != 0)

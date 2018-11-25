@@ -76,12 +76,14 @@ private:
 	boost::asio::deadline_timer heart_timer_;
 	// Maintenance worker
 	std::shared_ptr<boost::asio::io_context::work> pwork_;
-	// Main thread
-	std::shared_ptr<std::thread> thread_main_;
+	// Threads
+	std::shared_ptr<std::thread> thread_main_, thread_heart_;
+	// 辅助运行标志
+	bool heart_flag_;
 	// 当前模式
 	TOOL_EVENT curmode;
 	// HTTP数据收发
-	CURL *m_curl;
+	CURL *curl_main_, *curl_heart_;
 	// 日志文件句柄
 	std::fstream _logfile;
 	// 账户列表类
