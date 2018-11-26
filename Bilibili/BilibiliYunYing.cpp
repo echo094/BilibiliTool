@@ -157,7 +157,7 @@ void CBilibiliSmallTV::_UpdateLotteryList(rapidjson::Value &infoArray, int srid,
 		if (_CheckLoid((*itor)->loid)) {
 			flag++;
 			m_lotteryactive.push_back(*itor);
-			BOOST_LOG_SEV(g_logger::get(), info) << "[Lottery] Type: " << (*itor)->type << " Id: " << m_curid;
+			BOOST_LOG_SEV(g_logger::get(), info) << "[Lottery] Type: " << (*itor)->type << " Id: " << (*itor)->loid;
 		}
 		else {
 			delete (*itor);
@@ -267,7 +267,7 @@ void CBilibiliGuard::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, i
 			flag++;
 			m_curid = (*itor)->loid;
 			m_lotteryactive.push_back(*itor);
-			BOOST_LOG_SEV(g_logger::get(), info) << "[Guard] Type: " << (*itor)->type << " Id: " << m_curid
+			BOOST_LOG_SEV(g_logger::get(), info) << "[Guard] Type: " << (*itor)->type << " Id: " << (*itor)->loid
 				<< " GType: " << (*itor)->exinfo;
 		}
 		itor = tlist.erase(itor);
