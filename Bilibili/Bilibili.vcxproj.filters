@@ -90,6 +90,9 @@
     <ClInclude Include="event\event_base.h">
       <Filter>event</Filter>
     </ClInclude>
+    <ClInclude Include="source\proto_bl.h">
+      <Filter>source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -148,6 +151,9 @@
     </ClCompile>
     <ClCompile Include="event\event_base.cpp">
       <Filter>event</Filter>
+    </ClCompile>
+    <ClCompile Include="source\proto_bl.cpp">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

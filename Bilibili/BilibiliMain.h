@@ -10,7 +10,6 @@ http://www.lyyyuna.com/2016/03/14/bilibili-danmu01/
 #include <boost/asio.hpp>
 #include "BilibiliUserList.h"
 #include "event/BilibiliDanmuAPI.h"
-#include "source/BilibiliDanmu.h"
 #include "source/BilibiliDanmuWS.h"
 #include "source/source_dmasio.h"
 #include "BilibiliYunYing.h"

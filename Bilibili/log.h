@@ -9,3 +9,5 @@ BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(g_logger, logger_type)
 
 void boost_log_init();
 void boost_log_deinit();
+
+const std::string char2hexstring(unsigned char * data, int nLen);

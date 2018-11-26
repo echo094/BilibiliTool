@@ -152,7 +152,7 @@ void DanmuAPI::process_data(MSG_INFO *data)
 	case 0x05: {
 		ret = ParseJSON(data);
 		if (ret) {
-			BOOST_LOG_SEV(g_logger::get(), debug) << "[DanmuAPI] " << data->id << " DMNEW: " << data->msg;
+			BOOST_LOG_SEV(g_logger::get(), debug) << "[DanmuAPI] " << data->id << " DMNEW: " << data->buff.get();
 		}
 		break;
 	}
@@ -169,7 +169,7 @@ void DanmuAPI::process_data(MSG_INFO *data)
 
 int DanmuAPI::ParseJSON(MSG_INFO *data) {
 	rapidjson::Document doc;
-	doc.Parse(data->msg.c_str());
+	doc.Parse(data->buff.get());
 
 	if (!doc.IsObject() || !doc.HasMember("cmd") || !doc["cmd"].IsString()) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[DanmuAPI] " << data->id << " JSON Wrong.";

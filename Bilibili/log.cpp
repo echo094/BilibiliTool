@@ -1,9 +1,11 @@
 ﻿#include "stdafx.h"
 #include "log.h"
 
+#include <iomanip>
 #include <iostream>
-#include <fstream>
+#include <sstream>
 #include <string>
+#include <fstream>
 
 #include <boost/core/null_deleter.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
@@ -72,4 +74,14 @@ void boost_log_init() {
 
 void boost_log_deinit() {
 	boost::log::core::get()->remove_all_sinks();
+}
+
+const std::string char2hexstring(unsigned char * data, int nLen) {
+	using namespace std;
+	ostringstream oss;
+	oss << hex << setfill('0');
+	for (int i = 0; i < nLen; i++) {
+		oss << setw(2) << static_cast<unsigned int>(data[i]) << ' ';
+	}
+	return oss.str();
 }

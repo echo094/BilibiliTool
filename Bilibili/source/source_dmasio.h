@@ -32,10 +32,12 @@ public:
 	size_t on_payload(context_info* c, const int len);
 
 private:
-	long long GetRUID();
-	int CheckMessage(const unsigned char *str);
-	int MakeConnectionInfo(unsigned char* str, int len, int room);
-	int MakeHeartInfo(unsigned char* str, int len, int room);
+	int uncompress_dmpack(
+		char *buff,
+		const unsigned ilen,
+		const unsigned id,
+		const unsigned opt
+	);
 
 private:
 	asioclient asioclient_;

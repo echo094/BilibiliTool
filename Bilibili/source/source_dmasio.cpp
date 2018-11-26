@@ -1,19 +1,17 @@
 ﻿#include "stdafx.h"
-#include "source/source_dmasio.h"
-#include "log.h"
-#include <iomanip>
-#include <iostream>
-#include <sstream>
 
-const std::string Char2HexString(unsigned char * data, int nLen) {
-	using namespace std;
-	ostringstream oss;
-	oss << hex << setfill('0');
-	for (int i = 0; i < nLen; i++) {
-		oss << setw(2) << static_cast<unsigned int>(data[i]) << ' ';
-	}
-	return oss.str();
-}
+#ifndef ZLIB_CONST
+#define ZLIB_CONST
+#endif
+#include <zlib.h>
+#pragma comment(lib,"zlibstat.lib")
+
+#include "source_dmasio.h"
+#include "proto_bl.h"
+#include "log.h"
+
+const char DM_TCPSERVER[] = "broadcastlv.chat.bilibili.com";
+const char DM_TCPPORTSTR[] = "2243";
 
 source_dmasio::source_dmasio() :
 	asioclient_(16),
@@ -137,23 +135,23 @@ void source_dmasio::on_open(context_info * c) {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[DMAS] Open: " << c->label_;
 	source_base::do_list_add(c->label_);
 	char cmdstr[128];
-	int len = MakeConnectionInfo((unsigned char *)cmdstr, 128, c->label_);
+	int len = protobl::MakeFlashConnectionInfo((unsigned char *)cmdstr, 128, c->label_);
 	asioclient_.post_write(c, cmdstr, len);
 }
 
 void source_dmasio::on_heart(context_info * c) {
 	char cmdstr[128];
-	int len = MakeHeartInfo((unsigned char *)cmdstr, 128, c->label_);
+	int len = protobl::MakeFlashHeartInfo((unsigned char *)cmdstr, 128, c->label_);
 	asioclient_.post_write(c, cmdstr, len);
 }
 
 size_t source_dmasio::on_header(context_info * c, const int len) {
 	unsigned char *data = (unsigned char *)c->buff_header_;
 	size_t bufflen = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
-	int type = CheckMessage(data);
+	int type = protobl::CheckMessage(data);
 	if ((bufflen > 5000) || (type == -1)) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[DMAS] Recv: " << c->label_ 
-			<< " bytes: " << Char2HexString(data, len);
+			<< " bytes: " << char2hexstring(data, len);
 		return 0;
 	}
 	c->opt_ = type;
@@ -162,7 +160,6 @@ size_t source_dmasio::on_header(context_info * c, const int len) {
 		info.id = c->label_;
 		info.opt = get_info(c->label_).opt;
 		info.type = c->opt_;
-		info.msg = "";
 		handler_msg(&info);
 	}
 	return bufflen;
@@ -170,68 +167,99 @@ size_t source_dmasio::on_header(context_info * c, const int len) {
 
 size_t source_dmasio::on_payload(context_info * c, const int len) {
 	unsigned char *data = (unsigned char *)c->buff_payload_;
-	MSG_INFO info;
-	info.id = c->label_;
-	info.opt = get_info(c->label_).opt;
-	info.type = c->opt_;
-	info.msg = "";
-	info.msg.append(c->buff_payload_, len);
-	info.msg.append(1, 0);
-	handler_msg(&info);
+	if (c->buff_header_[7] == 2) {
+		uncompress_dmpack(c->buff_payload_, len, c->label_, get_info(c->label_).opt);
+	}
+	else {
+		MSG_INFO info;
+		info.id = c->label_;
+		info.opt = get_info(c->label_).opt;
+		info.type = c->opt_;
+		info.ver = c->buff_header_[7];
+		info.len = len;
+		info.buff.reset(new char[len + 1]);
+		memcpy_s(info.buff.get(), len, c->buff_payload_, len);
+		info.buff.get()[len] = 0;
+		handler_msg(&info);
+	}
 	return 0;
 }
 
-long long source_dmasio::GetRUID() {
-	srand(unsigned(time(0)));
-	double val = 100000000000000.0 + 200000000000000.0*(rand() / (RAND_MAX + 1.0));
-	return static_cast <long long> (val);
-}
+int source_dmasio::uncompress_dmpack(
+	char *buf,
+	const unsigned ilen,
+	const unsigned id,
+	const unsigned opt
+) {
+	// 初始化zlib
+	z_stream strm;
+	strm.zalloc = Z_NULL;
+	strm.zfree = Z_NULL;
+	strm.opaque = Z_NULL;
+	strm.avail_in = 0;
+	strm.next_in = Z_NULL;
+	if (inflateInit(&strm) != Z_OK) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[DMAS] Recv: " << id
+			<< " Zlib init failed! ";
+		return 0;
+	}
+	strm.avail_in = ilen;
+	strm.next_in = (unsigned char *)buf;
+	int ret = 0;
+	bool success = true;
+	do {
+		// 解压header
+		unsigned char head[17] = {};
+		strm.avail_out = 16;
+		strm.next_out = head;
+		ret = inflate(&strm, Z_NO_FLUSH);
+		if (ret != Z_OK && ret != Z_STREAM_END) {
+			// 解压出错
+			success = false;
+			break;
+		}
+		if (strm.avail_out) {
+			// header未完整获取
+			success = false;
+			break;
+		}
+		// 获取header信息
+		MSG_INFO info;
+		info.id = id;
+		info.opt = opt;
+		info.type = protobl::CheckMessage(head);
+		info.ver = head[7];
+		info.len = head[0] << 24 | head[1] << 16 | head[2] << 8 | head[3];
+		info.len -= 16;
+		info.buff.reset(new char[info.len + 1]);
+		if (info.type == -1) {
+			success = false;
+			break;
+		}
+		// 解压payload
+		strm.avail_out = info.len;
+		strm.next_out = (unsigned char *)info.buff.get();
+		ret = inflate(&strm, Z_NO_FLUSH);
+		if (ret != Z_OK && ret != Z_STREAM_END) {
+			// 解压出错
+			success = false;
+			break;
+		}
+		if (strm.avail_out) {
+			// payload未完整获取
+			success = false;
+			break;
+		}
+		info.buff.get()[info.len] = 0;
+		handler_msg(&info);
+	} while (ret == Z_OK);
 
-int source_dmasio::CheckMessage(const unsigned char *str) {
-	int i;
-	if (str[4])
-		return -1;
-	if (str[5] - 16)
-		return -1;
-	for (i = 8; i < 11; i++) {
-		if (str[i])
-			return -1;
+	if (!success) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[DMAS] Recv: " << id
+			<< " compress bytes: " << char2hexstring((unsigned char*)buf, ilen);
 	}
-	for (i = 12; i < 15; i++) {
-		if (str[i])
-			return -1;
-	}
-	return str[11];
-}
 
-int source_dmasio::MakeConnectionInfo(unsigned char* str, int len, int room) {
-	memset(str, 0, len);
-	int buflen;
-	buflen = sprintf_s((char*)str + 16, len - 16, "{\"roomid\":%d,\"uid\":%I64d}", room, GetRUID());
-	if (buflen == -1) {
-		return -1;
-	}
-	buflen = 16 + buflen;
-	str[3] = buflen;
-	str[5] = 0x10;
-	str[7] = 0x01;
-	str[11] = 0x07;
-	str[15] = 0x01;
-	return buflen;
-}
-
-int source_dmasio::MakeHeartInfo(unsigned char* str, int len, int room) {
-	memset(str, 0, len);
-	int buflen;
-	buflen = sprintf_s((char*)str + 16, len - 16, "{\"roomid\":%d,\"uid\":%I64d}", room, GetRUID());
-	if (buflen == -1) {
-		return -1;
-	}
-	buflen = 16 + buflen;
-	str[3] = buflen;
-	str[5] = 0x10;
-	str[7] = 0x01;
-	str[11] = 0x02;
-	str[15] = 0x01;
-	return buflen;
+	// clean up and return
+	(void)inflateEnd(&strm);
+	return 0;
 }

@@ -1,6 +1,8 @@
 ﻿#include "stdafx.h"
 #include "wxclient.h"
 
+const char DM_UA[] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36";
+
 std::ostream & operator<< (std::ostream & out, connection_metadata const & data) {
 	out << "> URI: " << data.m_uri << "\n"
 		<< "> Status: " << data.m_status << "\n"

@@ -1,9 +1,11 @@
 ﻿#include "stdafx.h"
-#include "BilibiliDanmu.h"
-#include "log.h"
-#include <ctime>
 #include <algorithm>
-#include <iostream>
+#include "BilibiliDanmu.h"
+#include "proto_bl.h"
+#include "log.h"
+
+const char DM_TCPSERVER[] = "broadcastlv.chat.bilibili.com";
+const int DM_TCPPORT = 2243;
 
 CBilibiliDanmu::CBilibiliDanmu() {
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[DMWIN] Create.";
@@ -74,7 +76,7 @@ int CBilibiliDanmu::OnReceive(PER_SOCKET_CONTEXT* pSocketContext, PER_IO_CONTEXT
 		}
 		// 如果剩余数据大于16字节则校验协议头的正确性
 		if (pos + 16 <= reclen) {
-			type = CheckMessage(str + pos);
+			type = protobl::CheckMessage(str + pos);
 			if (type == -1) {
 				// 数据包校验失败
 				BOOST_LOG_SEV(g_logger::get(), error) << "[DMWIN] " << room
@@ -101,9 +103,13 @@ int CBilibiliDanmu::OnReceive(PER_SOCKET_CONTEXT* pSocketContext, PER_IO_CONTEXT
 		info.id = room;
 		info.opt = get_info(room).opt;
 		info.type = type;
-		info.msg = "";
-		info.msg.append(pIoContext->m_szBuffer + (pos + 16), ireclen - 16);
-		info.msg.append(1, 0);
+		info.ver = pIoContext->m_szBuffer[pos + 7];
+		info.len = ireclen - 16;
+		if (ireclen > 16) {
+			info.buff.reset(new char[info.len + 1]);
+			memcpy_s(info.buff.get(), info.len, pIoContext->m_szBuffer + (pos + 16), info.len);
+			info.buff.get()[info.len] = 0;
+		}
 		handler_msg(&info);
 
 		// 移动指针
@@ -137,7 +143,7 @@ int CBilibiliDanmu::OnHeart() {
 			continue;
 		}
 		room = (*m_itor)->label;
-		len = this->MakeHeartInfo((unsigned char *)cmdstr, 60, room);
+		len = protobl::MakeFlashHeartInfo((unsigned char *)cmdstr, 60, room);
 		ret = _PostSend(*m_itor, cmdstr, len);
 		if (ret) {
 			// 发送失败则断开连接 必须保证没有Worker线程正在处理该连接的数据
@@ -264,61 +270,6 @@ void CBilibiliDanmu::show_stat() {
 	printf("IO count: %d \n", m_arrayClientContext.size());
 }
 
-long long CBilibiliDanmu::GetRUID() {
-	srand(unsigned(time(0)));
-	double val = 100000000000000.0 + 200000000000000.0*(rand() / (RAND_MAX + 1.0));
-	return static_cast <long long> (val);
-}
-
-int CBilibiliDanmu::CheckMessage(const unsigned char *str) {
-	int i;
-	if (str[4])
-		return -1;
-	if (str[5] - 16)
-		return -1;
-	for (i = 8; i < 11; i++) {
-		if (str[i])
-			return -1;
-	}
-	for (i = 12; i < 15; i++) {
-		if (str[i])
-			return -1;
-	}
-	return str[11];
-}
-
-int CBilibiliDanmu::MakeConnectionInfo(unsigned char* str, int len, int room) {
-	memset(str, 0, len);
-	int buflen;
-	buflen = sprintf_s((char*)str + 16, len - 16, "{\"roomid\":%d,\"uid\":%I64d}", room, GetRUID());
-	if (buflen == -1) {
-		return -1;
-	}
-	buflen = 16 + buflen;
-	str[3] = buflen;
-	str[5] = 0x10;
-	str[7] = 0x01;
-	str[11] = 0x07;
-	str[15] = 0x01;
-	return buflen;
-}
-
-int CBilibiliDanmu::MakeHeartInfo(unsigned char* str, int len, int room) {
-	memset(str, 0, len);
-	int buflen;
-	buflen = sprintf_s((char*)str + 16, len - 16, "{\"roomid\":%d,\"uid\":%I64d}", room, GetRUID());
-	if (buflen == -1) {
-		return -1;
-	}
-	buflen = 16 + buflen;
-	str[3] = buflen;
-	str[5] = 0x10;
-	str[7] = 0x01;
-	str[11] = 0x02;
-	str[15] = 0x01;
-	return buflen;
-}
-
 int CBilibiliDanmu::SendConnectionInfo(int room) {
 	if (source_base::is_exist(room)) {
 		return 0;
@@ -326,7 +277,7 @@ int CBilibiliDanmu::SendConnectionInfo(int room) {
 	//构造发送的字符串
 	int ret, len;
 	char cmdstr[60];
-	len = this->MakeConnectionInfo((unsigned char *)cmdstr, 60, room);
+	len = protobl::MakeFlashConnectionInfo((unsigned char *)cmdstr, 60, room);
 	// 在添加连接信息至列表时会加线程锁
 	ret = this->Connect(DM_TCPPORT, DM_TCPSERVER, room, cmdstr, len);
 	if (ret) {

@@ -1,12 +1,6 @@
-﻿/*
-弹幕协议说明
-协议头一般为16位规则如下
- 0- 3 总长度
- 4- 5 头部长度(0x0010)
- 6- 7 版本 客户端版本目前为1 
- 8-11 数据类型 3为在线人数 5为JSON数据 8为连接成功
-12-15 设备 socket为0 flash为1
-*/
+﻿// 已弃用
+// 只支持第1版协议
+// 不支持zlib解压
 
 #pragma once
 #include <fstream>
@@ -42,10 +36,6 @@ public:
 	void show_stat() override;
 
 private:
-	long long GetRUID();
-	int CheckMessage(const unsigned char *str);
-	int MakeConnectionInfo(unsigned char* str, int len, int room);
-	int MakeHeartInfo(unsigned char* str, int len, int room);
 	int SendConnectionInfo(int room);
 
 private:

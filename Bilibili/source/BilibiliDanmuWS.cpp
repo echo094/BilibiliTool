@@ -1,9 +1,13 @@
 ﻿#include "stdafx.h"
-#include "BilibiliDanmuWS.h"
-#include "log.h"
 #include <ctime>
 #include <iostream>
 #include <list>
+#include "BilibiliDanmuWS.h"
+#include "proto_bl.h"
+#include "log.h"
+
+const char DM_WSSERVER[] = "ws://broadcastlv.chat.bilibili.com:2244/sub";
+const char DM_WSSSERVER[] = "wss://broadcastlv.chat.bilibili.com:443/sub";
 
 CWSDanmu::CWSDanmu() {
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[DMWS] Create.";
@@ -85,7 +89,7 @@ void CWSDanmu::on_message(connection_metadata *it, std::string &msg, int len) {
 			}
 			return;
 		}
-		int type = CheckMessage(precv + pos);
+		int type = protobl::CheckMessage(precv + pos);
 		if (type == -1) {
 			// The header is wrong
 			BOOST_LOG_SEV(g_logger::get(), error) << "[DMWS] Data pack check failed!";
@@ -96,8 +100,13 @@ void CWSDanmu::on_message(connection_metadata *it, std::string &msg, int len) {
 		info.id = label;
 		info.opt = get_info(label).opt;
 		info.type = type;
-		info.msg = msg.substr(pos + 16, ireclen - 16);
-		info.msg.append(1, 0);
+		info.ver = msg[pos + 7];
+		info.len = ireclen - 16;
+		if (ireclen > 16) {
+			info.buff.reset(new char[info.len + 1]);
+			memcpy_s(info.buff.get(), info.len, msg.c_str() + pos + 16, info.len);
+			info.buff.get()[info.len] = 0;
+		}
 		handler_msg(&info);
 		pos += ireclen;
 	}
@@ -162,60 +171,9 @@ void CWSDanmu::show_stat() {
 	printf("IO count: %d \n", m_connection_list.size());
 }
 
-int CWSDanmu::CheckMessage(const unsigned char *str) {
-	int i;
-	if (str[4])
-		return -1;
-	if (str[5] - 16)
-		return -1;
-	for (i = 8; i < 11; i++) {
-		if (str[i])
-			return -1;
-	}
-	for (i = 12; i < 15; i++) {
-		if (str[i])
-			return -1;
-	}
-	return str[11];
-}
-
-int CWSDanmu::MakeConnectionInfo(unsigned char* str, int len, int room) {
-	memset(str, 0, len);
-	int buflen;
-	//构造发送的字符串
-	buflen = sprintf_s((char*)str + 16, len - 16, "{\"uid\":0,\"roomid\":%d,\"protover\":1,\"platform\":\"web\",\"clientver\":\"1.5.10\"}", room);
-	if (buflen == -1) {
-		return -1;
-	}
-	buflen = 16 + buflen;
-	str[3] = buflen;
-	str[5] = 0x10;
-	str[7] = 0x01;
-	str[11] = 0x07;
-	str[15] = 0x01;
-	return buflen;
-}
-
-int CWSDanmu::MakeHeartInfo(unsigned char* str, int len) {
-	memset(str, 0, len);
-	int buflen;
-	//构造发送的字符串
-	buflen = sprintf_s((char*)str + 16, len - 16, "[object Object]");
-	if (buflen == -1) {
-		return -1;
-	}
-	buflen = 16 + buflen;
-	str[3] = buflen;
-	str[5] = 0x10;
-	str[7] = 0x01;
-	str[11] = 0x02;
-	str[15] = 0x01;
-	return buflen;
-}
-
 int CWSDanmu::SendConnectionInfo(connection_metadata *it) {
 	unsigned char cmdstr[128];
-	int len = MakeConnectionInfo(cmdstr, 128, it->get_id());
+	int len = protobl::MakeWebConnectionInfo(cmdstr, 128, it->get_id());
 	websocketpp::lib::error_code ec;
 	m_client.send(it->get_hdl(), cmdstr, len, websocketpp::frame::opcode::binary, ec);
 	if (ec) {
@@ -228,7 +186,7 @@ int CWSDanmu::SendConnectionInfo(connection_metadata *it) {
 
 int CWSDanmu::SendHeartInfo(connection_metadata &it) {
 	unsigned char cmdstr[128];
-	int len = MakeHeartInfo(cmdstr, 128);
+	int len = protobl::MakeWebHeartInfo(cmdstr, 128);
 	websocketpp::lib::error_code ec;
 	m_client.send(it.get_hdl(), cmdstr, len, websocketpp::frame::opcode::binary, ec);
 	if (ec) {
