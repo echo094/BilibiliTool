@@ -4,7 +4,11 @@
 #define ZLIB_CONST
 #endif
 #include <zlib.h>
+#ifdef CURL_STATICLIB
 #pragma comment(lib,"zlibstat.lib")
+#else
+#pragma comment(lib,"zlibwapi.lib")
+#endif
 
 #include "source_dmasio.h"
 #include "proto_bl.h"

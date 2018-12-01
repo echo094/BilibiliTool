@@ -262,7 +262,8 @@ __pycache__/
 
 # Custom
 /Bilibili/BiliConfig.ini
-/Bilibili/BiliRoomMonitor.txt
 /Bilibili/Captcha.jpg
 /Bilibili/CaptchaSilver.jpg
 /ToolConfig/BiliConfig.ini
+ReleaseMD/
+ReleaseMT/

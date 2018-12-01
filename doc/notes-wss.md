@@ -74,15 +74,15 @@ context_ptr on_tls_init(const char * hostname, websocketpp::connection_hdl) {
 template <typename config>
 void connection<config>::write_frame() {
 	// ...
-    typename std::vector<message_ptr>::iterator it;
-    for (it = m_current_msgs.begin(); it != m_current_msgs.end(); ++it) {
-        std::string const & header = (*it)->get_header();
+	typename std::vector<message_ptr>::iterator it;
+		for (it = m_current_msgs.begin(); it != m_current_msgs.end(); ++it) {
+		std::string const & header = (*it)->get_header();
 		(*it)->get_raw_payload().insert(0, header);
-        std::string const & payload = (*it)->get_payload();
+		std::string const & payload = (*it)->get_payload();
 
 		// m_send_buffer.push_back(transport::buffer(header.c_str(), header.size()));
-        m_send_buffer.push_back(transport::buffer(payload.c_str(),payload.size()));
-    }
+		m_send_buffer.push_back(transport::buffer(payload.c_str(),payload.size()));
+	}
 	// ...
 }
 

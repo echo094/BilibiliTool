@@ -36,7 +36,10 @@ RTLIBCFG决定CRT为MD或MT 文件中不建议使用MT编译 但最好与包含�
 编译指令示例：
 
 ```bash
-nmake /f Makefile.vc VC=15 mode=dll WITH_SSL=dll WITH_ZLIB=static DEBUG=no RTLIBCFG=static
+# 生成DLL
+nmake /f Makefile.vc VC=15 mode=dll WITH_SSL=dll WITH_ZLIB=dll
+# 生成静态库
+nmake /f Makefile.vc VC=15 mode=static WITH_SSL=static WITH_ZLIB=static DEBUG=no RTLIBCFG=static
 ```
 
 生成的文件在builds文件夹下。
@@ -45,7 +48,7 @@ nmake /f Makefile.vc VC=15 mode=dll WITH_SSL=dll WITH_ZLIB=static DEBUG=no RTLIB
 
 ### Openssl
 
-版本 1.1.1
+版本 1.1.1a
 
 [主页](https://www.openssl.org/)
 
@@ -54,15 +57,19 @@ nmake /f Makefile.vc VC=15 mode=dll WITH_SSL=dll WITH_ZLIB=static DEBUG=no RTLIB
 使用以下语句编译并安装（32位版）：
 
 ```bash
+# 使用DLL运行时 同时生成DLL和静态库
 perl Configure VC-WIN32
+# 使用静态运行时 只生成静态库
+perl Configure VC-WIN32 -static
 nmake
 nmake test
+# 一定要执行安装才能生成对应的头文件
 nmake install
 ```
 
 会将文件安装到默认路径：C:\Program Files (x86)\OpenSSL
 
-这样得到的是使用VC运行时库的DLL。
+如果不需要编译测试程序，可使用 no-tests 参数。
 
 
 
@@ -95,4 +102,6 @@ nmake install
 如果需要以C风格导出需要去除 ZLIB_WINAPI 预定义宏。
 
 Release版本使用ReleaseWithoutAsm配置项编译。  
+
+项目zlibstat生成静态库（MT），项目zlibvc生成DLL（MD）。
 

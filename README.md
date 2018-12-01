@@ -107,21 +107,25 @@ Bilibili直播站小工具
 > > >
 > > > lib(boost lib)  
 > >
-> > curl  
+> > curl-md
 > >
-> > openssl
+> > openssl-md
 > >
 > > rapidjson
 > >
-> > websocketpp  
+> > websocketpp
 > >
 > > > websocketpp(websocketpp include)  
+> >
+> > zlib-md
 
 
 
 #### 项目配置  
 
-默认配置：Debug运行时为MDd，Release运行时为MT。  
+* Debug运行时为MDd
+* ReleaseMD运行时为MD
+*  ReleaseMT运行时为MT
 
 
 
@@ -137,12 +141,6 @@ Bilibili直播站小工具
 依赖库的编译参考[doc/lib-build.md](doc/lib-build.md)
 
 **[重要]WSS相关内容参考[doc/notes-wss.md](doc/notes-wss.md)**
-
-
-
-#### 运行时库
-
-在编译openssl时生成的DLL需要使用VC140运行时库。
 
 
 

@@ -2,13 +2,12 @@
 #ifndef _TOOLLIB_SSLEX_
 #define _TOOLLIB_SSLEX_
 
+#include <string>
+
 #include <openssl/rsa.h>
 #include <openssl/err.h>
 #include <openssl/pem.h>
 #include <openssl/evp.h>
-#pragma comment(lib,"libcrypto.lib")
-
-#include <string>
 
 namespace toollib {
 
