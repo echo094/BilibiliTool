@@ -85,8 +85,8 @@
     </Link>
     <PostBuildEvent>
       <Command>copy $(SolutionDir)..\share\curl-md\bin\libcurl.dll $(SolutionDir)build\$(Configuration)\libcurl.dll /y
-copy $(SolutionDir)..\share\openssl\bin-md\libcrypto-1_1.dll $(SolutionDir)build\$(Configuration)\libcrypto-1_1.dll /y
-copy $(SolutionDir)..\share\openssl\bin-md\libssl-1_1.dll $(SolutionDir)build\$(Configuration)\libssl-1_1.dll /y
+copy $(SolutionDir)..\share\openssl-md\bin\libcrypto-1_1.dll $(SolutionDir)build\$(Configuration)\libcrypto-1_1.dll /y
+copy $(SolutionDir)..\share\openssl-md\bin\libssl-1_1.dll $(SolutionDir)build\$(Configuration)\libssl-1_1.dll /y
 copy $(SolutionDir)..\share\zlib-md\zlibwapi.dll $(SolutionDir)build\$(Configuration)\zlibwapi.dll /y
 </Command>
     </PostBuildEvent>
