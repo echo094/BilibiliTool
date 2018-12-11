@@ -15,18 +15,10 @@
 #pragma once
 #include <string>
 
-const char DEF_URLLoginCaptcha[] = "https://passport.bilibili.com/captcha?";
-const char DEF_URLLoginGweKey[] = "https://passport.bilibili.com/login?act=getkey";
-const char DEF_URLLogin[] = "https://passport.bilibili.com/login";
-const char DEF_URLLoginDo[] = "https://passport.bilibili.com/login/dologin";
-const char DEF_URLLoginAJAX[] = "https://passport.bilibili.com/ajax/miniLogin/minilogin";
-const char DEF_URLLoginMini[] = "https://passport.bilibili.com/ajax/miniLogin/login";
-
 enum class LOGINRET {
 	NOFAULT,
 	NOTLOGIN,
-	NOTVALID,
-	NOTINVITED
+	NOTVALID
 };
 
 struct tagHeartInfo
@@ -43,11 +35,11 @@ typedef struct _BILIUSEROPT
 	int fileid;
 	int conf; // 配置信息
 	bool islogin;
-	std::string uid;
+	unsigned uid;
 	std::string account;
 	std::string password;
 	std::string tokena,tokenr;
-	std::string tokenlive, tokenjct;
+	std::string tokenjct;
 	std::string visitid;
 
 	int silver_minute;
@@ -113,18 +105,6 @@ public:
 	// 上船低保
 	int ActGuard(const std::string &type, const int rrid, const int loid);
 
-// 登录相关
-protected:
-	// 获取LIVE的一些Cookie
-	BILIRET GETLoginJct(int area) const;
-	// 获取验证码图片
-	BILIRET GETPicCaptcha() const;
-	// 获取RSA公钥加密密码
-	BILIRET GETEncodePsd(std::string &psd) const;
-	// 网页移动端登录接口
-	BILIRET POSTLogin(std::string username, std::string password, std::string strver = "") const;
-
-// 用户信息获取相关
 protected:
 	// 获取直播站主要信息
 	BILIRET GetUserInfoLive(BILIUSEROPT &pinfo) const;
@@ -153,12 +133,6 @@ protected:
 	BILIRET _APIv1Captcha(std::string &img, std::string &token) const;
 	// 领取风暴
 	BILIRET _APIv1StormJoin(int roomID, long long cid, std::string code, std::string token);
-	// 银瓜子验证码
-	BILIRET _APIv1SilverCaptcha() const;
-	// 获取当前宝箱领取情况
-	BILIRET _APIv1SilverCurrentTask();
-	// 领取银瓜子 失效
-	BILIRET _APIv1SilverAward();
 	// 银瓜子换硬币新API
 	BILIRET _APIv1Silver2Coin() const;
 	// 查询扭蛋币数量
@@ -188,8 +162,10 @@ protected:
 private:
 	BILIRET _APIAndv2GetKey(std::string &psd) const;
 	BILIRET _APIAndv2Login(std::string username, std::string password);
-	// 获取房间信息包括活动及抽奖
-	BILIRET _APIAndv1RoomInfo(int rid) const;
+	// 获取当前宝箱领取情况
+	BILIRET _APIAndSilverCurrentTask();
+	// 领取银瓜子
+	BILIRET _APIAndSilverAward();
 	// 领取风暴
 	BILIRET _APIAndv1StormJoin(long long cid);
 

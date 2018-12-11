@@ -1,10 +1,13 @@
 ﻿#include "stdafx.h"
 #include "BilibiliUserInfo.h"
-#include "log.h"
+#include <cmath>
 #include <iostream>
 #include <sstream> 
 #include <fstream>  
+#include "log.h"
 using namespace rapidjson;
+
+const char PARAM_BUILD[] = "5230002";
 
 CBilibiliUserInfo::CBilibiliUserInfo()
 {
@@ -47,18 +50,6 @@ LOGINRET CBilibiliUserInfo::Login(int index, std::string username, std::string p
 	// 将账号转码
 	username = _strcoding.UrlEncode(_useropt.account);
 
-	// 为避免异常情况必须有两次登录
-	// 无验证码登录
-	bret = GETPicCaptcha();
-	if (bret != BILIRET::NOFAULT) {
-		return LOGINRET::NOTLOGIN;
-	}
-	bret = GETEncodePsd(password);
-	if (bret != BILIRET::NOFAULT) {
-		return LOGINRET::NOTLOGIN;
-	}
-	POSTLogin(username, password);
-
 	// 移动端登录
 	password = _useropt.password;
 	bret = _APIAndv2GetKey(password);
@@ -70,32 +61,12 @@ LOGINRET CBilibiliUserInfo::Login(int index, std::string username, std::string p
 		return LOGINRET::NOTLOGIN;
 	}
 
-	// 网页端有验证码登录
-	password = _useropt.password;
-	bret = GETPicCaptcha();
-	if (bret != BILIRET::NOFAULT) {
-		return LOGINRET::NOTLOGIN;
-	}
-	std::string tmp_chcode;
-	printf("Enter the pic validate code: ");
-	std::cin >> tmp_chcode;
-	bret = GETEncodePsd(password);
-	if (bret != BILIRET::NOFAULT) {
-		return LOGINRET::NOTLOGIN;
-	}
-	bret =  POSTLogin(username, password, tmp_chcode);
-	if (bret != BILIRET::NOFAULT) {
-		return LOGINRET::NOTLOGIN;
-	}
-
 	// 登录成功则获取必要的临时id
 	bret = _GetCaptchaKey();
 	if (bret != BILIRET::NOFAULT) {
 		_useropt.islogin = false;
 		return LOGINRET::NOTLOGIN;
 	}
-	// 获取必要的cookie字段
-	GETLoginJct(2);
 	// 生成访问ID
 	_GetVisitID(_useropt.visitid);
 	// 验证账户有效性
@@ -108,16 +79,9 @@ LOGINRET CBilibiliUserInfo::Login(int index, std::string username, std::string p
 		return LOGINRET::NOTLOGIN;
 	}
 	_useropt.fileid = index;
-	std::string ckname, ckvalue;
-	ckname = "DedeUserID";
-	_httpcookie.UpdateCookies(curlweb);
-	if (_httpcookie.GetCookie(ckname, ckvalue) == 0)
-		_useropt.uid = ckvalue;
-	else
-		_useropt.uid = "";
 	// 默认开启所有功能
 	if (_useropt.conf == 0) {
-		_useropt.conf = 0xd1;
+		_useropt.conf = 0xd3;
 	}
 	_useropt.islogin = true;
 
@@ -152,7 +116,6 @@ LOGINRET CBilibiliUserInfo::CheckLogin() {
 		_useropt.islogin = false;
 		return LOGINRET::NOTLOGIN;
 	}
-	GETLoginJct(2);
 	// 生成访问ID
 	_GetVisitID(_useropt.visitid);
 	if (GetToken(_useropt)) {
@@ -194,9 +157,8 @@ int CBilibiliUserInfo::ReadFileAccount(std::string key, int index, char *addr) {
 		tmpch = new char[256];
 	else
 		tmpch = new char[ilenck + 10];
-	ret = ::GetPrivateProfileStringA(tmps.c_str(), "UserID", "", tmpch, 30, addr);
-	_useropt.uid = tmpch;
-	ret = ::GetPrivateProfileStringA(tmps.c_str(), "Username", "", tmpch, 30, addr);
+	_useropt.uid = ::GetPrivateProfileIntA(tmps.c_str(), "UserID", 0, addr);
+	::GetPrivateProfileStringA(tmps.c_str(), "Username", "", tmpch, 30, addr);
 	_useropt.account = tmpch;
 
 	// 解密密码
@@ -252,7 +214,7 @@ int CBilibiliUserInfo::WriteFileAccount(std::string key, char *addr) {
 	}
 	tmps = "User" + std::to_string(_useropt.fileid);
 
-	ret = ::WritePrivateProfileStringA(tmps.c_str(), "UserID", _useropt.uid.c_str(), addr);
+	ret = ::WritePrivateProfileStringA(tmps.c_str(), "UserID", std::to_string(_useropt.uid).c_str(), addr);
 	ret = ::WritePrivateProfileStringA(tmps.c_str(), "Username", _useropt.account.c_str(), addr);
 
 	// 加密密码
@@ -294,8 +256,7 @@ int CBilibiliUserInfo::ActStartHeart() {
 	_heartopt.timercount = 0;
 	// 银瓜子领取信息获取
 	if (_useropt.conf & 0x02) {
-		_APIv1SilverCurrentTask();
-		_APIv1SilverCaptcha();
+		_APIAndSilverCurrentTask();
 	}
 	else {
 		_heartopt.silvercount = -1;
@@ -328,8 +289,8 @@ int CBilibiliUserInfo::ActHeart() {
 	if (_heartopt.silvercount != -1) {
 		_heartopt.silvercount--;
 		if (_heartopt.silvercount == 0) {
-			// _APIv1SilverAward();
-			_APIv1SilverCurrentTask();
+			_APIAndSilverAward();
+			_APIAndSilverCurrentTask();
 		}
 	}
 	return 0;
@@ -381,132 +342,6 @@ int CBilibiliUserInfo::ActGuard(const std::string &type, const int rrid, const i
 		return 0;
 	}
 	return 0;
-}
-
-// 获取LIVE的一些Cookie
-BILIRET CBilibiliUserInfo::GETLoginJct(int area) const
-{
-	BOOST_LOG_SEV(g_logger::get(), info) << "[User] Get initial cookie...";
-	int ret;
-	if (area == 1)
-	{
-		_httppackweb->url = DEF_URLLogin;
-		_httppackweb->ClearHeader();
-		ret = toollib::HttpGetEx(curlweb, _httppackweb);
-		_httppackweb->url = "https://api.bilibili.com/nav?callback=jQuery1491890066391&type=jsonp";
-		_httppackweb->ClearHeader();
-		ret = toollib::HttpGetEx(curlweb, _httppackweb);
-	}
-	else {
-		_httppackweb->url = "http://live.bilibili.com/23058";
-		_httppackweb->ClearHeader();
-		ret = toollib::HttpGetEx(curlweb, _httppackweb);
-	}
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	return BILIRET::NOFAULT;
-}
-
-// 获取验证码图片
-BILIRET CBilibiliUserInfo::GETPicCaptcha() const {
-	BOOST_LOG_SEV(g_logger::get(), info) << "[User] Get captcha...";
-	std::ostringstream oss;
-	oss << DEF_URLLoginCaptcha << GetTimeStamp();
-	_httppackweb->url = oss.str();
-	_httppackweb->ClearHeader();
-	_httppackweb->AddHeaderManual("Referer: https://passport.bilibili.com/login/");
-	int ret = toollib::HttpGetEx(curlweb, _httppackweb);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	FILE *ValidateJPG;
-	ret = fopen_s(&ValidateJPG, "Captcha.jpg", "wb");
-	if (ret) {
-		return BILIRET::FILE_ERROR;
-	}
-	fwrite((char*)_httppackweb->strrecdata, 1, _httppackweb->i_lenrecdata, ValidateJPG);
-	fclose(ValidateJPG);
-	
-	return BILIRET::NOFAULT;
-}
-
-// 获取RSA公钥加密密码
-BILIRET CBilibiliUserInfo::GETEncodePsd(std::string &psd) const {
-	BOOST_LOG_SEV(g_logger::get(), info) << "[User] Get RSA key...";
-	std::ostringstream oss;
-	oss << DEF_URLLoginGweKey << "&_=" << GetTimeStamp();
-	_httppackweb->url = oss.str();
-	_httppackweb->ClearHeader();
-	_httppackweb->AddHeaderManual("Accept: application/json, text/javascript, */*; q=0.01");
-	_httppackweb->AddHeaderManual("Referer: https://passport.bilibili.com/ajax/miniLogin/minilogin");
-	_httppackweb->AddHeaderManual("X-Requested-With: XMLHttpRequest");
-	int ret = toollib::HttpGetEx(curlweb, _httppackweb);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
-	if (!doc.IsObject() || !doc.HasMember("hash") || !doc["hash"].IsString()
-		|| !doc.HasMember("key") || !doc["key"].IsString()) {
-		return BILIRET::JSON_ERROR;
-	}
-	std::string tmp_strhash = doc["hash"].GetString();
-	std::string tmp_strpubkey = doc["key"].GetString();
-	tmp_strhash += psd;
-	ret = Encrypt_RSA_KeyBuff((char*)tmp_strpubkey.c_str(), tmp_strhash, psd);
-	if (!ret) {
-		return BILIRET::OPENSSL_ERROR;
-	}
-	return BILIRET::NOFAULT;
-}
-
-// 移动端登录接口
-BILIRET CBilibiliUserInfo::POSTLogin(std::string username, std::string password, std::string strver) const {
-	BOOST_LOG_SEV(g_logger::get(), info) << "[User] Logging in by mobile api...";
-	_httppackweb->url = DEF_URLLoginMini;
-	std::ostringstream oss;
-	oss << "userid=" << username 
-		<< "&pwd=" << _strcoding.UrlUTF8(password.c_str()) 
-		<< "&captcha=" << strver 
-		<< "&keep=1&cType=2&vcType=1";
-	_httppackweb->strsenddata = oss.str();
-	_httppackweb->ClearHeader();
-	_httppackweb->AddHeaderManual("Accept: application/json, text/javascript, */*; q=0.01");
-	_httppackweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=UTF-8");
-	_httppackweb->AddHeaderManual("Origin: https://passport.bilibili.com");
-	_httppackweb->AddHeaderManual("Referer: https://passport.bilibili.com/ajax/miniLogin/minilogin");
-	_httppackweb->AddHeaderManual("X-Requested-With:XMLHttpRequest");
-	int ret = toollib::HttpPostEx(curlweb, _httppackweb);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
-	if (!doc.IsObject() || !doc.HasMember("status") || !doc["status"].IsBool()) {
-		return BILIRET::JSON_ERROR;
-	}
-	if (doc["status"].GetBool()) {
-		return BILIRET::NOFAULT;
-	}
-	// 登录失败
-	if (!doc.HasMember("message") || !doc["message"]["code"].IsInt()) {
-		return BILIRET::JSON_ERROR;
-	}
-
-	ret = doc["message"]["code"].GetInt();
-	if (ret == -626)
-		return BILIRET::LOGIN_NAMEWRONG;
-	if (ret == -627)
-		return BILIRET::LOGIN_PASSWORDWRONG;
-	if (ret == -105)
-		return BILIRET::LOGIN_NEEDVERIFY;
-
-	return BILIRET::JSON_ERROR;
 }
 
 // 获取直播站主要信息
@@ -813,134 +648,6 @@ BILIRET CBilibiliUserInfo::_APIv1StormJoin(int roomID, long long cid, std::strin
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
 		<< "Storm " << msg;
 
-	return BILIRET::NOFAULT;
-}
-
-// 银瓜子验证码
-BILIRET CBilibiliUserInfo::_APIv1SilverCaptcha() const {
-	std::ostringstream oss;
-	oss << _urlapi << "/lottery/v1/SilverBox/getCaptcha?ts=" << GetTimeStamp() << "537";
-	_httppackweb->url = oss.str();
-	_httppackweb->ClearHeader();
-	_httppackweb->AddHeaderManual("Accept:application/json, text/plain, */*");
-	_httppackweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
-	_httppackweb->AddHeaderManual(URL_DEFAULT_REFERER);
-	int ret = toollib::HttpGetEx(curlweb, _httppackweb);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
-	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
-		return BILIRET::JSON_ERROR;
-	}
-	if (doc["code"].GetInt()) {
-		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << _useropt.fileid << "] "
-			<< "Get captcha error.";
-		return BILIRET::JSON_ERROR;
-	}
-	// 获取验证码BASE64字符串
-	std::string img;
-	img = doc["data"]["img"].GetString();
-	ret = img.find("base64") + 7;
-	img = img.substr(ret, img.length() - ret);
-	// 打开文档
-	FILE *ValidateJPG;
-	ret = fopen_s(&ValidateJPG, "CaptchaSilver.jpg", "wb");
-	if (ret) {
-		return BILIRET::FILE_ERROR;
-	}
-	// 解码并写入文件
-	int len = img.length();
-	BYTE *imgstr = new BYTE[len];
-	Decode_Base64(img, imgstr, (unsigned int *)&len);
-	fwrite((char*)imgstr, 1, len, ValidateJPG);
-	fclose(ValidateJPG);
-	delete[]imgstr;
-
-	return BILIRET::NOFAULT;
-}
-
-//获取当前宝箱领取情况
-BILIRET CBilibiliUserInfo::_APIv1SilverCurrentTask() {
-	_httppackweb->url = _urlapi + "/lottery/v1/SilverBox/getCurrentTask";
-	_httppackweb->ClearHeader();
-	_httppackweb->AddHeaderManual("Accept:application/json, text/plain, */*");
-	_httppackweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
-	_httppackweb->AddHeaderManual(URL_DEFAULT_REFERER);
-	int ret = toollib::HttpGetEx(curlweb, _httppackweb);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-	// 领完为-10017
-
-	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
-	if (!doc.IsObject() || !doc.HasMember("code")) {
-		return BILIRET::JSON_ERROR;
-	}
-	ret = doc["code"].GetInt();
-	if (ret != 0) {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
-			<< "GetFreeSilver: No new task.";
-		_heartopt.silvercount = -1;
-		return BILIRET::NOFAULT;
-	}
-	_heartopt.silvercount = doc["data"]["minute"].GetInt();
-	_useropt.silver_minute = doc["data"]["minute"].GetInt();
-	_useropt.silver_count = doc["data"]["silver"].GetInt();
-	_useropt.silver_start = doc["data"]["time_start"].GetInt();
-	_useropt.silver_end = doc["data"]["time_end"].GetInt();
-	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
-		<< "GetFreeSilver: Wait:" << _useropt.silver_minute << " Amount:" << _useropt.silver_count;
-
-	return BILIRET::NOFAULT;
-}
-
-// 领取银瓜子 失效
-BILIRET CBilibiliUserInfo::_APIv1SilverAward() {
-	int ret;
-	int iCaptcha = -1;
-	std::ostringstream oss;
-	oss << _urlapi << "/lottery/v1/SilverBox/getAward?"
-		<< "time_start=" << _useropt.silver_start
-		<< "&end_time=" << _useropt.silver_end
-		<< "&captcha=" << iCaptcha;
-	_httppackweb->url = oss.str();
-	_httppackweb->ClearHeader();
-	_httppackweb->AddHeaderManual(URL_DEFAULT_REFERER);
-	ret = toollib::HttpGetEx(curlweb, _httppackweb);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-	
-	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
-	if (!doc.IsObject() || !doc.HasMember("code")) {
-		return BILIRET::JSON_ERROR;
-	}
-	ret = doc["code"].GetInt();
-	if (ret == -99) {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
-			<< "GetFreeSilver: Overdue.";
-		_heartopt.silvercount = 0;
-		return BILIRET::NOFAULT;
-	}
-	if (strcmp(doc["msg"].GetString(), "ok")) {
-		return BILIRET::JSON_ERROR;
-	}
-
-	if (doc["data"]["isEnd"].GetInt()) {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
-			<< "GetFreeSilver: Finish.";
-		_heartopt.silvercount = -1;
-	}
-	else {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
-			<< "GetFreeSilver: Success.";
-		_heartopt.silvercount = 0;
-	}
 	return BILIRET::NOFAULT;
 }
 
@@ -1294,14 +1001,11 @@ BILIRET CBilibiliUserInfo::_APIAndv2GetKey(std::string &psd) const
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User] Get APP RSA key...";
 	_httppackapp->url = "https://passport.bilibili.com/api/oauth2/getKey";
 	std::ostringstream oss;
-	oss << "appkey="<< APP_KEY
-		<< "&build=5230002&mobi_app=android&platform=android&ts=" << GetTimeStamp();
-	char datastr[400] = "";
-	sprintf_s(datastr, sizeof(datastr), "appkey=%s&build=5230002&mobi_app=android&platform=android&ts=%I64d",
-		APP_KEY, GetTimeStamp());
+	oss << "appkey=" << APP_KEY
+		<< "&build=" << PARAM_BUILD
+		<< "&mobi_app=android&platform=android&ts=" << GetTimeStamp();
 	std::string sign;
 	this->_GetMD5Sign(oss.str().c_str(), sign);
-	this->_GetMD5Sign(datastr, sign);
 	oss << "&sign=" << sign;
 	_httppackapp->strsenddata = oss.str();
 	_httppackapp->ClearHeader();
@@ -1336,7 +1040,8 @@ BILIRET CBilibiliUserInfo::_APIAndv2Login(std::string username, std::string pass
 	_httppackapp->url = "https://passport.bilibili.com/api/v2/oauth2/login";
 	std::ostringstream oss;
 	oss << "appkey=" << APP_KEY
-		<< "&build=5230002&mobi_app=android&password=" << _strcoding.UrlUTF8(password.c_str())
+		<< "&build=" << PARAM_BUILD
+		<< "&mobi_app=android&password=" << _strcoding.UrlUTF8(password.c_str())
 		<< "&platform=android&ts=" << GetTimeStamp()
 		<< "&username=" << username;
 	std::string sign;
@@ -1355,40 +1060,115 @@ BILIRET CBilibiliUserInfo::_APIAndv2Login(std::string username, std::string pass
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
 		return BILIRET::JSON_ERROR;
 	}
-	if (doc["code"].GetInt())
+	if (doc["code"].GetInt()) {
 		return BILIRET::LOGIN_PASSWORDWRONG;
+	}
 
 	// 登录成功
+	_useropt.uid = doc["data"]["token_info"]["mid"].GetInt();
 	_useropt.tokena = doc["data"]["token_info"]["access_token"].GetString();
 	_useropt.tokenr = doc["data"]["token_info"]["refresh_token"].GetString();
+	oss.str("");
+	rapidjson::Value &cookie_list = doc["data"]["cookie_info"]["cookies"];
+	for (unsigned i = 0; i < cookie_list.Size(); i++) {
+		if (cookie_list[i]["http_only"].GetInt()) {
+			oss << "#HttpOnly_";
+		}
+		oss << ".bilibili.com\tTRUE\t/\tFALSE\t"
+			<< cookie_list[i]["expires"].GetInt64() << "\t"
+			<< cookie_list[i]["name"].GetString() << "\t"
+			<< cookie_list[i]["value"].GetString() << "\n";
+	}
+	_httpcookie.ImportCookies(oss.str(), curlweb);
 
 	return BILIRET::NOFAULT;
 }
 
-BILIRET CBilibiliUserInfo::_APIAndv1RoomInfo(int rid) const {
-	_httppackapp->url = _urlapi + "/activity/v1/Common/mobileRoomInfo?";
+//获取当前宝箱领取情况
+BILIRET CBilibiliUserInfo::_APIAndSilverCurrentTask() {
+	_httppackapp->url = _urlapi + "/mobile/freeSilverCurrentTask";
 	std::ostringstream oss;
 	oss << "access_key=" << _useropt.tokena
 		<< "&actionKey=appkey&appkey=" << APP_KEY
-		<< "&build=5230002&device=android&mobi_app=android&platform=android&roomid=" << rid
+		<< "&build=" << PARAM_BUILD
+		<< "&device=android&mobi_app=android&platform=android&ts=" << GetTimeStamp();
+	std::string sign;
+	this->_GetMD5Sign(oss.str().c_str(), sign);
+	oss << "&sign=" << sign;
+	_httppackapp->strsenddata = oss.str();
+	_httppackapp->ClearHeader();
+	int ret = toollib::HttpPostEx(curlapp, _httppackapp);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+	// 领完为-10017
+
+	rapidjson::Document doc;
+	doc.Parse(_httppackapp->strrecdata);
+	if (!doc.IsObject() || !doc.HasMember("code")) {
+		return BILIRET::JSON_ERROR;
+	}
+	ret = doc["code"].GetInt();
+	if (ret != 0) {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
+			<< "GetFreeSilver: No new task.";
+		_heartopt.silvercount = -1;
+		return BILIRET::NOFAULT;
+	}
+	_useropt.silver_minute = doc["data"]["minute"].GetInt();
+	_useropt.silver_count = doc["data"]["silver"].GetInt();
+	_useropt.silver_start = doc["data"]["time_start"].GetInt();
+	_useropt.silver_end = doc["data"]["time_end"].GetInt();
+	_heartopt.silvercount = _useropt.silver_minute;
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
+		<< "GetFreeSilver: Wait:" << _heartopt.silvercount << " Amount:" << _useropt.silver_count;
+
+	return BILIRET::NOFAULT;
+}
+
+// 领取银瓜子
+BILIRET CBilibiliUserInfo::_APIAndSilverAward() {
+	_httppackapp->url = _urlapi + "/mobile/freeSilverAward";
+	std::ostringstream oss;
+	oss << "access_key=" << _useropt.tokena
+		<< "&actionKey=appkey&appkey=" << APP_KEY
+		<< "&build=" << PARAM_BUILD
+		<< "&device=android&mobi_app=android&platform=android&time_end=" << _useropt.silver_end
+		<< "&time_start=" << _useropt.silver_start
 		<< "&ts=" << GetTimeStamp();
 	std::string sign;
 	this->_GetMD5Sign(oss.str().c_str(), sign);
 	oss << "&sign=" << sign;
 	_httppackapp->strsenddata = oss.str();
 	_httppackapp->ClearHeader();
-	int ret = toollib::HttpGetEx(curlapp, _httppackapp);
+	int ret = toollib::HttpPostEx(curlapp, _httppackapp);
 	if (ret) {
 		return BILIRET::HTTP_ERROR;
 	}
 
 	rapidjson::Document doc;
 	doc.Parse(_httppackapp->strrecdata);
-	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
+	if (!doc.IsObject() || !doc.HasMember("code")) {
 		return BILIRET::JSON_ERROR;
 	}
 	ret = doc["code"].GetInt();
+	if (ret) {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
+			<< "GetFreeSilver: Error.";
+		_heartopt.silvercount = 0;
+		return BILIRET::NOFAULT;
+	}
 
+	if (doc["data"]["isEnd"].GetInt()) {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
+			<< "GetFreeSilver: Finish.";
+		_heartopt.silvercount = -1;
+	}
+	else {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
+			<< "GetFreeSilver: Success.";
+		_heartopt.silvercount = 0;
+	}
 	return BILIRET::NOFAULT;
 }
 
@@ -1398,7 +1178,8 @@ BILIRET CBilibiliUserInfo::_APIAndv1StormJoin(long long cid) {
 	std::ostringstream oss;
 	oss << "access_key=" << _useropt.tokena
 		<< "&actionKey=appkey&appkey=" << APP_KEY
-		<< "&build=5230002&device=android&id=" << cid
+		<< "&build=" << PARAM_BUILD
+		<< "&device=android&id=" << cid
 		<< "&mobi_app=android&platform=android&ts=" << GetTimeStamp();
 	std::string sign;
 	this->_GetMD5Sign(oss.str().c_str(), sign);
@@ -1459,10 +1240,6 @@ int CBilibiliUserInfo::GetExpiredTime() {
 int CBilibiliUserInfo::GetToken(BILIUSEROPT &opt) {
 	std::string ckname;
 	_httpcookie.UpdateCookies(curlweb);
-	ckname = "LIVE_LOGIN_DATA";
-	if (_httpcookie.GetCookie(ckname, opt.tokenlive)) {
-		opt.tokenlive = "";
-	}
 	ckname = "bili_jct";
 	if (_httpcookie.GetCookie(ckname, opt.tokenjct)) {
 		opt.tokenjct = "";
