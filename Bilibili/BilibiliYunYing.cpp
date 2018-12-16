@@ -319,6 +319,10 @@ BILIRET CBilibiliLive::GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, const
 			return ret;
 		}
 		rapidjson::Value &infoArray = doc["data"];
+		if (infoArray.Size() == 0) {
+			BOOST_LOG_SEV(g_logger::get(), error) << "[Live] List empty page: " << page;
+			return BILIRET::NOFAULT;
+		}
 		unsigned pop;
 		for (auto it = infoArray.Begin(); it != infoArray.End(); it++) {
 			pop = (*it)["online"].GetUint();
@@ -357,7 +361,8 @@ BILIRET CBilibiliLive::PickOneRoom(CURL *pcurl, unsigned &nrid, const unsigned o
 BILIRET CBilibiliLive::_ApiLiveList(CURL *pcurl, rapidjson::Document &doc, int pid) const {
 	int ret;
 	std::ostringstream oss;
-	oss << URL_LIVEAPI_HEAD << "/area/liveList?area=all&order=online&page=" << pid;
+	oss << URL_LIVEAPI_HEAD << "/room/v1/Area/getListByAreaID?areaId=0&sort=online&pageSize="
+		<< 100 << "&page=" << pid;
 	_httppack->url = oss.str();
 	_httppack->ClearHeader();
 	_httppack->AddHeaderManual("Accept: application/json, text/plain, */*");
