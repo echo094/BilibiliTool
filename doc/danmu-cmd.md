@@ -1329,6 +1329,41 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
+### 其它无处理函数的消息(2)
+
+#### USER_TOAST_MSG
+
+房间内用户购买舰队服务时。
+
+```json
+{
+	"cmd": "USER_TOAST_MSG",
+	"data": {
+		"op_type": 1,
+		"uid": 24655455,
+		"username": "到底有莫得感情",
+		"guard_level": 3,
+		"is_show": 0
+	}
+}
+```
+
+
+
+#### room_admin_entrance
+
+房间内新增房管。
+
+```json
+{
+	"cmd": "room_admin_entrance",
+	"msg": "系统提示：你已被主播设为房管",
+	"uid": 157642459
+}
+```
+
+
+
 ## 失效指令
 
 在以上JS文件中找不到的指令。

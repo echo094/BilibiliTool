@@ -57,6 +57,9 @@ enum {
 	DM_PK_INVITE_REFUSE,
 	DM_PK_CLICK_AGAIN,
 
+	DM_USER_TOAST_MSG,
+	DM_room_admin_entrance,
+
 	DM_COMBO_END,
 	DM_ENTRY_EFFECT,
 	DM_GUARD_MSG,
@@ -131,6 +134,9 @@ void DanmuAPI::InitCMD() {
 	m_cmdid["LOL_ACTIVITY"] = DM_LOL_ACTIVITY;
 	m_cmdid["ACTIVITY_EVENT"] = DM_ACTIVITY_EVENT;
 	m_cmdid["HOUR_RANK_AWARDS"] = DM_HOUR_RANK_AWARDS;
+
+	m_cmdid["USER_TOAST_MSG"] = DM_USER_TOAST_MSG;
+	m_cmdid["room_admin_entrance"] = DM_room_admin_entrance;
 
 	m_cmdid["COMBO_END"] = DM_COMBO_END;
 	m_cmdid["ENTRY_EFFECT"] = DM_ENTRY_EFFECT;
