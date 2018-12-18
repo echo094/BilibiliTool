@@ -212,11 +212,11 @@ int DanmuAPI::ParseJSON(MSG_INFO *data) {
 	}
 	case DM_PREPARING:
 	case DM_CUT_OFF: {
-		event_base::post_close_msg(data->id, DM_ROOM_AREA(data->opt));
+		event_base::post_close_msg(data->id, data->opt);
 		return 0;
 	}
 	case DM_LIVE: {
-		event_base::post_open_msg(data->id, DM_ROOM_AREA(data->opt));
+		event_base::post_open_msg(data->id, data->opt);
 		return 0;
 	}
 	}

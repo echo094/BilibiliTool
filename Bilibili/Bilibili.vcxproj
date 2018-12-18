@@ -157,7 +157,6 @@ copy $(SolutionDir)..\share\zlib-md\zlibwapi.dll $(SolutionDir)build\$(Configura
     <ClInclude Include="httpex.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="source\BilibiliDanmu.h" />
     <ClInclude Include="source\BilibiliDanmuWS.h" />
     <ClInclude Include="source\proto_bl.h" />
     <ClInclude Include="source\source_base.h" />
@@ -166,7 +165,6 @@ copy $(SolutionDir)..\share\zlib-md\zlibwapi.dll $(SolutionDir)build\$(Configura
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="tcpio\asioclient.h" />
-    <ClInclude Include="tcpio\socketsc.h" />
     <ClInclude Include="tcpio\wxclient.h" />
   </ItemGroup>
   <ItemGroup>
@@ -180,7 +178,6 @@ copy $(SolutionDir)..\share\zlib-md\zlibwapi.dll $(SolutionDir)build\$(Configura
     <ClCompile Include="event\event_base.cpp" />
     <ClCompile Include="httpex.cpp" />
     <ClCompile Include="log.cpp" />
-    <ClCompile Include="source\BilibiliDanmu.cpp" />
     <ClCompile Include="source\BilibiliDanmuWS.cpp" />
     <ClCompile Include="source\proto_bl.cpp" />
     <ClCompile Include="source\source_base.cpp" />
@@ -192,7 +189,6 @@ copy $(SolutionDir)..\share\zlib-md\zlibwapi.dll $(SolutionDir)build\$(Configura
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='ReleaseMT|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="tcpio\asioclient.cpp" />
-    <ClCompile Include="tcpio\socketsc.cpp" />
     <ClCompile Include="tcpio\wsclient.cpp" />
   </ItemGroup>
   <ItemGroup>

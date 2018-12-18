@@ -2,6 +2,8 @@
 #include <functional>
 #include <map>
 #include <set>
+#include <boost/thread/lock_types.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
 typedef struct _ROOM_INFO {
 	// 编号
@@ -21,14 +23,14 @@ typedef struct _ROOM_INFO {
 class source_base {
 public:
 	typedef std::function<void(MSG_INFO *)> msg_handler;
+	typedef std::function<void(unsigned, unsigned)> close_handler;
 
 public:
 	source_base() :
-		msg_handler_(nullptr) {
-		InitializeCriticalSection(&cslist_);
+		msg_handler_(nullptr),
+		close_handler_(nullptr) {
 	}
 	virtual ~source_base() {
-		DeleteCriticalSection(&cslist_);
 	}
 
 public:
@@ -43,6 +45,9 @@ public:
 	void set_msg_handler(msg_handler h) {
 		msg_handler_ = h;
 	}
+	void set_close_handler(close_handler h) {
+		close_handler_ = h;
+	}
 	void set_con_stat(const unsigned id, const bool stat) {
 		con_info_[id].needclose = stat;
 	}
@@ -51,6 +56,11 @@ protected:
 	void handler_msg(MSG_INFO *info) {
 		if (msg_handler_) {
 			msg_handler_(info);
+		}
+	}
+	void handler_close(unsigned rrid, unsigned opt) {
+		if (close_handler_) {
+			close_handler_(rrid, opt);
 		}
 	}
 	ROOM_INFO get_info(const unsigned id) {
@@ -63,10 +73,11 @@ protected:
 
 protected:
 	msg_handler msg_handler_;
+	close_handler close_handler_;
 	// Connection list
 	std::set<unsigned> con_list_;
 	// Connection info
 	std::map<unsigned, ROOM_INFO> con_info_;
 	// Lock of list
-	CRITICAL_SECTION cslist_;
+	boost::shared_mutex mutex_list_;
 };

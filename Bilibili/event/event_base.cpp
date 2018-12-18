@@ -6,6 +6,10 @@ void event_base::set_event_handler(event_handler h) {
 	event_handler_ = h;
 }
 
+void event_base::connection_close(unsigned rrid, unsigned opt) {
+	post_close_event(rrid, opt);
+}
+
 void event_base::post_lottery_msg(unsigned rrid) {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[EVENT] lottery room: " << rrid;
 	if (event_handler_) {
@@ -36,16 +40,23 @@ void event_base::post_guard23_msg(BILI_LOTTERYDATA * pinfo) {
 	}
 }
 
-void event_base::post_close_msg(unsigned rrid, unsigned area) {
-	BOOST_LOG_SEV(g_logger::get(), trace) << "[EVENT] close room: " << rrid;
+void event_base::post_close_event(unsigned rrid, unsigned opt) {
+	BOOST_LOG_SEV(g_logger::get(), trace) << "[EVENT] abnormal close room: " << rrid;
 	if (event_handler_) {
-		event_handler_(MSG_CHANGEROOM1, WPARAM(rrid), LPARAM(area));
+		event_handler_(MSG_CLOSEROOM, WPARAM(rrid), LPARAM(opt));
 	}
 }
 
-void event_base::post_open_msg(unsigned rrid, unsigned area) {
-	BOOST_LOG_SEV(g_logger::get(), trace) << "[EVENT] open room: " << rrid;
+void event_base::post_close_msg(unsigned rrid, unsigned opt) {
+	BOOST_LOG_SEV(g_logger::get(), trace) << "[EVENT] msg close room: " << rrid;
 	if (event_handler_) {
-		event_handler_(MSG_CHANGEROOM2, WPARAM(rrid), LPARAM(area));
+		event_handler_(MSG_CHANGEROOM1, WPARAM(rrid), LPARAM(opt));
+	}
+}
+
+void event_base::post_open_msg(unsigned rrid, unsigned opt) {
+	BOOST_LOG_SEV(g_logger::get(), trace) << "[EVENT] msg open room: " << rrid;
+	if (event_handler_) {
+		event_handler_(MSG_CHANGEROOM2, WPARAM(rrid), LPARAM(opt));
 	}
 }

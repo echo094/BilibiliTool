@@ -62,8 +62,8 @@ int source_dmasio::add_context(const unsigned id, const ROOM_INFO & info) {
 	if (source_base::is_exist(id)) {
 		return -1;
 	}
-	asioclient_.connect(id);
 	source_base::do_info_add(id, info);
+	asioclient_.connect(id);
 	return 0;
 }
 
@@ -80,17 +80,18 @@ int source_dmasio::update_context(std::set<unsigned>& nlist, const unsigned opt)
 	using namespace std;
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[DMAS] Update start. ";
 	set<unsigned> dlist, ilist;
-	EnterCriticalSection(&cslist_);
-	// 房间下播后还会在列表存在一段时间
-	// 生成新增房间列表
-	set_difference(nlist.begin(), nlist.end(), con_list_.begin(), con_list_.end(), inserter(ilist, ilist.end()));
-	// 生成关播房间列表
-	for (auto it = con_list_.begin(); it != con_list_.end(); it++) {
-		if (con_info_[(*it)].needclose) {
-			dlist.insert(*it);
+	{
+		boost::shared_lock<boost::shared_mutex> m(mutex_list_);
+		// 房间下播后还会在列表存在一段时间
+		// 生成新增房间列表
+		set_difference(nlist.begin(), nlist.end(), con_list_.begin(), con_list_.end(), inserter(ilist, ilist.end()));
+		// 生成关播房间列表
+		for (auto it = con_list_.begin(); it != con_list_.end(); it++) {
+			if (con_info_[(*it)].needclose) {
+				dlist.insert(*it);
+			}
 		}
 	}
-	LeaveCriticalSection(&cslist_);
 	// 输出操作概要
 	BOOST_LOG_SEV(g_logger::get(), info) << "[DMAS] Status:"
 		<< " Current: " << con_list_.size()
@@ -131,7 +132,8 @@ void source_dmasio::on_error(const unsigned id, const boost::system::error_code 
 	else {
 		BOOST_LOG_SEV(g_logger::get(), warning) << "[DMAS] Abnormal Close: " << id
 			<< " code: " << ec;
-		asioclient_.connect(id);
+		// 通知意外断开事件
+		handler_close(id, get_info(id).opt);
 	}
 }
 

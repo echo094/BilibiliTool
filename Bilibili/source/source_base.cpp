@@ -12,6 +12,7 @@ void source_base::show_stat() {
 }
 
 bool source_base::is_exist(const unsigned id) {
+	boost::shared_lock<boost::shared_mutex> m(mutex_list_);
 	if (con_list_.count(id)) {
 		return true;
 	}
@@ -24,13 +25,11 @@ void source_base::do_info_add(const unsigned id, const ROOM_INFO & info) {
 }
 
 void source_base::do_list_add(const unsigned id) {
-	EnterCriticalSection(&cslist_);
+	boost::unique_lock<boost::shared_mutex> m(mutex_list_);
 	con_list_.insert(id);
-	LeaveCriticalSection(&cslist_);
 }
 
 void source_base::do_list_del(const unsigned id) {
-	EnterCriticalSection(&cslist_);
+	boost::unique_lock<boost::shared_mutex> m(mutex_list_);
 	con_list_.erase(id);
-	LeaveCriticalSection(&cslist_);
 }

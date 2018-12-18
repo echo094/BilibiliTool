@@ -66,16 +66,10 @@
     <ClInclude Include="source\source_base.h">
       <Filter>source</Filter>
     </ClInclude>
-    <ClInclude Include="source\BilibiliDanmu.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="source\BilibiliDanmuWS.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="tcpio\wxclient.h">
-      <Filter>tcpio</Filter>
-    </ClInclude>
-    <ClInclude Include="tcpio\socketsc.h">
       <Filter>tcpio</Filter>
     </ClInclude>
     <ClInclude Include="tcpio\asioclient.h">
@@ -128,16 +122,10 @@
     <ClCompile Include="source\source_base.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="source\BilibiliDanmu.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="source\BilibiliDanmuWS.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="tcpio\wsclient.cpp">
-      <Filter>tcpio</Filter>
-    </ClCompile>
-    <ClCompile Include="tcpio\socketsc.cpp">
       <Filter>tcpio</Filter>
     </ClCompile>
     <ClCompile Include="tcpio\asioclient.cpp">

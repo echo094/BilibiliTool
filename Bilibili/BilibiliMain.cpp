@@ -209,14 +209,15 @@ int CBilibiliMain::ProcessModuleMSG(unsigned msg, WPARAM wp, LPARAM lp) {
 		delete pinfo;
 		break;
 	}
+	case MSG_CLOSEROOM:
 	case MSG_CHANGEROOM1: {
 		// 房间下播
-		UpdateAreaRoom(wp, lp, true);
+		UpdateAreaRoom(wp, DM_ROOM_AREA(lp), true);
 		break;
 	}
 	case MSG_CHANGEROOM2: {
 		// 房间上播
-		UpdateAreaRoom(wp, lp, false);
+		UpdateAreaRoom(wp, DM_ROOM_AREA(lp), false);
 		break;
 	}
 	}
@@ -360,6 +361,13 @@ int CBilibiliMain::StartMonitorPubEvent() {
 		_dmsource->set_msg_handler(
 			std::bind(&event_base::process_data, _apidm, std::placeholders::_1)
 		);
+		_dmsource->set_close_handler(
+			std::bind(
+				&event_base::connection_close,
+				_apidm,
+				std::placeholders::_1,
+				std::placeholders::_2)
+		);
 		_dmsource->start();
 	}
 
@@ -372,7 +380,7 @@ int CBilibiliMain::StartMonitorPubEvent() {
 		if (_apilive->PickOneRoom(curl_main_, roomid, 0, i) == BILIRET::NOFAULT) {
 			ROOM_INFO info;
 			info.id = roomid;
-			info.opt = DM_ROOM_AREA(i) | DM_PUBEVENT;
+			info.opt = i | DM_PUBEVENT;
 			_dmsource->add_context(roomid, info);
 		}
 	}
@@ -388,18 +396,25 @@ int CBilibiliMain::StartMonitorHiddenEvent() {
 	curmode = TOOL_EVENT::GET_HIDEN_GIFT;
 
 	heart_flag_ = false;
-	start_timer(HEART_INTERVAL);
 
 	if (_dmsource == nullptr) {
 		_dmsource = std::make_unique<source_dmasio>();
 		_dmsource->set_msg_handler(
 			std::bind(&event_base::process_data, _apidm, std::placeholders::_1)
 		);
+		_dmsource->set_close_handler(
+			std::bind(
+				&event_base::connection_close, 
+				_apidm, 
+				std::placeholders::_1, 
+				std::placeholders::_2)
+		);
 		_dmsource->start();
 	}
 
 	// 连接符合人气条件的开播房间
-	UpdateLiveRoom();
+	// 在IO线程中开始操作
+	start_timer(1);
 
 	return 0;
 }
@@ -432,7 +447,7 @@ int CBilibiliMain::UpdateAreaRoom(const unsigned rid, const unsigned area, const
 		if (_apilive->PickOneRoom(curl_main_, nrid, rid, area) == BILIRET::NOFAULT) {
 			ROOM_INFO info;
 			info.id = rid;
-			info.opt = DM_ROOM_AREA(area) | DM_PUBEVENT;
+			info.opt = area | DM_PUBEVENT;
 			_dmsource->add_context(nrid, info);
 			return 0;
 		}
