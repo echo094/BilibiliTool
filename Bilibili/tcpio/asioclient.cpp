@@ -15,7 +15,7 @@ void asioclient::init(
 	endpoints_ = resolver.resolve(host, service);
 	// Create the worker threads
 	pwork_ = std::make_shared< boost::asio::io_context::work>(io_context_);
-	for (size_t i = 0; i < 2 * prosessor_num_; i++) {
+	for (size_t i = 0; i < prosessor_num_; i++) {
 		io_threads_.push_back(std::make_shared< std::thread>(
 			boost::bind(&boost::asio::io_service::run, &io_context_)
 		));
@@ -38,7 +38,7 @@ void asioclient::deinit()
 		[this]() { do_deinit(); }
 	);
 	// Wait for threads to exit
-	for (size_t i = 0; i < 2 * prosessor_num_; i++) {
+	for (size_t i = 0; i < prosessor_num_; i++) {
 		io_threads_[i]->join();
 	}
 	io_threads_.clear();
@@ -192,7 +192,8 @@ void asioclient::do_deinit()
 void asioclient::on_connect(context_info* context, boost::system::error_code ec, tcp::endpoint)
 {
 	if (ec) {
-		on_error(context, ec);
+		// 未连接成功时上层列表无记录 不需要更新列表
+		// on_error(context, ec);
 		return;
 	}
 	context->stat_ = ioconst::IO_READY;
@@ -248,7 +249,8 @@ void asioclient::do_write(context_info* context)
 void asioclient::on_write(context_info* context, boost::system::error_code ec, std::size_t length)
 {
 	if (ec) {
-		on_error(context, ec);
+		// 发送失败时 接收IO同样会产生错误 只需向上层通知一次
+		// on_error(context, ec);
 		return;
 	}
 	context->stat_ = ioconst::IO_READY;
