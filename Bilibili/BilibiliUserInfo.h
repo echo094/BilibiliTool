@@ -111,6 +111,7 @@ protected:
 
 // 其它直播API
 protected:
+	BILIRET GETLoginCaptcha() const;
 	// 直播经验心跳Web
 	BILIRET PostOnlineHeart() const;
 	// 直播站签到
@@ -161,7 +162,7 @@ protected:
 // 安卓端API 
 private:
 	BILIRET _APIAndv2GetKey(std::string &psd) const;
-	BILIRET _APIAndv2Login(std::string username, std::string password);
+	BILIRET _APIAndv2Login(std::string username, std::string password, std::string captcha);
 	// 获取当前宝箱领取情况
 	BILIRET _APIAndSilverCurrentTask();
 	// 领取银瓜子

@@ -56,7 +56,24 @@ LOGINRET CBilibiliUserInfo::Login(int index, std::string username, std::string p
 	if (bret != BILIRET::NOFAULT) {
 		return LOGINRET::NOTLOGIN;
 	}
-	bret = _APIAndv2Login(username, password);
+	bret = _APIAndv2Login(username, password, "");
+	if (bret == BILIRET::LOGIN_NEEDVERIFY) {
+		// 获取验证码
+		bret = GETLoginCaptcha();
+		if (bret != BILIRET::NOFAULT) {
+			return LOGINRET::NOTLOGIN;
+		}
+		std::string tmp_chcode;
+		printf("Enter the pic validate code: ");
+		std::cin >> tmp_chcode;
+		// 移动端使用验证码登录
+		password = _useropt.password;
+		bret = _APIAndv2GetKey(password);
+		if (bret != BILIRET::NOFAULT) {
+			return LOGINRET::NOTLOGIN;
+		}
+		bret = _APIAndv2Login(username, password, tmp_chcode);
+	}
 	if (bret != BILIRET::NOFAULT) {
 		return LOGINRET::NOTLOGIN;
 	}
@@ -370,6 +387,24 @@ BILIRET CBilibiliUserInfo::GetUserInfoLive(BILIUSEROPT &pinfo) const {
 		return BILIRET::JSON_ERROR;
 	}
 	
+	return BILIRET::NOFAULT;
+}
+
+// 获取验证码图片
+BILIRET CBilibiliUserInfo::GETLoginCaptcha() const {
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User] Get captcha...";
+	_httppackapp->url = "https://passport.bilibili.com/captcha?rnd=569";
+	_httppackapp->ClearHeader();
+	int ret = toollib::HttpGetEx(curlapp, _httppackapp);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	std::ofstream out;
+	out.open("Captcha.jpg", std::ios::binary);
+	out.write((char*)_httppackapp->strrecdata, _httppackapp->i_lenrecdata);
+	out.close();
+
 	return BILIRET::NOFAULT;
 }
 
@@ -1034,14 +1069,17 @@ BILIRET CBilibiliUserInfo::_APIAndv2GetKey(std::string &psd) const
 }
 
 // 移动端登录接口
-BILIRET CBilibiliUserInfo::_APIAndv2Login(std::string username, std::string password)
+BILIRET CBilibiliUserInfo::_APIAndv2Login(std::string username, std::string password, std::string captcha)
 {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User] Logging in by app api...";
 	_httppackapp->url = "https://passport.bilibili.com/api/v2/oauth2/login";
 	std::ostringstream oss;
 	oss << "appkey=" << APP_KEY
-		<< "&build=" << PARAM_BUILD
-		<< "&mobi_app=android&password=" << _strcoding.UrlUTF8(password.c_str())
+		<< "&build=" << PARAM_BUILD;
+	if (captcha != "") {
+		oss << "&captcha=" << captcha;
+	}
+	oss << "&mobi_app=android&password=" << _strcoding.UrlUTF8(password.c_str())
 		<< "&platform=android&ts=" << GetTimeStamp()
 		<< "&username=" << username;
 	std::string sign;
@@ -1060,7 +1098,11 @@ BILIRET CBilibiliUserInfo::_APIAndv2Login(std::string username, std::string pass
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
 		return BILIRET::JSON_ERROR;
 	}
-	if (doc["code"].GetInt()) {
+	ret = doc["code"].GetInt();
+	if (ret == -105) {
+		return BILIRET::LOGIN_NEEDVERIFY;
+	}
+	if (ret) {
 		return BILIRET::LOGIN_PASSWORDWRONG;
 	}
 
