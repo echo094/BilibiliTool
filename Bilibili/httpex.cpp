@@ -4,63 +4,33 @@ using namespace toollib;
 #include<iostream>
 #include <sstream>
 
-CHTTPPack::CHTTPPack(const char *ua)
-{
+CHTTPPack::CHTTPPack(const char *ua) {
 	strcpy_s(useragent, ua);
-	url.empty();
 	//所有HTTP包都需要的头
-	_defheadernum = 0;
-	i_numsendheader = 0;
-	strrecheader = NULL;
-	strrecdata = NULL;
-	sstrrecheader = "";
-	sstrrecdata = "";
+	header_num_def = 0;
+	url.empty();
+	recv_data = "";
 }
 
-CHTTPPack::~CHTTPPack()
-{
-	if (strrecheader != NULL)
-		free(strrecheader);
-	if (strrecdata != NULL)
-		free(strrecdata);
+void CHTTPPack::AddDefHeader(const char *str) {
+	header_num_def++;
+	send_header.push_back(str);
 }
 
-int CHTTPPack::AddDefHeader(const char *str)
-{
-	_defheadernum++;
-	strsendheader[_defheadernum] = str;
-	i_numsendheader = _defheadernum;
-	return 0;
+void CHTTPPack::ClearHeader() {
+	send_header.resize(header_num_def);
 }
 
-bool CHTTPPack::ClearHeader() {
-	i_numsendheader = _defheadernum;
-	return true;
+void CHTTPPack::ClearRec() {
+	recv_data = "";
 }
 
-bool CHTTPPack::ClearRec() {
-	sstrrecheader = "";
-	sstrrecdata = "";
-	delete[] strrecheader;
-	strrecheader = NULL;
-	delete[] strrecdata;
-	strrecdata = NULL;
-	i_lenrecheader = 0;
-	i_lenrecdata = 0;
-	return true;
-}
-
-bool CHTTPPack::AddHeaderManual(const char *tsheader)
-{
-	strsendheader[i_numsendheader] = tsheader;
-	i_numsendheader++;
-	return true;
+void CHTTPPack::AddHeaderManual(const char *str) {
+	send_header.push_back(str);
 }
 
 
-
-int CCookiePack::ImportCookies(std::string &str, CURL *pcurl)
-{
+int CCookiePack::ImportCookies(std::string &str, CURL *pcurl) {
 	cookie = str;
 	if (pcurl == NULL)
 		return 0;
@@ -69,8 +39,7 @@ int CCookiePack::ImportCookies(std::string &str, CURL *pcurl)
 	return 0;
 }
 
-int CCookiePack::ExportCookies(std::string &str, CURL *pcurl)
-{
+int CCookiePack::ExportCookies(std::string &str, CURL *pcurl) {
 	if (pcurl) {
 		UpdateCookies(pcurl);
 	}
@@ -79,8 +48,7 @@ int CCookiePack::ExportCookies(std::string &str, CURL *pcurl)
 	return 0;
 }
 
-int CCookiePack::ApplyCookies(CURL *pcurl)
-{
+int CCookiePack::ApplyCookies(CURL *pcurl) {
 	if (pcurl == NULL)
 		return 0;
 	int pl = 0, pr = cookie.find('\n', 0);
@@ -93,8 +61,7 @@ int CCookiePack::ApplyCookies(CURL *pcurl)
 	return 0;
 }
 
-int CCookiePack::UpdateCookies(CURL *pcurl)
-{
+int CCookiePack::UpdateCookies(CURL *pcurl) {
 	struct curl_slist *pcookies = NULL, *cur = NULL;
 	if (pcurl) {
 		cookie = "";
@@ -112,8 +79,7 @@ int CCookiePack::UpdateCookies(CURL *pcurl)
 	return 0;
 }
 
-int CCookiePack::GetCookie(std::string &name, std::string &value)
-{
+int CCookiePack::GetCookie(std::string &name, std::string &value) {
 	std::string str = "\t" + name + "\t";
 	int pl = cookie.find(str, 0);
 	if (pl == -1)
@@ -127,8 +93,7 @@ int CCookiePack::GetCookie(std::string &name, std::string &value)
 	return 0;
 }
 
-int CCookiePack::GetCookieTime(std::string &name, int &value) const
-{
+int CCookiePack::GetCookieTime(std::string &name, int &value) const {
 	std::string str = "\t" + name + "\t";
 	int pr = cookie.find(str, 0);
 	if (pr == -1)
@@ -142,224 +107,103 @@ int CCookiePack::GetCookieTime(std::string &name, int &value) const
 	return 0;
 }
 
-/*
-回调函数 curl_easy
-pData是指向存储数据的指针
-size是每个块的大小
-nmemb是指块的数目
-stream是用户参数
-*/
-static size_t write_header_callback(void *ptr, size_t size, size_t nmemb, void *stream)
-{
+static size_t write_data_callback(void *ptr, size_t size, size_t nmemb, void *stream) {
 	size_t realsize = size * nmemb;
-	/*
-	char*str = (char*)ptr;
-	for (int i = 0; i<realsize; i++)
-		std::cout << str[i];
-	*/
-	std::string* sstr = dynamic_cast<std::string*>((std::string *)stream);
-	if (NULL == sstr || NULL == ptr)
-		return -1;
-	char* pData = (char*)ptr;
-	sstr->append(pData, realsize);
-
-	return nmemb;
-}
-
-static size_t write_data_callback(void *ptr, size_t size, size_t nmemb, void *stream)
-{
-	size_t realsize = size * nmemb;
-	/*
-	char*str = (char*)ptr;
-	for (int i = 0; i<realsize; i++)
-		std::cout << str[i];
-	*/
-	std::string* sstr = dynamic_cast<std::string*>((std::string *)stream);
-	if (NULL == sstr || NULL == ptr)
-		return -1;
-	char* pData = (char*)ptr;
-	sstr->append(pData, realsize);
-
-	return nmemb;
-}
-
-int toollib::HttpGetEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, int flag)
-{
-	CURLcode res;
-	struct curl_slist *slist = NULL;//存放HTTP表头
-	size_t i;
-
-	if (pcurl == NULL)
-		return -1;
-	if (pcurl) {
-		//设定URL
-		curl_easy_setopt(pcurl, CURLOPT_URL, pHTTPPack->url.c_str());
-		//不检查证书
-		curl_easy_setopt(pcurl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		//设置UA
-		curl_easy_setopt(pcurl, CURLOPT_USERAGENT, pHTTPPack->useragent);
-		//自定义Header内容
-		for (i=0;i<pHTTPPack->i_numsendheader;i++)
-			slist = curl_slist_append(slist, pHTTPPack->strsendheader[i].c_str());
-		//将自定义Header添加到curl包
-		if (slist != NULL)
-			curl_easy_setopt(pcurl, CURLOPT_HTTPHEADER, slist);
-		//自动解压Header
-		curl_easy_setopt(pcurl, CURLOPT_ACCEPT_ENCODING, "gzip");
-		//设置代理
-		//curl_easy_setopt(pcurl, CURLOPT_PROXY, "127.0.0.1:8888");
-		//启动CURL内部的Cookie引擎
-		curl_easy_setopt(pcurl, CURLOPT_COOKIEFILE, "");
-		/* 设置接受的 Cookies */
-		//curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookieFilePath);
-		//对返回的数据进行操作的函数地址
-		pHTTPPack->ClearRec();
-		curl_easy_setopt(pcurl, CURLOPT_HEADERDATA, (void *)&pHTTPPack->sstrrecheader);
-		curl_easy_setopt(pcurl, CURLOPT_HEADERFUNCTION, write_header_callback);
-		curl_easy_setopt(pcurl, CURLOPT_WRITEDATA, (void *)&pHTTPPack->sstrrecdata);
-		curl_easy_setopt(pcurl, CURLOPT_WRITEFUNCTION, write_data_callback);
-
-		//执行
-		res = curl_easy_perform(pcurl);
-		if (res != CURLE_OK)
-			printf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-
-		//转换字符串
-		if (flag)
-		{
-			size_t tmplen;
-			tmplen = pHTTPPack->sstrrecheader.size();
-			pHTTPPack->strrecheader = new char[tmplen + 1];
-			for (i = 0; i < tmplen; i++)
-				pHTTPPack->strrecheader[i] = pHTTPPack->sstrrecheader[i];
-			pHTTPPack->strrecheader[tmplen] = 0;
-			pHTTPPack->i_lenrecheader = tmplen;
-
-			tmplen = pHTTPPack->sstrrecdata.size();
-			pHTTPPack->strrecdata = new char[tmplen + 1];
-			for (i = 0; i < tmplen; i++)
-				pHTTPPack->strrecdata[i] = pHTTPPack->sstrrecdata[i];
-			pHTTPPack->strrecdata[tmplen] = 0;
-			pHTTPPack->i_lenrecdata = tmplen;
-		}
-
-		curl_easy_reset(pcurl);
-		/* free the list again */
-		if (slist != NULL)
-			curl_slist_free_all(slist); 
+	if (nullptr == ptr) {
+		return 0;
 	}
+	if (nullptr == stream) {
+		return realsize;
+	}
+	char* contents = (char*)ptr;
+	std::string* buff = (std::string *)stream;
+	buff->append(contents, realsize);
+	return realsize;
+}
+
+CURLcode http_perform(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack) {
+	CURLcode ret;
+	// 存放HTTP表头
+	struct curl_slist *slist = NULL;
+	// 设定URL
+	curl_easy_setopt(pcurl, CURLOPT_URL, pHTTPPack->url.c_str());
+	// 自定义Header内容
+	for (unsigned i = 0; i < pHTTPPack->send_header.size(); i++) {
+		slist = curl_slist_append(slist, pHTTPPack->send_header[i].c_str());
+	}
+	// 将自定义Header添加到curl包
+	if (slist != NULL) {
+		curl_easy_setopt(pcurl, CURLOPT_HTTPHEADER, slist);
+	}
+	// 启动CURL内部的Cookie引擎
+	curl_easy_setopt(pcurl, CURLOPT_COOKIEFILE, "");
+	// 设置接受的 Cookies
+	// curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookieFilePath);
+	// 设置UA
+	curl_easy_setopt(pcurl, CURLOPT_USERAGENT, pHTTPPack->useragent);
+	// 自动解压Header
+	curl_easy_setopt(pcurl, CURLOPT_ACCEPT_ENCODING, "gzip");
+	// 不检查证书
+	curl_easy_setopt(pcurl, CURLOPT_SSL_VERIFYPEER, FALSE);
+	// 设置代理
+	// curl_easy_setopt(pcurl, CURLOPT_PROXY, "127.0.0.1:8888");
+	// 设置超时时间
+	curl_easy_setopt(pcurl, CURLOPT_TIMEOUT, 10L);
+	// 阻塞方式执行
+	ret = curl_easy_perform(pcurl);
+	curl_easy_reset(pcurl);
+	if (slist != NULL) {
+		curl_slist_free_all(slist);
+	}
+	if (ret != CURLE_OK) {
+		printf("curl_easy_perform() failed: %s\n", curl_easy_strerror(ret));
+	}
+	return ret;
+}
+
+int toollib::HttpGetEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack) {
+	if (pcurl == NULL) {
+		return -1;
+	}
+
+	//对返回的数据进行操作的函数地址
+	pHTTPPack->ClearRec();
+	curl_easy_setopt(pcurl, CURLOPT_WRITEDATA, (void *)&pHTTPPack->recv_data);
+	curl_easy_setopt(pcurl, CURLOPT_WRITEFUNCTION, write_data_callback);
+	//执行
+	CURLcode res = http_perform(pcurl, pHTTPPack);
 
 	return res;
 }
 
-int toollib::HttpPostEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, int flag)
-{
-	CURLcode res;
-	struct curl_slist *slist = NULL;//存放HTTP表头
-	size_t i;
-
-	if (pcurl == NULL)
+int toollib::HttpPostEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack) {
+	if (pcurl == NULL) {
 		return -1;
-	if (pcurl) {
-		//设定URL
-		curl_easy_setopt(pcurl, CURLOPT_URL, pHTTPPack->url.c_str());
-		//标记为POST
-		curl_easy_setopt(pcurl, CURLOPT_POST, 1L);
-		//POST数据格式为char*否则无法正常读取和发送
-		curl_easy_setopt(pcurl, CURLOPT_POSTFIELDS, pHTTPPack->strsenddata.c_str());
-		//不检查证书
-		curl_easy_setopt(pcurl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		//设置UA
-		curl_easy_setopt(pcurl, CURLOPT_USERAGENT, pHTTPPack->useragent);
-		//自定义Header内容
-		for (i = 0; i<pHTTPPack->i_numsendheader; i++)
-			slist = curl_slist_append(slist, pHTTPPack->strsendheader[i].c_str());
-		//将自定义Header添加到curl包
-		if (slist != NULL)
-			curl_easy_setopt(pcurl, CURLOPT_HTTPHEADER, slist);
-		//自动解压Header
-		curl_easy_setopt(pcurl, CURLOPT_ACCEPT_ENCODING, "gzip");
-		//设置代理
-		// curl_easy_setopt(pcurl, CURLOPT_PROXY, "127.0.0.1:8888");
-		//启动CURL内部的Cookie引擎
-		curl_easy_setopt(pcurl, CURLOPT_COOKIEFILE, "");
-		//对返回的数据进行操作的函数地址
-		pHTTPPack->ClearRec();
-		curl_easy_setopt(pcurl, CURLOPT_HEADERDATA, (void *)&pHTTPPack->sstrrecheader);
-		curl_easy_setopt(pcurl, CURLOPT_HEADERFUNCTION, write_header_callback);
-		curl_easy_setopt(pcurl, CURLOPT_WRITEDATA, (void *)&pHTTPPack->sstrrecdata);
-		curl_easy_setopt(pcurl, CURLOPT_WRITEFUNCTION, write_data_callback);
-		
-		//执行
-		res = curl_easy_perform(pcurl);
-		if (res != CURLE_OK)
-			printf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-		
-		//转换字符串
-		if (flag)
-		{
-			size_t tmplen;
-			tmplen = pHTTPPack->sstrrecheader.size();
-			pHTTPPack->strrecheader = new char[tmplen + 1];
-			for (i = 0; i < tmplen; i++)
-				pHTTPPack->strrecheader[i] = pHTTPPack->sstrrecheader[i];
-			pHTTPPack->strrecheader[tmplen] = 0;
-			pHTTPPack->i_lenrecheader = tmplen;
-
-			tmplen = pHTTPPack->sstrrecdata.size();
-			pHTTPPack->strrecdata = new char[tmplen + 1];
-			for (i = 0; i < tmplen; i++)
-				pHTTPPack->strrecdata[i] = pHTTPPack->sstrrecdata[i];
-			pHTTPPack->strrecdata[tmplen] = 0;
-			pHTTPPack->i_lenrecdata = tmplen;
-		}
-
-		curl_easy_reset(pcurl);
-		/* free the list again */
-		if (slist != NULL)
-			curl_slist_free_all(slist);
 	}
+
+	//标记为POST
+	curl_easy_setopt(pcurl, CURLOPT_POST, 1L);
+	//POST数据格式为char*否则无法正常读取和发送
+	curl_easy_setopt(pcurl, CURLOPT_POSTFIELDS, pHTTPPack->send_data.c_str());
+	//对返回的数据进行操作的函数地址
+	pHTTPPack->ClearRec();
+	curl_easy_setopt(pcurl, CURLOPT_WRITEDATA, (void *)&pHTTPPack->recv_data);
+	curl_easy_setopt(pcurl, CURLOPT_WRITEFUNCTION, write_data_callback);
+	//执行
+	CURLcode res = http_perform(pcurl, pHTTPPack);
 
 	return res;
 }
 
-int toollib::HttpHeadEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, int flag)
-{
-	CURLcode res;
-	struct curl_slist *slist = NULL;//存放HTTP表头
-	size_t i;
-
-	if (pcurl == NULL)
+int toollib::HttpHeadEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack) {
+	if (pcurl == NULL) {
 		return -1;
-	if (pcurl) {
-		//设定URL
-		curl_easy_setopt(pcurl, CURLOPT_URL, pHTTPPack->url.c_str());
-		//标记为HEAD
-		curl_easy_setopt(pcurl, CURLOPT_NOBODY, 1L);
-		//不检查证书
-		curl_easy_setopt(pcurl, CURLOPT_SSL_VERIFYPEER, FALSE);
-		//设置UA
-		curl_easy_setopt(pcurl, CURLOPT_USERAGENT, pHTTPPack->useragent);
-		//自定义Header内容
-		for (i = 0; i<pHTTPPack->i_numsendheader; i++)
-			slist = curl_slist_append(slist, pHTTPPack->strsendheader[i].c_str());
-		//将自定义Header添加到curl包
-		if (slist != NULL)
-			curl_easy_setopt(pcurl, CURLOPT_HTTPHEADER, slist);
-		//自动解压Header
-		curl_easy_setopt(pcurl, CURLOPT_ACCEPT_ENCODING, "gzip");
-		//设置代理
-		//curl_easy_setopt(pcurl, CURLOPT_PROXY, "127.0.0.1:8888");
-		//执行
-		res = curl_easy_perform(pcurl);
-		if (res != CURLE_OK)
-			printf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-
-		curl_easy_reset(pcurl);
-		/* free the list again */
-		if (slist != NULL)
-			curl_slist_free_all(slist);
 	}
+
+	// 标记为HEAD
+	curl_easy_setopt(pcurl, CURLOPT_NOBODY, 1L);
+	// 执行
+	CURLcode res = http_perform(pcurl, pHTTPPack);
 
 	return res;
 }

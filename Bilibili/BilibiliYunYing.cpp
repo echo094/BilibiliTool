@@ -76,7 +76,7 @@ BILIRET CBilibiliLotteryBase::_CheckRoom(CURL *pcurl, int srid, int &rrid) {
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(m_httppack->strrecdata);
+	doc.Parse(m_httppack->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsObject()
 		|| !doc["data"].HasMember("room_id") || !doc["data"]["room_id"].IsInt()) {
@@ -107,7 +107,7 @@ BILIRET CBilibiliSmallTV::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 
 	//开始处理小电视信息
 	rapidjson::Document doc;
-	doc.Parse(m_httppack->strrecdata);
+	doc.Parse(m_httppack->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("list") || !doc["data"]["list"].IsArray()) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[SmallTV] ERROR:" << doc["code"].GetInt();
@@ -212,7 +212,7 @@ BILIRET CBilibiliGuard::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 
 	// 开始处理上船信息
 	rapidjson::Document doc;
-	doc.Parse(m_httppack->strrecdata);
+	doc.Parse(m_httppack->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsArray()) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[SmallTV] ERROR:" << doc["code"].GetInt();
@@ -291,7 +291,7 @@ BILIRET CBilibiliLive::ApiCheckGuard(CURL *pcurl, int rrid, int &loid) const
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppack->strrecdata);
+	doc.Parse(_httppack->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("guard") || !doc["data"]["guard"].IsArray()) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[Live] Check Guard Failed!";
@@ -368,11 +368,11 @@ BILIRET CBilibiliLive::_ApiLiveList(CURL *pcurl, rapidjson::Document &doc, int p
 	_httppack->AddHeaderManual("Accept: application/json, text/plain, */*");
 	ret = toollib::HttpGetEx(pcurl, _httppack);
 	if (ret) {
-		BOOST_LOG_SEV(g_logger::get(), error) << "[Live] Get Livelist Failed!";
+		BOOST_LOG_SEV(g_logger::get(), error) << "[Live] Get Livelist Failed code: " << ret;
 		return BILIRET::HTTP_ERROR;
 	}
 
-	doc.Parse(_httppack->strrecdata);
+	doc.Parse(_httppack->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsArray()) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[Live] Get Livelist Failed!";
@@ -397,7 +397,7 @@ BILIRET CBilibiliLive::_ApiRoomArea(CURL *pcurl, rapidjson::Document &doc, const
 		return BILIRET::HTTP_ERROR;
 	}
 
-	doc.Parse(_httppack->strrecdata);
+	doc.Parse(_httppack->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsArray() || (doc["data"].Size() < 2)) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[Live] Get RoomArea Failed!";

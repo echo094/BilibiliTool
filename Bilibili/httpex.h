@@ -30,6 +30,7 @@
 #endif
 
 #include <string>
+#include <vector>
 #include <memory>
 using std::unique_ptr;
 
@@ -41,24 +42,22 @@ namespace toollib {
 
 	class CHTTPPack
 	{
-	private:
-		int _defheadernum; // 不会更改的HTTP头数量
-	public:
-		char useragent[255];
-		size_t i_numsendheader;
-		std::string url, strsendheader[15], strsenddata;
-		//size_t i_sizerecheader, i_sizerecdata;
-		size_t i_lenrecheader, i_lenrecdata;
-		char *strrecheader, *strrecdata;
-		std::string sstrrecheader, sstrrecdata;
 
 	public:
 		CHTTPPack(const char *ua = DEF_UA_FF);
-		~CHTTPPack();
-		int AddDefHeader(const char *str);
-		bool ClearHeader();
-		bool ClearRec();
-		bool AddHeaderManual(const char *);
+		void AddDefHeader(const char *str);
+		void ClearHeader();
+		void ClearRec();
+		void AddHeaderManual(const char *str);
+
+	private:
+		// 不会更改的HTTP头数量
+		unsigned header_num_def;
+	public:
+		char useragent[255];
+		std::string url, send_data;
+		std::vector<std::string> send_header;
+		std::string recv_data;
 	};
 
 	class CCookiePack
@@ -78,9 +77,9 @@ namespace toollib {
 		int GetCookieTime(std::string &name, int &value) const;
 	};
 
-	int HttpGetEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, int flag = 1);
-	int HttpPostEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, int flag = 1);
-	int HttpHeadEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, int flag = 1);
+	int HttpGetEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack);
+	int HttpPostEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack);
+	int HttpHeadEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack);
 
 }
 

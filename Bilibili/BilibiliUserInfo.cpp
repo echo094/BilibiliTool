@@ -372,7 +372,7 @@ BILIRET CBilibiliUserInfo::GetUserInfoLive(BILIUSEROPT &pinfo) const {
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject()) {
 		return BILIRET::JSON_ERROR;
 	}
@@ -402,7 +402,7 @@ BILIRET CBilibiliUserInfo::GETLoginCaptcha() const {
 
 	std::ofstream out;
 	out.open("Captcha.jpg", std::ios::binary);
-	out.write((char*)_httppackapp->strrecdata, _httppackapp->i_lenrecdata);
+	out.write(_httppackapp->recv_data.c_str(), _httppackapp->recv_data.size());
 	out.close();
 
 	return BILIRET::NOFAULT;
@@ -412,7 +412,7 @@ BILIRET CBilibiliUserInfo::GETLoginCaptcha() const {
 BILIRET CBilibiliUserInfo::PostOnlineHeart() const {
 	// -403 非法心跳
 	_httppackweb->url = _urlapi + "/User/userOnlineHeart";
-	_httppackweb->strsenddata = "";
+	_httppackweb->send_data = "";
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept:application/json, text/javascript, */*; q=0.01");
 	_httppackweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
@@ -423,14 +423,14 @@ BILIRET CBilibiliUserInfo::PostOnlineHeart() const {
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
 		return BILIRET::JSON_ERROR;
 	}
 	ret = doc["code"].GetInt();
 	if (ret) {
 		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << _useropt.fileid << "] "
-			<< "OnlineHeart: " << _httppackweb->strrecdata;
+			<< "OnlineHeart: " << _httppackweb->recv_data;
 		return BILIRET::JSON_ERROR;
 	}
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
@@ -450,7 +450,7 @@ BILIRET CBilibiliUserInfo::GetSign() const {
 
 	// 0签到成功 -500已签到
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
 		return BILIRET::JSON_ERROR;
 	}
@@ -462,7 +462,7 @@ BILIRET CBilibiliUserInfo::GetSign() const {
 	}
 	if (ret) {
 		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << _useropt.fileid << "] "
-			<< "Sign: " << _httppackweb->strrecdata;
+			<< "Sign: " << _httppackweb->recv_data;
 		return BILIRET::JSON_ERROR;
 	}
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
@@ -482,7 +482,7 @@ BILIRET CBilibiliUserInfo::GetCoin() const {
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()) {
 		return BILIRET::JSON_ERROR;
 	}
@@ -500,7 +500,7 @@ BILIRET  CBilibiliUserInfo::SendDanmuku(int roomID, std::string msg) const {
 	oss << "color=16777215&fontsize=25&mode=1&msg=" << _strcoding.UrlUTF8(msg.c_str()) 
 		<< "&rnd=" << GetTimeStamp()
 		<< "&roomid=" << roomID;
-	_httppackweb->strsenddata = oss.str();
+	_httppackweb->send_data = oss.str();
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept: application/json, text/javascript, */*; q=0.01");
 	_httppackweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=UTF-8");
@@ -514,7 +514,7 @@ BILIRET  CBilibiliUserInfo::SendDanmuku(int roomID, std::string msg) const {
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") 
 		|| !doc["code"].IsInt() || doc["code"].GetInt()) {
 		return BILIRET::JSON_ERROR;
@@ -538,7 +538,7 @@ BILIRET CBilibiliUserInfo::_APIv1MasterID(int liveRoomID, int &uid) const {
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc["data"].HasMember("MASTERID")) {
 		return BILIRET::JSON_ERROR;
 	}
@@ -562,7 +562,7 @@ BILIRET CBilibiliUserInfo::_APIv1HeartBeat() const {
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
 		return BILIRET::JSON_ERROR;
 	}
@@ -593,7 +593,7 @@ BILIRET CBilibiliUserInfo::_APIv1MedalRankList(int roomid, int uid, int &rank) c
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code")|| !doc["code"].IsInt()
 		|| doc["code"].GetInt() || !doc.HasMember("data")
 		|| !doc["data"].HasMember("own") || !doc["data"]["own"].HasMember("rank")) {
@@ -620,7 +620,7 @@ BILIRET CBilibiliUserInfo::_APIv1Captcha(std::string &img, std::string &token) c
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsObject()) {
 		return BILIRET::JSON_ERROR;
@@ -644,7 +644,7 @@ BILIRET CBilibiliUserInfo::_APIv1StormJoin(int roomID, long long cid, std::strin
 		<< "&roomid=" << roomID
 		<< "&csrf_token=" << _useropt.tokenjct
 		<< "&visit_id=" << _useropt.visitid;
-	_httppackweb->strsenddata = oss.str();
+	_httppackweb->send_data = oss.str();
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept: application/json, text/plain, */*");
 	_httppackweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded");
@@ -658,7 +658,7 @@ BILIRET CBilibiliUserInfo::_APIv1StormJoin(int roomID, long long cid, std::strin
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
 		return BILIRET::JSON_ERROR;
 	}
@@ -689,7 +689,7 @@ BILIRET CBilibiliUserInfo::_APIv1StormJoin(int roomID, long long cid, std::strin
 // 银瓜子换硬币
 BILIRET CBilibiliUserInfo::_APIv1Silver2Coin() const {
 	_httppackweb->url = _urlapi + "/pay/v1/Exchange/silver2coin";
-	_httppackweb->strsenddata = "platform=pc&csrf_token=" + _useropt.tokenjct;
+	_httppackweb->send_data = "platform=pc&csrf_token=" + _useropt.tokenjct;
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept: application/json, text/javascript, */*; q=0.01");
 	_httppackweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=UTF-8");
@@ -702,7 +702,7 @@ BILIRET CBilibiliUserInfo::_APIv1Silver2Coin() const {
 
 	// 0兑换成功 403已兑换
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
 		return BILIRET::JSON_ERROR;
 	}
@@ -727,7 +727,7 @@ BILIRET CBilibiliUserInfo::_APIv1CapsuleCheck() const {
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") 
 		|| !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsObject()) {
@@ -755,7 +755,7 @@ BILIRET CBilibiliUserInfo::_APIv1RoomEntry(int room) const {
 	oss << "room_id=" << room
 		<< "&platform=pc&csrf_token=" << _useropt.tokenjct
 		<< "&visit_id=" << _useropt.visitid;
-	_httppackweb->strsenddata = oss.str();
+	_httppackweb->send_data = oss.str();
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept: application/json, text/plain, */*");
 	_httppackweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded");
@@ -785,10 +785,10 @@ BILIRET CBilibiliUserInfo::_APIv2CheckHeartGift() {
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()) {
 		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << _useropt.fileid << "] "
-			<< "FreeGiftInfo: " << _httppackweb->strrecdata;
+			<< "FreeGiftInfo: " << _httppackweb->recv_data;
 		return BILIRET::JSON_ERROR;
 	}
 	if (doc["data"]["heart_status"].GetInt() && doc["data"]["gift_list"].Size()) {
@@ -818,7 +818,7 @@ BILIRET CBilibiliUserInfo::_APIv2GetHeartGift() {
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	_heartopt.freegift--;
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
 		return BILIRET::JSON_ERROR;
@@ -826,7 +826,7 @@ BILIRET CBilibiliUserInfo::_APIv2GetHeartGift() {
 	// 进小黑屋后无法领取
 	if (doc["code"].GetInt()) {
 		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << _useropt.fileid << "] "
-			<< "EventRoomHeart: " << _httppackweb->strrecdata;
+			<< "EventRoomHeart: " << _httppackweb->recv_data;
 		_heartopt.freegift = 0;
 		return BILIRET::JSON_ERROR;
 	}
@@ -868,7 +868,7 @@ BILIRET CBilibiliUserInfo::_APIv2GiftBag() const {
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()) {
 		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << _useropt.fileid << "] "
 			<< "Get bag info failed.";
@@ -909,7 +909,7 @@ BILIRET CBilibiliUserInfo::_APIv2GiftDaily() const {
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()) {
 		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << _useropt.fileid << "] "
 			<< "Receive daily gift failed.";
@@ -941,7 +941,7 @@ BILIRET CBilibiliUserInfo::_APIv2LotteryJoin(const std::string &type, const int 
 		<< "&type=" << type
 		<< "&csrf_token=" << _useropt.tokenjct
 		<< "&visit_id=" << _useropt.visitid;
-	_httppackweb->strsenddata = oss.str();
+	_httppackweb->send_data = oss.str();
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept: application/json, text/plain, */*");
 	_httppackweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded");
@@ -955,7 +955,7 @@ BILIRET CBilibiliUserInfo::_APIv2LotteryJoin(const std::string &type, const int 
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
 		return BILIRET::JSON_ERROR;
 	}
@@ -991,7 +991,7 @@ BILIRET CBilibiliUserInfo::_APIv3SmallTV(int rrid, int loid)
 		<< "&raffleId=" << loid
 		<< "&type=Gift&csrf_token=" << _useropt.tokenjct
 		<< "&visit_id=" << _useropt.visitid;
-	_httppackweb->strsenddata = oss.str();
+	_httppackweb->send_data = oss.str();
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept: application/json, text/plain, */*");
 	_httppackweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded");
@@ -1005,7 +1005,7 @@ BILIRET CBilibiliUserInfo::_APIv3SmallTV(int rrid, int loid)
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackweb->strrecdata);
+	doc.Parse(_httppackweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
 		return BILIRET::JSON_ERROR;
 	}
@@ -1042,7 +1042,7 @@ BILIRET CBilibiliUserInfo::_APIAndv2GetKey(std::string &psd) const
 	std::string sign;
 	this->_GetMD5Sign(oss.str().c_str(), sign);
 	oss << "&sign=" << sign;
-	_httppackapp->strsenddata = oss.str();
+	_httppackapp->send_data = oss.str();
 	_httppackapp->ClearHeader();
 	_httppackapp->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=utf-8");
 	int ret = toollib::HttpPostEx(curlapp, _httppackapp);
@@ -1051,7 +1051,7 @@ BILIRET CBilibiliUserInfo::_APIAndv2GetKey(std::string &psd) const
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackapp->strrecdata);
+	doc.Parse(_httppackapp->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code")
 		|| !doc["code"].IsInt() || doc["code"].GetInt()) {
 		return BILIRET::JSON_ERROR;
@@ -1085,7 +1085,7 @@ BILIRET CBilibiliUserInfo::_APIAndv2Login(std::string username, std::string pass
 	std::string sign;
 	this->_GetMD5Sign(oss.str().c_str(), sign);
 	oss << "&sign=" << sign;
-	_httppackapp->strsenddata = oss.str();
+	_httppackapp->send_data = oss.str();
 	_httppackapp->ClearHeader();
 	_httppackapp->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=utf-8");
 	int ret = toollib::HttpPostEx(curlapp, _httppackapp);
@@ -1094,7 +1094,7 @@ BILIRET CBilibiliUserInfo::_APIAndv2Login(std::string username, std::string pass
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackapp->strrecdata);
+	doc.Parse(_httppackapp->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
 		return BILIRET::JSON_ERROR;
 	}
@@ -1137,7 +1137,7 @@ BILIRET CBilibiliUserInfo::_APIAndSilverCurrentTask() {
 	std::string sign;
 	this->_GetMD5Sign(oss.str().c_str(), sign);
 	oss << "&sign=" << sign;
-	_httppackapp->strsenddata = oss.str();
+	_httppackapp->send_data = oss.str();
 	_httppackapp->ClearHeader();
 	int ret = toollib::HttpPostEx(curlapp, _httppackapp);
 	if (ret) {
@@ -1146,7 +1146,7 @@ BILIRET CBilibiliUserInfo::_APIAndSilverCurrentTask() {
 	// 领完为-10017
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackapp->strrecdata);
+	doc.Parse(_httppackapp->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code")) {
 		return BILIRET::JSON_ERROR;
 	}
@@ -1181,7 +1181,7 @@ BILIRET CBilibiliUserInfo::_APIAndSilverAward() {
 	std::string sign;
 	this->_GetMD5Sign(oss.str().c_str(), sign);
 	oss << "&sign=" << sign;
-	_httppackapp->strsenddata = oss.str();
+	_httppackapp->send_data = oss.str();
 	_httppackapp->ClearHeader();
 	int ret = toollib::HttpPostEx(curlapp, _httppackapp);
 	if (ret) {
@@ -1189,7 +1189,7 @@ BILIRET CBilibiliUserInfo::_APIAndSilverAward() {
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackapp->strrecdata);
+	doc.Parse(_httppackapp->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code")) {
 		return BILIRET::JSON_ERROR;
 	}
@@ -1226,7 +1226,7 @@ BILIRET CBilibiliUserInfo::_APIAndv1StormJoin(long long cid) {
 	std::string sign;
 	this->_GetMD5Sign(oss.str().c_str(), sign);
 	oss << "&sign=" << sign;
-	_httppackapp->strsenddata = oss.str();
+	_httppackapp->send_data = oss.str();
 	_httppackapp->ClearHeader();
 	_httppackapp->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=utf-8");
 	int ret = toollib::HttpPostEx(curlapp, _httppackapp);
@@ -1235,7 +1235,7 @@ BILIRET CBilibiliUserInfo::_APIAndv1StormJoin(long long cid) {
 	}
 
 	rapidjson::Document doc;
-	doc.Parse(_httppackapp->strrecdata);
+	doc.Parse(_httppackapp->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
 		return BILIRET::JSON_ERROR;
 	}
@@ -1309,7 +1309,7 @@ BILIRET CBilibiliUserInfo::_GetCaptchaKey() {
 	if (ret) {
 		return BILIRET::HTTP_ERROR;
 	}
-	ret = _httppackweb->sstrrecdata.find("captcha_key");
+	ret = _httppackweb->recv_data.find("captcha_key");
 	if (ret == -1)
 		return BILIRET::HTMLTEXT_ERROR;
 	// finger生成于如下脚本中
