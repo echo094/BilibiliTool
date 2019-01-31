@@ -308,6 +308,31 @@ BILIRET CBilibiliLive::ApiCheckGuard(CURL *pcurl, int rrid, int &loid) const
 	return BILIRET::NOFAULT;
 }
 
+BILIRET CBilibiliLive::GetAreaNum(CURL * pcurl, unsigned & num) const {
+	int ret;
+	std::ostringstream oss;
+	oss << URL_LIVEAPI_HEAD << "/room/v1/Area/getList";
+	_httppack->url = oss.str();
+	_httppack->ClearHeader();
+	_httppack->AddHeaderManual("Accept: application/json, text/plain, */*");
+	ret = toollib::HttpGetEx(pcurl, _httppack);
+	if (ret) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[Live] Get area num failed code: " << ret;
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(_httppack->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
+		|| !doc.HasMember("data") || !doc["data"].IsArray()) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[Live] Get area num failed!";
+		return BILIRET::JSON_ERROR;
+	}
+	num = doc["data"].Size();
+
+	return BILIRET::NOFAULT;
+}
+
 BILIRET CBilibiliLive::GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, const unsigned minpop) const {
 	BILIRET ret = BILIRET::NOFAULT;
 	int page = 0, err = 10;

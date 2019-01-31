@@ -67,6 +67,8 @@ public:
 		_httppack = nullptr;
 	}
 	BILIRET ApiCheckGuard(CURL *pcurl, int rrid, int &loid) const;
+	// 获取分区数量
+	BILIRET GetAreaNum(CURL *pcurl, unsigned &num) const;
 	// 获取人气满足一定条件的房间列表
 	BILIRET GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, const unsigned minpop) const;
 	// 获取指定分区的一个房间

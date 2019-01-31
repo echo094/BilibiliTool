@@ -375,8 +375,13 @@ int CBilibiliMain::StartMonitorPubEvent() {
 	_lotterytv->ClearMissingLottery();
 
 	// 获取需要连接的房间
+	unsigned num = 0;
+	if (_apilive->GetAreaNum(curl_main_, num) != BILIRET::NOFAULT) {
+		printf("Start failed! \n");
+		return -1;
+	}
 	unsigned roomid;
-	for (unsigned int i = 1; i < 6; i++) {
+	for (unsigned int i = 1; i <= num; i++) {
 		if (_apilive->PickOneRoom(curl_main_, roomid, 0, i) == BILIRET::NOFAULT) {
 			ROOM_INFO info;
 			info.id = roomid;
