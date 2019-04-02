@@ -87,7 +87,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-### 房间配置相关(16)
+### 房间配置相关(17)
 
 #### CHANGE_ROOM_INFO
 
@@ -126,6 +126,22 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 ```json
 {"cmd":"WARNING","msg":"禁止直播违禁游戏，请立即更换","roomid":776023}
+```
+
+
+
+#### ROOM_SKIN_MSG
+
+更改皮肤。
+
+```json
+{
+	"cmd": "ROOM_SKIN_MSG",
+	"skin_id": 5,
+	"status": 0,
+	"end_time": 1552924800,
+	"current_time": 1552924802
+}
 ```
 
 
@@ -232,7 +248,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-#### ROOM_SHIELD
+#### ROOM_SHIELD(无处理)
 
 无需响应，设置屏蔽词汇以及用户。
 
@@ -248,7 +264,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-#### ROOM_ADMINS
+#### ROOM_ADMINS(无处理)
 
 无需响应，设置管理员。
 
@@ -684,18 +700,25 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-#### WELCOME_ACTIVITY
+#### ENTRY_EFFECT
 
-房间欢迎特效。
+房间内用户进入特效。
 
 ```json
 {
-	"cmd": "WELCOME_ACTIVITY",
+	"cmd": "ENTRY_EFFECT",
 	"data": {
-		"uid": 12298306,
-		"uname": "你的丸子_",
-		"type": "comingForYou",
-		"display_mode": 1
+		"id": 4,
+		"uid": 18910980,
+		"target_id": 19738891,
+		"show_avatar": 1,
+		"copy_writing": "欢迎舰长 <%玲家的糖%> 进入直播间",
+		"highlight_color": "#E6FF00",
+		"basemap_url": "http:\/\/i0.hdslb.com\/bfs\/live\/1fa3cc06258e16c0ac4c209e2645fda3c2791894.png",
+		"effective_time": 2,
+		"priority": 70,
+		"privilege_type": 3,
+		"face": "http:\/\/i1.hdslb.com\/bfs\/face\/855cf5155c3122b15b5c57bd4ddd4c94c0841e12.jpg"
 	}
 }
 ```
@@ -704,7 +727,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 ### PK模式相关(15)
 
-#### PK_INVITE_INIT
+#### PK_INVITE_INIT(无处理)
 
 无需响应，邀请玩家。
 
@@ -724,7 +747,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-#### PK_INVITE_FAIL
+#### PK_INVITE_FAIL(无处理)
 
 无需响应。
 
@@ -739,7 +762,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-#### PK_INVITE_CANCEL
+#### PK_INVITE_CANCEL(无处理)
 
 无需响应。
 
@@ -759,7 +782,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-#### PK_INVITE_SWITCH_OPEN
+#### PK_INVITE_SWITCH_OPEN(无处理)
 
 无需响应。
 
@@ -772,7 +795,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-#### PK_INVITE_SWITCH_CLOSE
+#### PK_INVITE_SWITCH_CLOSE(无处理)
 
 无需响应。
 
@@ -785,7 +808,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-#### PK_INVITE_REFUSE
+#### PK_INVITE_REFUSE(无处理)
 
 无需响应。
 
@@ -1034,7 +1057,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-#### PK_CLICK_AGAIN
+#### PK_CLICK_AGAIN(无处理)
 
 无需响应。
 
@@ -1054,6 +1077,27 @@ flash通过调用 window._playerEventMap 对象处理事件。
 #### GUARD_LOTTERY_START
 
 房间内登船活动开启消息。
+
+
+
+#### SCORE_CARD
+
+分数卡。
+
+```json
+{
+	"cmd": "SCORE_CARD",
+	"data": {
+		"start_time": 1552740607,
+		"end_time": 1552740667,
+		"now_time": 1552740607,
+		"gift_id": 30081,
+		"uid": 2232963,
+		"ruid": 1577804,
+		"id": 66
+	}
+}
+```
 
 
 
@@ -1289,24 +1333,6 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-#### ACTIVITY_EVENT
-
-房间内活动信息。目前为BLS预热活动。
-
-```json
-{
-	"cmd": "ACTIVITY_EVENT",
-	"data": {
-		"keyword": "bls_winter_2018",
-		"type": "charge",
-		"limit": 500000,
-		"progress": 48280
-	}
-}
-```
-
-
-
 #### HOUR_RANK_AWARDS
 
 房间内小时榜榜首信息。
@@ -1329,7 +1355,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-### 其它无处理函数的消息(2)
+### 其它无处理函数的消息(3)
 
 #### USER_TOAST_MSG
 
@@ -1364,9 +1390,43 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
+#### ROOM_REAL_TIME_MESSAGE_UPDATE
+
+粉丝数更新。
+
+```json
+{
+	"cmd": "ROOM_REAL_TIME_MESSAGE_UPDATE",
+	"data": {
+		"roomid": 10175194,
+		"fans": 19606
+	}
+}
+```
+
+
+
 ## 失效指令
 
 在以上JS文件中找不到的指令。
+
+
+
+### ACTIVITY_EVENT
+
+房间内活动信息。目前为BLS预热活动。
+
+```json
+{
+	"cmd": "ACTIVITY_EVENT",
+	"data": {
+		"keyword": "bls_winter_2018",
+		"type": "charge",
+		"limit": 500000,
+		"progress": 48280
+	}
+}
+```
 
 
 
@@ -1385,31 +1445,6 @@ flash通过调用 window._playerEventMap 对象处理事件。
 		"start_time": 1540277390,
 		"end_time": 1540277390,
 		"guard_level": 0
-	}
-}
-```
-
-
-
-### ENTRY_EFFECT
-
-房间内用户进入特效。
-
-```json
-{
-	"cmd": "ENTRY_EFFECT",
-	"data": {
-		"id": 4,
-		"uid": 18910980,
-		"target_id": 19738891,
-		"show_avatar": 1,
-		"copy_writing": "欢迎舰长 <%玲家的糖%> 进入直播间",
-		"highlight_color": "#E6FF00",
-		"basemap_url": "http:\/\/i0.hdslb.com\/bfs\/live\/1fa3cc06258e16c0ac4c209e2645fda3c2791894.png",
-		"effective_time": 2,
-		"priority": 70,
-		"privilege_type": 3,
-		"face": "http:\/\/i1.hdslb.com\/bfs\/face\/855cf5155c3122b15b5c57bd4ddd4c94c0841e12.jpg"
 	}
 }
 ```
@@ -1481,4 +1516,23 @@ flash通过调用 window._playerEventMap 对象处理事件。
 ### GUARD_MSG
 
 广播的总督上船消息。
+
+
+
+### WELCOME_ACTIVITY
+
+房间欢迎特效。
+
+```json
+{
+	"cmd": "WELCOME_ACTIVITY",
+	"data": {
+		"uid": 12298306,
+		"uname": "你的丸子_",
+		"type": "comingForYou",
+		"display_mode": 1
+	}
+}
+```
+
 
