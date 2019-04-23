@@ -2,7 +2,7 @@
 #include <functional>
 #include <map>
 
-const unsigned MSG_NEWSMALLTV = WM_USER + 612;
+const unsigned MSG_NEWLOTTERY = WM_USER + 612;
 const unsigned MSG_NEWSPECIALGIFT = WM_USER + 613;
 const unsigned MSG_NEWGUARD1 = WM_USER + 614;
 const unsigned MSG_NEWGUARD0 = WM_USER + 615;

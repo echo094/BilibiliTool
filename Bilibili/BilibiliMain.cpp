@@ -60,8 +60,8 @@ CBilibiliMain::CBilibiliMain():
 	heart_flag_(false),
 	_dmsource(nullptr),
 	_apidm(new DanmuAPI()),
-	_lotterytv(new CBilibiliSmallTV()),
-	_lotterygu(new CBilibiliGuard()),
+	_lotterytv(new lottery_list()),
+	_lotterygu(new guard_list()),
 	_apilive(new CBilibiliLive()),
 	_userlist(new CBilibiliUserList()) {
 
@@ -187,8 +187,8 @@ void CBilibiliMain::on_timer(boost::system::error_code ec) {
 
 int CBilibiliMain::ProcessModuleMSG(unsigned msg, WPARAM wp, LPARAM lp) {
 	switch (msg) {
-	case MSG_NEWSMALLTV: {
-		JoinTV(wp);
+	case MSG_NEWLOTTERY: {
+		JoinLottery(wp);
 		break;
 	}
 	case MSG_NEWGUARD0: {
@@ -477,7 +477,7 @@ int CBilibiliMain::UpdateLiveRoom() {
 	return 0;
 }
 
-int CBilibiliMain::JoinTV(int room)
+int CBilibiliMain::JoinLottery(int room)
 {
 	int ret = -1, count = 2;
 	ret = _lotterytv->CheckLottery(curl_main_, room);
@@ -499,7 +499,7 @@ int CBilibiliMain::JoinTV(int room)
 		if (isSkip()) {
 			continue;
 		}
-		_userlist->JoinTVALL(&pdata);
+		_userlist->JoinLotteryALL(&pdata);
 	}
 	return 0;
 }

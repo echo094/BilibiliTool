@@ -330,7 +330,7 @@ int CBilibiliUserInfo::ActStorm(int roid, long long cid) {
 	return 0;
 }
 
-int CBilibiliUserInfo::ActSmallTV(int rrid, int loid)
+int CBilibiliUserInfo::ActLottery(int rrid, int loid)
 {
 	BILIRET bret;
 	int count;
@@ -985,11 +985,12 @@ BILIRET CBilibiliUserInfo::_APIv2LotteryJoin(const std::string &type, const int 
 BILIRET CBilibiliUserInfo::_APIv3SmallTV(int rrid, int loid)
 {
 	int ret;
-	_httppackweb->url = _urlapi + "/gift/v3/smalltv/join";
+	_httppackweb->url = _urlapi + "/xlive/lottery-interface/v3/smalltv/Join";
 	std::ostringstream oss;
 	oss << "roomid=" << rrid
 		<< "&raffleId=" << loid
 		<< "&type=Gift&csrf_token=" << _useropt.tokenjct
+		<< "&csrf=" << _useropt.tokenjct
 		<< "&visit_id=" << _useropt.visitid;
 	_httppackweb->send_data = oss.str();
 	_httppackweb->ClearHeader();

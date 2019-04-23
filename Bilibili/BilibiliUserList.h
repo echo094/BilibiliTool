@@ -67,7 +67,7 @@ public:
 	int StopUserHeart();
 	// 检测并等待抽奖线程停止
 	int WaitActThreadStop();
-	int JoinTVALL(BILI_LOTTERYDATA *data);
+	int JoinLotteryALL(BILI_LOTTERYDATA *data);
 	int JoinGuardALL(BILI_LOTTERYDATA &data);
 	int JoinSpecialGiftALL(int roomID, long long cid);
 	int SendDanmuku(int index, int roomID, std::string msg);
@@ -78,7 +78,7 @@ protected:
 	// 经验心跳
 	int _HeartExp(int firsttime = 0);
 	// 小电视领取线程
-	static DWORD WINAPI Thread_ActTV(PVOID lpParameter);
+	static DWORD WINAPI Thread_ActLottery(PVOID lpParameter);
 	// 舰队低保领取线程
 	static DWORD WINAPI Thread_ActGuard(PVOID lpParameter);
 	// 节奏领取线程

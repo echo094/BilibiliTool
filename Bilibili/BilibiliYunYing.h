@@ -4,11 +4,11 @@
 #include <set>
 
 // 目前不支持多线程操作
-class CBilibiliLotteryBase
+class event_list_base
 {
 public:
-	CBilibiliLotteryBase();
-	virtual ~CBilibiliLotteryBase();
+	event_list_base();
+	virtual ~event_list_base();
 
 public:
 	// 查询抽奖入口函数
@@ -23,8 +23,10 @@ public:
 protected:
 	// 需要在类中实例化的查询API
 	virtual BILIRET _GetLotteryID(CURL *pcurl, int srid, int rrid) = 0;
-	// 检测房间号以及房间状态
-	BILIRET _CheckRoom(CURL *pcurl, int srid, int &rrid);
+	// 检测房间号以及房间状态 待修改
+	BILIRET _CheckRoom(CURL* pcurl, int srid, int& rrid);
+	// 检测房间号以及房间状态 废除
+	BILIRET _CheckRoomOld(CURL *pcurl, int srid, int &rrid);
 	// 更新待抽奖列表
 	virtual void _UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid) = 0;
 
@@ -35,7 +37,7 @@ protected:
 	std::set<int> m_missingid;
 };
 
-class CBilibiliSmallTV : public CBilibiliLotteryBase
+class lottery_list : public event_list_base
 {
 protected:
 	BILIRET _GetLotteryID(CURL *pcurl, int srid, int rrid) override;
@@ -46,7 +48,7 @@ private:
 	bool _CheckLoid(const int id);
 };
 
-class CBilibiliGuard : public CBilibiliLotteryBase
+class guard_list : public event_list_base
 {
 protected:
 	BILIRET _GetLotteryID(CURL *pcurl, int srid, int rrid) override;
@@ -66,7 +68,6 @@ public:
 	~CBilibiliLive() {
 		_httppack = nullptr;
 	}
-	BILIRET ApiCheckGuard(CURL *pcurl, int rrid, int &loid) const;
 	// 获取分区数量
 	BILIRET GetAreaNum(CURL *pcurl, unsigned &num) const;
 	// 获取人气满足一定条件的房间列表

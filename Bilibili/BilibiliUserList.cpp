@@ -282,7 +282,7 @@ int CBilibiliUserList::WaitActThreadStop()
 	return 0;
 }
 
-int CBilibiliUserList::JoinTVALL(BILI_LOTTERYDATA *data)
+int CBilibiliUserList::JoinLotteryALL(BILI_LOTTERYDATA *data)
 {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Gift Room: " << data->rrid << " ID: " << data->loid;
 	// 当前没有用户则不领取
@@ -298,7 +298,7 @@ int CBilibiliUserList::JoinTVALL(BILI_LOTTERYDATA *data)
 	EnterCriticalSection(&_csthread);
 	_threadcount++;
 	LeaveCriticalSection(&_csthread);
-	lphandle = CreateThread(NULL, 0, Thread_ActTV, pdata, 0, 0);
+	lphandle = CreateThread(NULL, 0, Thread_ActLottery, pdata, 0, 0);
 	CloseHandle(lphandle);
 
 	return 0;
@@ -414,7 +414,7 @@ int CBilibiliUserList::_HeartExp(int firsttime)
 	return 0;
 }
 
-DWORD CBilibiliUserList::Thread_ActTV(PVOID lpParameter)
+DWORD CBilibiliUserList::Thread_ActLottery(PVOID lpParameter)
 {
 	PTHARED_DATAEX pdata = (PTHARED_DATAEX)lpParameter;
 	CBilibiliUserList *pclass = pdata->ptr;
@@ -429,7 +429,7 @@ DWORD CBilibiliUserList::Thread_ActTV(PVOID lpParameter)
 			continue;
 		Sleep(pclass->_GetRand(1000, 1500));
 		EnterCriticalSection(&pclass->_csthread);
-		(*itor)->ActSmallTV(pdata->id1, pdata->id2);
+		(*itor)->ActLottery(pdata->id1, pdata->id2);
 		LeaveCriticalSection(&pclass->_csthread);
 	}
 	delete pdata;

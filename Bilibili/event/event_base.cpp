@@ -13,7 +13,7 @@ void event_base::connection_close(unsigned rrid, unsigned opt) {
 void event_base::post_lottery_msg(unsigned rrid) {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[EVENT] lottery room: " << rrid;
 	if (event_handler_) {
-		event_handler_(MSG_NEWSMALLTV, WPARAM(rrid), 0);
+		event_handler_(MSG_NEWLOTTERY, WPARAM(rrid), 0);
 	}
 }
 

@@ -101,7 +101,7 @@ public:
 	// 节奏风暴
 	int ActStorm(int roid, long long cid);
 	// 通告礼物
-	int ActSmallTV(int rrid, int loid);
+	int ActLottery(int rrid, int loid);
 	// 上船低保
 	int ActGuard(const std::string &type, const int rrid, const int loid);
 

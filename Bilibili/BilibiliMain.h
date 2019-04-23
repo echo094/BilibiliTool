@@ -55,7 +55,7 @@ private:
 	// 非广播模式下更新监控的房间
 	int UpdateLiveRoom();
 	// 抽奖消息
-	int JoinTV(int room);
+	int JoinLottery(int room);
 	// 上船消息通告只含有房间号
 	int JoinGuardGift(int room);
 	// 上船抽奖事件通告含有完整抽奖信息
@@ -88,9 +88,9 @@ private:
 	// 账户列表类
 	unique_ptr<CBilibiliUserList> _userlist;
 	// 小电视信息处理类
-	unique_ptr<CBilibiliSmallTV> _lotterytv;
+	unique_ptr<lottery_list> _lotterytv;
 	// 上船信息处理类
-	unique_ptr<CBilibiliGuard> _lotterygu;
+	unique_ptr<guard_list> _lotterygu;
 	// 其它API
 	unique_ptr<CBilibiliLive> _apilive;
 	// 弹幕API解释模块
