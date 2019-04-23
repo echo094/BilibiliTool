@@ -70,7 +70,6 @@ public:
 	int JoinLotteryALL(BILI_LOTTERYDATA *data);
 	int JoinGuardALL(BILI_LOTTERYDATA &data);
 	int JoinSpecialGiftALL(int roomID, long long cid);
-	int SendDanmuku(int index, int roomID, std::string msg);
 
 protected:
 	// 查找用户

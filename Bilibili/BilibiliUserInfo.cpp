@@ -263,12 +263,6 @@ int CBilibiliUserInfo::WriteFileAccount(std::string key, char *addr) {
 int CBilibiliUserInfo::ActStartHeart() {
 	// 常规心跳
 	_APIv1HeartBeat();
-	// 活动礼物信息获取
-	_heartopt.freegift = false;
-	_APIv2CheckHeartGift();
-	if (_heartopt.freegift) {
-		_APIv2GetHeartGift();
-	}
 	// 心跳计时标签
 	_heartopt.timercount = 0;
 	// 银瓜子领取信息获取
@@ -298,9 +292,6 @@ int CBilibiliUserInfo::ActHeart() {
 	if (_heartopt.timercount == 5) {
 		_heartopt.timercount = 0;
 		_APIv1HeartBeat();
-		if (_heartopt.freegift) {
-			_APIv2GetHeartGift();
-		}
 		PostOnlineHeart();
 	}
 	if (_heartopt.silvercount != -1) {
@@ -364,7 +355,7 @@ int CBilibiliUserInfo::ActGuard(const std::string &type, const int rrid, const i
 // 获取直播站主要信息
 BILIRET CBilibiliUserInfo::GetUserInfoLive(BILIUSEROPT &pinfo) const {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User] Get user live info...";
-	_httppackweb->url = _urlapi + "/User/getUserInfo";
+	_httppackweb->url = _urlapi + "/xlive/web-ucenter/user/get_user_info";
 	_httppackweb->ClearHeader();
 	int ret = toollib::HttpGetEx(curlweb, _httppackweb);
 	if (ret) {
@@ -378,9 +369,6 @@ BILIRET CBilibiliUserInfo::GetUserInfoLive(BILIUSEROPT &pinfo) const {
 	}
 	bool isvalid = false;
 	if (doc.HasMember("code") && doc["code"].IsInt() && !doc["code"].GetInt()) {
-		isvalid = true;
-	}
-	if (doc.HasMember("code") && doc["code"].IsString() && strcmp("REPONSE_OK", doc["code"].GetString()) == 0) {
 		isvalid = true;
 	}
 	if (!isvalid) {
@@ -493,60 +481,6 @@ BILIRET CBilibiliUserInfo::GetCoin() const {
 	return BILIRET::NOFAULT;
 }
 
-// 发送弹幕
-BILIRET  CBilibiliUserInfo::SendDanmuku(int roomID, std::string msg) const {
-	_httppackweb->url = _urlapi + "/msg/send";
-	std::ostringstream oss;
-	oss << "color=16777215&fontsize=25&mode=1&msg=" << _strcoding.UrlUTF8(msg.c_str()) 
-		<< "&rnd=" << GetTimeStamp()
-		<< "&roomid=" << roomID;
-	_httppackweb->send_data = oss.str();
-	_httppackweb->ClearHeader();
-	_httppackweb->AddHeaderManual("Accept: application/json, text/javascript, */*; q=0.01");
-	_httppackweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=UTF-8");
-	_httppackweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
-	std::string strreffer(URL_DEFAULT_REFERERBASE);
-	strreffer += std::to_string(roomID);
-	_httppackweb->AddHeaderManual(strreffer.c_str());
-	int ret = toollib::HttpPostEx(curlweb, _httppackweb);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	rapidjson::Document doc;
-	doc.Parse(_httppackweb->recv_data.c_str());
-	if (!doc.IsObject() || !doc.HasMember("code") 
-		|| !doc["code"].IsInt() || doc["code"].GetInt()) {
-		return BILIRET::JSON_ERROR;
-	}
-
-	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
-		<< "SendDanmuku Success";
-
-	return BILIRET::NOFAULT;
-}
-
-// 获取播主账户ID（亦作 RUID）
-BILIRET CBilibiliUserInfo::_APIv1MasterID(int liveRoomID, int &uid) const {
-	std::ostringstream oss;
-	oss << _urlapi << "/room/v1/Room/getRoomInfoMain?roomid=" << liveRoomID;
-	_httppackweb->url = oss.str();
-	_httppackweb->ClearHeader();
-	int ret = toollib::HttpGetEx(curlweb, _httppackweb);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	rapidjson::Document doc;
-	doc.Parse(_httppackweb->recv_data.c_str());
-	if (!doc.IsObject() || !doc["data"].HasMember("MASTERID")) {
-		return BILIRET::JSON_ERROR;
-	}
-	uid = doc["data"]["MASTERID"].GetInt();
-
-	return BILIRET::NOFAULT;
-}
-
 // 直播经验心跳日志
 BILIRET CBilibiliUserInfo::_APIv1HeartBeat() const {
 	int ret;
@@ -575,33 +509,6 @@ BILIRET CBilibiliUserInfo::_APIv1HeartBeat() const {
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
 			<< "HeartBeat: OK";
 	}
-
-	return BILIRET::NOFAULT;
-}
-
-// 获取指定勋章排名
-BILIRET CBilibiliUserInfo::_APIv1MedalRankList(int roomid, int uid, int &rank) const {
-	std::ostringstream oss;
-	oss << _urlapi << "/rankdb/v1/RoomRank/webMedalRank?" 
-		<< "roomid=" << roomid << "&ruid=" << uid;
-	_httppackweb->url = oss.str();
-	_httppackweb->ClearHeader();
-	_httppackweb->AddHeaderManual("Accept: application/json, text/javascript, */*; q=0.01");
-	int ret = toollib::HttpGetEx(curlweb, _httppackweb);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	rapidjson::Document doc;
-	doc.Parse(_httppackweb->recv_data.c_str());
-	if (!doc.IsObject() || !doc.HasMember("code")|| !doc["code"].IsInt()
-		|| doc["code"].GetInt() || !doc.HasMember("data")
-		|| !doc["data"].HasMember("own") || !doc["data"]["own"].HasMember("rank")) {
-		return BILIRET::JSON_ERROR;
-	}
-
-	rank = -1;
-	rank = doc["data"]["own"]["rank"].GetInt();
 
 	return BILIRET::NOFAULT;
 }
@@ -716,7 +623,7 @@ BILIRET CBilibiliUserInfo::_APIv1Silver2Coin() const {
 
 // 查询扭蛋币数量
 BILIRET CBilibiliUserInfo::_APIv1CapsuleCheck() const {
-	_httppackweb->url = _urlapi + "/lottery/v1/Capsule/getUserInfo";
+	_httppackweb->url = _urlapi + "/xlive/web-ucenter/v1/capsule/get_detail?from=room";
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept: application/json, text/javascript, */*; q=0.01");
 	_httppackweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
@@ -766,90 +673,6 @@ BILIRET CBilibiliUserInfo::_APIv1RoomEntry(int room) const {
 	ret = toollib::HttpPostEx(curlweb, _httppackweb);
 	if (ret) {
 		return BILIRET::HTTP_ERROR;
-	}
-
-	return BILIRET::NOFAULT;
-}
-
-// 免费礼物领取状态查询
-BILIRET CBilibiliUserInfo::_APIv2CheckHeartGift() {
-	int ret;
-	_httppackweb->url = _urlapi + "/gift/v2/live/heart_gift_status?roomid=23058&area_v2_id=32";
-	_httppackweb->ClearHeader();
-	_httppackweb->AddHeaderManual("Accept:application/json, text/javascript, */*; q=0.01");
-	_httppackweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
-	_httppackweb->AddHeaderManual(URL_DEFAULT_REFERER);
-	ret = toollib::HttpGetEx(curlweb, _httppackweb);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	rapidjson::Document doc;
-	doc.Parse(_httppackweb->recv_data.c_str());
-	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()) {
-		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << _useropt.fileid << "] "
-			<< "FreeGiftInfo: " << _httppackweb->recv_data;
-		return BILIRET::JSON_ERROR;
-	}
-	if (doc["data"]["heart_status"].GetInt() && doc["data"]["gift_list"].Size()) {
-		_heartopt.freegift = 3;
-		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
-			<< "FreeGiftInfo: Start getting.";
-	}
-	else {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
-			<< "FreeGiftInfo: No available gift.";
-	}
-
-	return BILIRET::NOFAULT;
-}
-
-// 免费礼物领取心跳包
-BILIRET CBilibiliUserInfo::_APIv2GetHeartGift() {
-	int ret;
-	_httppackweb->url = _urlapi + "/gift/v2/live/heart_gift_receive?roomid=23058&area_v2_id=32";
-	_httppackweb->ClearHeader();
-	_httppackweb->AddHeaderManual("Accept:application/json, text/javascript, */*; q=0.01");
-	_httppackweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
-	_httppackweb->AddHeaderManual(URL_DEFAULT_REFERER);
-	ret = toollib::HttpGetEx(curlweb, _httppackweb);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	rapidjson::Document doc;
-	doc.Parse(_httppackweb->recv_data.c_str());
-	_heartopt.freegift--;
-	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
-		return BILIRET::JSON_ERROR;
-	}
-	// 进小黑屋后无法领取
-	if (doc["code"].GetInt()) {
-		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << _useropt.fileid << "] "
-			<< "EventRoomHeart: " << _httppackweb->recv_data;
-		_heartopt.freegift = 0;
-		return BILIRET::JSON_ERROR;
-	}
-	if (!doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("gift_list")) {
-		return BILIRET::JSON_ERROR;
-	}
-	if (doc["data"]["gift_list"].IsNull()) {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
-			<< "EventRoomHeart: Heart success.";
-		_heartopt.freegift = 3;
-	}
-	else if (doc["data"]["gift_list"].IsObject()) {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
-			<< "EventRoomHeart: Receive one freegift.";
-		_heartopt.freegift = 3;
-	}
-	if (doc["data"].HasMember("heart_status") || doc["data"]["heart_status"].IsInt()) {
-		return BILIRET::JSON_ERROR;
-	}
-	if (doc["data"]["heart_status"].GetInt() == 0) {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
-			<< "EventRoomHeart: Done. Heart stop.";
-		_heartopt.freegift = 0;
 	}
 
 	return BILIRET::NOFAULT;

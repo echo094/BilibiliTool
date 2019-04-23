@@ -349,26 +349,6 @@ int CBilibiliUserList::JoinSpecialGiftALL(int roomID, long long cid)
 	return 0;
 }
 
-//给指定房间发送弹幕需完善
-int CBilibiliUserList::SendDanmuku(int index, int roomID, std::string msg)
-{
-	int ret = 0;
-	if (index <= 0 || index > _usercount)
-		return -1;
-	int count = index;
-	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Danmu Room: " << roomID;
-	std::list<CBilibiliUserInfo*>::iterator itor;
-	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
-		if (!(*itor)->GetFileSN() != index)
-			continue;
-		if (!(*itor)->getLoginStatus())
-			break;
-		(*itor)->SendDanmuku(roomID, msg);
-		break;
-	}
-	return 0;
-}
-
 CBilibiliUserInfo*  CBilibiliUserList::SearchUser(std::string username)
 {
 	std::list<CBilibiliUserInfo*>::iterator itor;

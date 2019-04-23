@@ -25,7 +25,6 @@ struct tagHeartInfo
 {
 	int timercount;// 心跳计时
 	int silvercount;// 瓜子计时
-	int freegift;// 是否需要领取免费礼物
 };
 
 // 用户参数
@@ -105,12 +104,11 @@ public:
 	// 上船低保
 	int ActGuard(const std::string &type, const int rrid, const int loid);
 
+// 其它直播API
 protected:
 	// 获取直播站主要信息
 	BILIRET GetUserInfoLive(BILIUSEROPT &pinfo) const;
-
-// 其它直播API
-protected:
+	// 获取移动端登录验证码
 	BILIRET GETLoginCaptcha() const;
 	// 直播经验心跳Web
 	BILIRET PostOnlineHeart() const;
@@ -118,18 +116,11 @@ protected:
 	BILIRET GetSign() const;
 	// 获取登录硬币
 	BILIRET GetCoin() const;
-public:
-	// 发送弹幕
-	BILIRET SendDanmuku(int roomID, std::string msg) const;
 
 // APIv1
 protected:
-	// 获取播主账户ID（亦作 RUID）
-	BILIRET _APIv1MasterID(int liveRoomID, int &uid) const;
 	// 直播经验心跳日志1
 	BILIRET _APIv1HeartBeat() const;
-	// 获取指定勋章排名
-	BILIRET _APIv1MedalRankList(int roomid, int uid, int &rank) const;
 	// 获取验证码图片
 	BILIRET _APIv1Captcha(std::string &img, std::string &token) const;
 	// 领取风暴
@@ -143,15 +134,11 @@ protected:
 
 // APIv2
 protected:
-	//免费礼物领取状态查询
-	BILIRET _APIv2CheckHeartGift();
-	//免费礼物领取心跳包
-	BILIRET _APIv2GetHeartGift();
 	// 查询背包道具
 	BILIRET _APIv2GiftBag() const;
 	// 领取每日礼物
 	BILIRET _APIv2GiftDaily() const;
-	// 新通用抽奖
+	// 上船低保领取
 	BILIRET _APIv2LotteryJoin(const std::string &type, const int rrid, const int loid);
 
 // APIv3
