@@ -135,6 +135,8 @@ CURLcode http_perform(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack) {
 	if (slist != NULL) {
 		curl_easy_setopt(pcurl, CURLOPT_HTTPHEADER, slist);
 	}
+	// 设置支持302重定向
+	curl_easy_setopt(pcurl, CURLOPT_FOLLOWLOCATION, 1);
 	// 启动CURL内部的Cookie引擎
 	curl_easy_setopt(pcurl, CURLOPT_COOKIEFILE, "");
 	// 设置接受的 Cookies
