@@ -150,6 +150,8 @@ protected:
 private:
 	BILIRET _APIAndv2GetKey(std::string &psd) const;
 	BILIRET _APIAndv2Login(std::string username, std::string password, std::string captcha);
+	// 客户端经验心跳
+	BILIRET _APIAndHeart();
 	// 获取当前宝箱领取情况
 	BILIRET _APIAndSilverCurrentTask();
 	// 领取银瓜子

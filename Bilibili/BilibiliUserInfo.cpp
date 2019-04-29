@@ -292,6 +292,7 @@ int CBilibiliUserInfo::ActHeart() {
 	if (_heartopt.timercount == 5) {
 		_heartopt.timercount = 0;
 		_APIv1HeartBeat();
+		_APIAndHeart();
 		PostOnlineHeart();
 	}
 	if (_heartopt.silvercount != -1) {
@@ -400,7 +401,11 @@ BILIRET CBilibiliUserInfo::GETLoginCaptcha() const {
 BILIRET CBilibiliUserInfo::PostOnlineHeart() const {
 	// -403 非法心跳
 	_httppackweb->url = _urlapi + "/User/userOnlineHeart";
-	_httppackweb->send_data = "";
+	std::ostringstream oss;
+	oss << "&csrf_token=" << _useropt.tokenjct
+		<< "&csrf=" << _useropt.tokenjct
+		<< "&visit_id=";
+	_httppackweb->send_data = oss.str();
 	_httppackweb->ClearHeader();
 	_httppackweb->AddHeaderManual("Accept:application/json, text/javascript, */*; q=0.01");
 	_httppackweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
@@ -418,11 +423,11 @@ BILIRET CBilibiliUserInfo::PostOnlineHeart() const {
 	ret = doc["code"].GetInt();
 	if (ret) {
 		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << _useropt.fileid << "] "
-			<< "OnlineHeart: " << _httppackweb->recv_data;
+			<< "OnlineHeart web: " << _httppackweb->recv_data;
 		return BILIRET::JSON_ERROR;
 	}
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
-		<< "OnlineHeart: OK";
+		<< "OnlineHeart web: OK";
 
 	return BILIRET::NOFAULT;
 }
@@ -946,6 +951,42 @@ BILIRET CBilibiliUserInfo::_APIAndv2Login(std::string username, std::string pass
 			<< cookie_list[i]["value"].GetString() << "\n";
 	}
 	_httpcookie.ImportCookies(oss.str(), curlweb);
+
+	return BILIRET::NOFAULT;
+}
+
+// 客户端经验心跳
+BILIRET CBilibiliUserInfo::_APIAndHeart() {
+	_httppackapp->url = _urlapi + "/mobile/userOnlineHeart?";
+	std::ostringstream oss;
+	oss << "access_key=" << _useropt.tokena
+		<< "&actionKey=appkey&appkey=" << APP_KEY
+		<< "&build=" << PARAM_BUILD
+		<< "&device=android&mobi_app=android&platform=android&ts=" << GetTimeStamp();
+	std::string sign;
+	this->_GetMD5Sign(oss.str().c_str(), sign);
+	oss << "&sign=" << sign;
+	_httppackapp->url += oss.str();
+	_httppackapp->send_data = "{'roomid': 23058, 'scale': 'xhdpi'}";
+	_httppackapp->ClearHeader();
+	int ret = toollib::HttpPostEx(curlapp, _httppackapp);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(_httppackapp->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
+		return BILIRET::JSON_ERROR;
+	}
+	ret = doc["code"].GetInt();
+	if (ret) {
+		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << _useropt.fileid << "] "
+			<< "OnlineHeart mobile: " << _httppackweb->recv_data;
+		return BILIRET::JSON_ERROR;
+	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
+		<< "OnlineHeart mobile: OK";
 
 	return BILIRET::NOFAULT;
 }
