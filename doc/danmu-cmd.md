@@ -1072,7 +1072,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-### 活动相关(11)
+### 活动相关(12)
 
 #### GUARD_LOTTERY_START
 
@@ -1349,6 +1349,47 @@ flash通过调用 window._playerEventMap 对象处理事件。
 		"rank_desc": "http:\/\/i0.hdslb.com\/bfs\/vc\/fc85c1f7b815ea3422d4f8c0f3ed9e96c2a0a77a.png",
 		"content": "鎭枩涓绘挱鑾峰緱\n瓒呬汉姘旀帹鑽愬鍔憋紒",
 		"life_cycle": 3
+	}
+}
+```
+
+
+
+#### ACTIVITY_MATCH_GIFT
+
+房间内LOL应援礼物消息（仅限房间7734200）。
+
+```json
+{
+	"cmd": "ACTIVITY_MATCH_GIFT",
+	"data": {
+		"action": "match_ing",
+		"status": 1,
+		"detail": {
+			"match_id": 1099,
+			"home": {
+				"team_name": "FW",
+				"url": "http:\/\/i0.hdslb.com\/bfs\/vc\/6a2be591bc445d6f3c01005f1f3de7d6fba744a6.png",
+				"ratio": "66.67",
+				"score": 1,
+				"gift_info": [{
+						"gift_id": 30227,
+						"gift_name": "FW加油！"
+					}
+				]
+			},
+			"visit": {
+				"team_name": "VEGA",
+				"url": "http:\/\/i0.hdslb.com\/bfs\/vc\/e75be97576144fe5f0f8c79e97bf9c390c71a143.png",
+				"ratio": "33.33",
+				"score": 1,
+				"gift_info": [{
+						"gift_id": 30219,
+						"gift_name": "Vega加油！"
+					}
+				]
+			}
+		}
 	}
 }
 ```

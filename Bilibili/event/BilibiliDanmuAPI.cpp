@@ -49,6 +49,7 @@ enum {
 	DM_ROOM_RANK,
 	DM_HOUR_RANK_AWARDS,
 	DM_LOL_ACTIVITY,
+	DM_ACTIVITY_MATCH_GIFT,
 
 	DM_ROOM_SHIELD,
 	DM_ROOM_ADMINS,
@@ -135,6 +136,7 @@ void DanmuAPI::InitCMD() {
 	m_cmdid["WISH_BOTTLE"] = DM_WISH_BOTTLE;
 	m_cmdid["LOL_ACTIVITY"] = DM_LOL_ACTIVITY;
 	m_cmdid["HOUR_RANK_AWARDS"] = DM_HOUR_RANK_AWARDS;
+	m_cmdid["ACTIVITY_MATCH_GIFT"] = DM_ACTIVITY_MATCH_GIFT;
 
 	m_cmdid["USER_TOAST_MSG"] = DM_USER_TOAST_MSG;
 	m_cmdid["room_admin_entrance"] = DM_room_admin_entrance;
