@@ -265,6 +265,8 @@ int CBilibiliUserInfo::ActStartHeart() {
 	_APIv1HeartBeat();
 	// 心跳计时标签
 	_heartopt.timercount = 0;
+	// 双端观看奖励
+	_GetTaskInfo();
 	// 银瓜子领取信息获取
 	if (_useropt.conf & 0x02) {
 		_APIAndSilverCurrentTask();
@@ -486,6 +488,41 @@ BILIRET CBilibiliUserInfo::GetCoin() const {
 	return BILIRET::NOFAULT;
 }
 
+BILIRET CBilibiliUserInfo::_GetTaskInfo() const {
+	_httppackweb->url = _urlapi + "/i/api/taskInfo";
+	_httppackweb->ClearHeader();
+	_httppackweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	_httppackweb->AddHeaderManual("Origin: https://link.bilibili.com");
+	_httppackweb->AddHeaderManual("Referer: https://link.bilibili.com/p/center/index");
+	int ret = toollib::HttpGetEx(curlweb, _httppackweb);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(_httppackweb->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
+		|| !doc.HasMember("data") || !doc["data"].IsObject()) {
+		return BILIRET::JSON_ERROR;
+	}
+	auto obj = doc["data"].GetObjectW();
+	if (!obj.HasMember("double_watch_info") || !obj["double_watch_info"].IsObject()) {
+		return BILIRET::JSON_ERROR;
+	}
+	obj = obj["double_watch_info"].GetObjectW();
+	if (!obj.HasMember("status") || !obj["status"].IsInt()) {
+		return BILIRET::JSON_ERROR;
+	}
+	ret = obj["status"].GetInt();
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
+		<< "Get taskinfo: " << ret;
+	if (ret == 1) {
+		return _APIv1TaskAward();
+	}
+
+	return BILIRET::NOFAULT;
+}
+
 // 直播经验心跳日志
 BILIRET CBilibiliUserInfo::_APIv1HeartBeat() const {
 	int ret;
@@ -679,6 +716,36 @@ BILIRET CBilibiliUserInfo::_APIv1RoomEntry(int room) const {
 	if (ret) {
 		return BILIRET::HTTP_ERROR;
 	}
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET CBilibiliUserInfo::_APIv1TaskAward() const {
+	_httppackweb->url = _urlapi + "/activity/v1/task/receive_award";
+	std::ostringstream oss;
+	oss << "task_id=double_watch_task" 
+		<< "&csrf_token=" << _useropt.tokenjct
+		<< "&csrf=" << _useropt.tokenjct;
+	_httppackweb->send_data = oss.str();
+	_httppackweb->ClearHeader();
+	_httppackweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	_httppackweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded");
+	_httppackweb->AddHeaderManual("Origin: https://link.bilibili.com");
+	_httppackweb->AddHeaderManual("Referer: https://link.bilibili.com/p/center/index");
+	int ret = toollib::HttpPostEx(curlweb, _httppackweb);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(_httppackweb->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
+		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << _useropt.fileid << "] "
+			<< "Get double watch award failed.";
+		return BILIRET::JSON_ERROR;
+	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
+		<< "Get double watch award: " << doc["code"].GetInt();
 
 	return BILIRET::NOFAULT;
 }

@@ -116,6 +116,8 @@ protected:
 	BILIRET GetSign() const;
 	// 获取登录硬币
 	BILIRET GetCoin() const;
+	// 获取每日任务信息
+	BILIRET _GetTaskInfo() const;
 
 // APIv1
 protected:
@@ -131,6 +133,8 @@ protected:
 	BILIRET _APIv1CapsuleCheck() const;
 	// 进入房间历史记录
 	BILIRET _APIv1RoomEntry(int room) const;
+	// 领取双端观看奖励
+	BILIRET _APIv1TaskAward() const;
 
 // APIv2
 protected:
