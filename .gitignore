@@ -261,9 +261,8 @@ __pycache__/
 *.pyc
 
 # Custom
+/build
 /Bilibili/BiliConfig.ini
 /Bilibili/Captcha.jpg
 /Bilibili/CaptchaSilver.jpg
 /ToolConfig/BiliConfig.ini
-ReleaseMD/
-ReleaseMT/

@@ -82,51 +82,26 @@ Bilibili直播站小工具
 
 ## Build and Usage
 
-#### 文件组织结构
+### 文件组织结构
 
-> BilibiliTool  
->
-> > build(output)
-> >
-> > doc 
-> >
-> > Bilibili
-> >
-> > ToolConfig 
-> >
-> > toollib  
->
-> share  
->
-> > boost  
-> >
-> > > boost(boost include) 
-> > >
-> > > lib(boost lib)  
-> >
-> > curl-md
-> >
-> > openssl-md
-> >
-> > rapidjson
-> >
-> > websocketpp
-> >
-> > > websocketpp(websocketpp include)  
-> >
-> > zlib-md
+```
+source dir
+├── README
+├── CMakelists.txt (cmake配置文件)
+├── cmake/ (cmake插件)
+├── doc/
+├── Bilibili/ (主程序)
+├── ToolConfig/ (配置修改程序)
+└── LotteryHistory/ (历史记录) 
+
+build dir
+├── bin/ (生成目录)
+└── install/ (安装目录) 
+```
 
 
 
-#### 项目配置  
-
-* Debug运行时为MDd
-* ReleaseMD运行时为MD
-*  ReleaseMT运行时为MT
-
-
-
-#### 依赖库  
+### 依赖库  
 
 - boost  
 - curl  
@@ -138,6 +113,30 @@ Bilibili直播站小工具
 依赖库的编译参考[doc/lib-build.md](doc/lib-build.md)
 
 **[重要]WSS相关内容参考[doc/notes-wss.md](doc/notes-wss.md)**
+
+
+
+### 项目配置  
+
+使用Cmake配置依赖库，定义下述变量：
+
+* `BOOST_ROOT`：boost库的根目录，静态链接
+* `libcurl`库的相关变量，动态链接
+  * `CURL_INCLUDE_DIR`：头文件所在文件夹
+  * `CURL_LIBRARY_RELEASE`：库文件路径
+  * `CURL_DLL`：DLL文件路径
+* `OPENSSL_ROOT_DIR`：OpenSSL安装目录，动态链接
+* `RapidJSON_ROOT`：RapidJSON头文件所在文件夹
+* `WebsocketPP_ROOT`：WebsocketPP头文件所在文件夹
+* `ZLIB_ROOT`：ZLIB安装目录，动态链接
+
+输出目录可以选择其它文件夹，不建议使用当前文件夹。
+
+编译器建议使用VS2017，由于插件`WebsocketPP`目前不支持`Boost 1.70.0`，目前无法使用VS2019。
+
+按照提示一步步添加路径，然后生成解决方案。
+
+先执行`ALL_BUILD`，然后执行`INSTALL`，这时程序以及所需的DLL会被拷贝至`install/bin`文件夹，如果库文件的路径没有问题。
 
 
 

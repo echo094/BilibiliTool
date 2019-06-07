@@ -2,19 +2,26 @@
 
 ### boost
 
-版本 1.67.0
+版本 1.69.0
 
 [主页](https://www.boost.org/)  
+
+编译方法：
+
+```shell
+bootstrap
+.\b2
+```
 
 
 
 ### curl(libcurl)  
 
-版本 7.62.0
+版本 7.65.1
 
 [主页](https://curl.haxx.se/libcurl/)
 
-设置见 winbuild/BUILD.WINDOWS.txt
+设置见`winbuild/BUILD.WINDOWS.txt`
 
 **注意事项**  
 
@@ -22,8 +29,7 @@
 
   需要以C风格导出
 
-  即在编译时需要去除 ZLIB_WINAPI 宏
-  VS导出符号查看命令为 dumpbin /LINKERMEMBER [].lib  
+  VS导出符号查看命令为 `dumpbin /LINKERMEMBER zlib.lib  `
 
 - Openssl
 
@@ -48,7 +54,7 @@ nmake /f Makefile.vc VC=15 mode=static WITH_SSL=static WITH_ZLIB=static DEBUG=no
 
 ### Openssl
 
-版本 1.1.1a
+版本 1.1.1c
 
 [主页](https://www.openssl.org/)
 
@@ -67,7 +73,7 @@ nmake test
 nmake install
 ```
 
-会将文件安装到默认路径：C:\Program Files (x86)\OpenSSL
+会将文件安装到默认路径：`C:\Program Files (x86)\OpenSSL`
 
 如果不需要编译测试程序，可使用 no-tests 参数。
 
@@ -89,7 +95,7 @@ nmake install
 
 
 
-### Zlib
+### zlib
 
 版本 1.2.11
 
@@ -97,11 +103,9 @@ nmake install
 
 **编译说明**
 
-打开contrib\vstudio目录下的相应工程进行编译。
+在根目录使用Cmake生成项目，然后执行编译和安装。
 
-如果需要以C风格导出需要去除 ZLIB_WINAPI 预定义宏。
+生成的项目为C风格导出，无` ZLIB_WINAPI `预定义宏。
 
-Release版本使用ReleaseWithoutAsm配置项编译。  
-
-项目zlibstat生成静态库（MT），项目zlibvc生成DLL（MD）。
+32位的版本安装路径为`C:\Program Files (x86)\zlib`
 

@@ -20,14 +20,6 @@
 // #define CURL_STATICLIB
 
 #include <curl/curl.h>
-#ifdef CURL_STATICLIB
-#pragma comment( lib, "normaliz.lib")
-#pragma comment( lib, "wldap32.lib")
-#pragma comment( lib, "ws2_32.lib")
-#pragma comment( lib, "libcurl_a.lib")
-#else
-#pragma comment( lib, "libcurl.lib")
-#endif
 
 #include <string>
 #include <vector>

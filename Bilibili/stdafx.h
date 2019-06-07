@@ -24,14 +24,9 @@
 #include "base64.h"
 #include "httpex.h"
 #include "sslex.h"
-#include "toollib/md5.h"
-#include "toollib/strconvert.h"
+#include "utility/md5.h"
+#include "utility/strconvert.h"
 using namespace toollib;
-#ifdef _DEBUG
-#pragma comment(lib,"toollibd.lib")  
-#else
-#pragma comment(lib,"toollib.lib") 
-#endif
 
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
