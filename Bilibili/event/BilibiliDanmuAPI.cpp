@@ -64,6 +64,7 @@ enum {
 	DM_USER_TOAST_MSG,
 	DM_room_admin_entrance,
 	DM_ROOM_REAL_TIME_MESSAGE_UPDATE,
+	DM_DANMU_MSG_402220,
 
 	DM_ACTIVITY_EVENT,
 	DM_COMBO_END,
@@ -141,6 +142,7 @@ void DanmuAPI::InitCMD() {
 	m_cmdid["USER_TOAST_MSG"] = DM_USER_TOAST_MSG;
 	m_cmdid["room_admin_entrance"] = DM_room_admin_entrance;
 	m_cmdid["ROOM_REAL_TIME_MESSAGE_UPDATE"] = DM_ROOM_REAL_TIME_MESSAGE_UPDATE;
+	m_cmdid["DANMU_MSG:4:0:2:2:2:0"] = DM_DANMU_MSG_402220;
 
 	m_cmdid["ACTIVITY_EVENT"] = DM_ACTIVITY_EVENT;
 	m_cmdid["COMBO_END"] = DM_COMBO_END;

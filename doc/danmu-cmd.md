@@ -1396,7 +1396,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-### 其它无处理函数的消息(3)
+### 其它无处理函数的消息(4)
 
 #### USER_TOAST_MSG
 
@@ -1444,6 +1444,14 @@ flash通过调用 window._playerEventMap 对象处理事件。
 	}
 }
 ```
+
+
+
+#### DANMU_MSG:4:0:2:2:2:0
+
+特殊时期客户端丢弃弹幕消息的作用。
+
+见公告：[弹幕系统技术升级通知](https://t.bilibili.com/258961230595770167)
 
 
 
