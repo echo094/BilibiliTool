@@ -69,19 +69,16 @@ endmacro ()
 
 # Finalize target for all types
 macro (final_target)
-    if ("${TARGET_LIB_TYPE}" STREQUAL "EXECUTABLE")
-        install (TARGETS ${TARGET_NAME}
-                 RUNTIME DESTINATION "bin"
-                 CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
-    endif ()
-
-    if ("${TARGET_LIB_TYPE}" STREQUAL "LIBRARY")
-        install (TARGETS ${TARGET_NAME}
-                 RUNTIME DESTINATION "bin"
-                 ARCHIVE DESTINATION "lib"
-                 LIBRARY DESTINATION "lib"
-                 CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
-    endif ()
+    install (TARGETS ${TARGET_NAME}
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION "Release/bin"
+        ARCHIVE DESTINATION "Release/lib"
+        LIBRARY DESTINATION "Release/lib")
+    install (TARGETS ${TARGET_NAME}
+        CONFIGURATIONS Debug
+        RUNTIME DESTINATION "Debug/bin"
+        ARCHIVE DESTINATION "Debug/lib"
+        LIBRARY DESTINATION "Debug/lib")
 endmacro ()
 
 macro (link_boost)
@@ -92,6 +89,11 @@ endmacro ()
 macro (link_curl)
     target_link_libraries (${TARGET_NAME} ${CURL_LIBRARIES})
     set_property(TARGET ${TARGET_NAME} APPEND PROPERTY INCLUDE_DIRECTORIES ${CURL_INCLUDE_DIRS})
+endmacro ()
+
+macro (link_opencv)
+    target_link_libraries (${TARGET_NAME} ${OpenCV_LIBS})
+    set_property(TARGET ${TARGET_NAME} APPEND PROPERTY INCLUDE_DIRECTORIES ${OpenCV_INCLUDE_DIRS})
 endmacro ()
 
 macro (link_openssl)

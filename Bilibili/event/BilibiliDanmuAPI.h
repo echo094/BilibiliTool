@@ -32,5 +32,4 @@ private:
 
 private:
 	std::map<std::string, int> m_cmdid;
-	CStrConvert _strcoding;
 };

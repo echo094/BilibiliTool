@@ -28,18 +28,26 @@ public:
 	void PrintHelp();
 	// 初始化
 	int Run();
-	// 消息回调
-	void post_msg(unsigned msg, WPARAM wp, LPARAM lp);
+	// 房间消息回调
+	void post_msg_room(unsigned msg, unsigned rrid, unsigned opt);
+	// 活动消息回调
+	void post_msg_act(unsigned msg, std::shared_ptr<BILI_LOTTERYDATA> data);
 
 private:
-	// Stert heart timer
-	void start_timer(unsigned sec);
+	// Start heart timer
+	void set_timer_refresh(unsigned sec);
 	// Heart timer
-	void on_timer(boost::system::error_code ec);
+	void on_timer_refresh(boost::system::error_code ec);
+	// 用户心跳定时器
+	void set_timer_userheart(unsigned sec, unsigned type);
+	// 用户心跳操作
+	void on_timer_userheart(boost::system::error_code ec, unsigned type);
 
 private:
-	// 处理模块事件
-	int ProcessModuleMSG(unsigned msg, WPARAM wp, LPARAM lp);
+	// 处理房间消息
+	int ProcessMSGRoom(unsigned msg, unsigned rrid, unsigned opt);
+	// 处理活动消息
+	int ProcessMSGAct(unsigned msg, std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 处理用户指令
 	int ProcessCommand(std::string str);
 
@@ -55,13 +63,15 @@ private:
 	// 非广播模式下更新监控的房间
 	int UpdateLiveRoom();
 	// 抽奖消息
-	int JoinLottery(int room);
+	int JoinLottery(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 上船消息通告只含有房间号
-	int JoinGuardGift(int room);
+	int JoinGuardGift1(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 上船抽奖事件通告含有完整抽奖信息
-	int JoinGuardGift(BILI_LOTTERYDATA &pdata);
+	int JoinGuardGift0(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 节奏风暴
-	int JoinSpecialGift(int room, long long cid);
+	int JoinSpecialGift(std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 用户心跳
+	int HeartExp(unsigned type);
 
 	// 是否跳过此次操作
 	bool isSkip();

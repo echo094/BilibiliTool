@@ -58,7 +58,7 @@ namespace toollib {
 		std::string cookie;
 		//Cookie相关
 	public:
-		int ImportCookies(std::string &str, CURL *pcurl = NULL);
+		int ImportCookies(const std::string &str, CURL *pcurl = NULL);
 		int ExportCookies(std::string &str, CURL *pcurl = NULL);
 		//将Cookie应用到CURL句柄
 		int ApplyCookies(CURL *pcurl);

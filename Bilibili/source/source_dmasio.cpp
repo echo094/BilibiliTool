@@ -107,7 +107,7 @@ int source_dmasio::update_context(std::set<unsigned>& nlist, const unsigned opt)
 
 void source_dmasio::show_stat() {
 	source_base::show_stat();
-	printf("IO count: %d \n", asioclient_.get_ionum());
+	printf("IO count: %ld \n", asioclient_.get_ionum());
 }
 
 void source_dmasio::on_error(const unsigned id, const boost::system::error_code ec) {
@@ -164,7 +164,6 @@ size_t source_dmasio::on_header(context_info * c, const int len) {
 }
 
 size_t source_dmasio::on_payload(context_info * c, const int len) {
-	unsigned char *data = (unsigned char *)c->buff_payload_;
 	if (c->buff_header_[7] == 2) {
 		uncompress_dmpack(c->buff_payload_, len, c->label_, get_info(c->label_).opt);
 	}
@@ -176,7 +175,7 @@ size_t source_dmasio::on_payload(context_info * c, const int len) {
 		info.ver = c->buff_header_[7];
 		info.len = len;
 		info.buff.reset(new char[len + 1]);
-		memcpy_s(info.buff.get(), len, c->buff_payload_, len);
+		memcpy(info.buff.get(), c->buff_payload_, len);
 		info.buff.get()[len] = 0;
 		handler_msg(&info);
 	}

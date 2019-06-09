@@ -6,7 +6,7 @@
 #include "proto_bl.h"
 #include "log.h"
 
-const char DM_WSSERVER[] = "ws://broadcastlv.chat.bilibili.com:2244/sub";
+// const char DM_WSSERVER[] = "ws://broadcastlv.chat.bilibili.com:2244/sub";
 const char DM_WSSSERVER[] = "wss://broadcastlv.chat.bilibili.com:443/sub";
 
 CWSDanmu::CWSDanmu() {
@@ -104,7 +104,7 @@ void CWSDanmu::on_message(connection_metadata *it, std::string &msg, int len) {
 		info.len = ireclen - 16;
 		if (ireclen > 16) {
 			info.buff.reset(new char[info.len + 1]);
-			memcpy_s(info.buff.get(), info.len, msg.c_str() + pos + 16, info.len);
+			memcpy(info.buff.get(), msg.c_str() + pos + 16, info.len);
 			info.buff.get()[info.len] = 0;
 		}
 		handler_msg(&info);
@@ -168,7 +168,7 @@ int CWSDanmu::update_context(std::set<unsigned> &nlist, const unsigned opt) {
 
 void CWSDanmu::show_stat() {
 	source_base::show_stat();
-	printf("IO count: %d \n", m_connection_list.size());
+	printf("IO count: %ld \n", m_connection_list.size());
 }
 
 int CWSDanmu::SendConnectionInfo(connection_metadata *it) {

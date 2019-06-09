@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include <fstream>
-#include "tcpio/wxclient.h"
+#include "tcpio/wsclient.h"
 #include "source/source_base.h"
 
 class CWSDanmu: 

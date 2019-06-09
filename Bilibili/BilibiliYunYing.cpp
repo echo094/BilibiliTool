@@ -9,8 +9,8 @@ bool sortbiliyunyingdata(const PBILI_LOTTERYDATA & item1, const PBILI_LOTTERYDAT
 	return item1->loid < item2->loid;
 }
 
-event_list_base::event_list_base() {
-	m_httppack = std::make_unique<CHTTPPack>();
+event_list_base::event_list_base() :
+	m_httppack(new CHTTPPack()) {
 	m_curid = 0;
 }
 
@@ -39,13 +39,13 @@ int event_list_base::CheckLottery(CURL *pcurl, int room)
 	return 0;
 }
 
-int event_list_base::GetNextLottery(BILI_LOTTERYDATA &plo)
+int event_list_base::GetNextLottery(std::shared_ptr<BILI_LOTTERYDATA> data)
 {
 	if (m_lotteryactive.empty()) {
 		return -1;
 	}
 	PBILI_LOTTERYDATA pdata = m_lotteryactive.front();
-	plo = *pdata;
+	*data = *pdata;
 	delete pdata;
 	m_lotteryactive.pop_front();
 	return 0;
@@ -173,7 +173,7 @@ void lottery_list::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, int
 	}
 }
 
-bool lottery_list::_CheckLoid(const int id) {
+bool lottery_list::_CheckLoid(const long long id) {
 	if (m_curid == 0) {
 		// 第一次
 		m_curid = id;
@@ -186,7 +186,7 @@ bool lottery_list::_CheckLoid(const int id) {
 	}
 	if (id > m_curid) {
 		// 有漏掉 进行记录
-		for (int i = m_curid + 1; i < id; i++) {
+		for (long long i = m_curid + 1; i < id; i++) {
 			m_missingid.insert(i);
 		}
 		m_curid = id;

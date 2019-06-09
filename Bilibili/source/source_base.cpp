@@ -8,7 +8,7 @@ int source_base::stop() {
 }
 
 void source_base::show_stat() {
-	printf("Map count: %d List count: %d \n", con_info_.size(), con_list_.size());
+	printf("Map count: %ld List count: %ld \n", con_info_.size(), con_list_.size());
 }
 
 bool source_base::is_exist(const unsigned id) {

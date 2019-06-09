@@ -5,7 +5,7 @@ using namespace toollib;
 #include <sstream>
 
 CHTTPPack::CHTTPPack(const char *ua) {
-	strcpy_s(useragent, ua);
+	strcpy(useragent, ua);
 	//所有HTTP包都需要的头
 	header_num_def = 0;
 	url.empty();
@@ -30,7 +30,7 @@ void CHTTPPack::AddHeaderManual(const char *str) {
 }
 
 
-int CCookiePack::ImportCookies(std::string &str, CURL *pcurl) {
+int CCookiePack::ImportCookies(const std::string &str, CURL *pcurl) {
 	cookie = str;
 	if (pcurl == NULL)
 		return 0;
@@ -146,7 +146,7 @@ CURLcode http_perform(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack) {
 	// 自动解压Header
 	curl_easy_setopt(pcurl, CURLOPT_ACCEPT_ENCODING, "gzip");
 	// 不检查证书
-	curl_easy_setopt(pcurl, CURLOPT_SSL_VERIFYPEER, FALSE);
+	curl_easy_setopt(pcurl, CURLOPT_SSL_VERIFYPEER, false);
 	// 设置代理
 	// curl_easy_setopt(pcurl, CURLOPT_PROXY, "127.0.0.1:8888");
 	// 设置超时时间

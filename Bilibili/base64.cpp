@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "base64.h"
+#include <sstream>
 
 static const char *g_pCodes =
  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
@@ -29,49 +30,13 @@ static const unsigned char g_pMap[256] =
  255, 255, 255, 255
 };
 
-bool toollib::Encode_Base64(const unsigned char *pIn, unsigned long uInLen, unsigned char *pOut, unsigned int *uOutLen)
-{
-	unsigned long i, len2, leven;
-	unsigned char *p;
-	if (pOut == NULL || *uOutLen == 0)
-		return false;
-	//ASSERT((pIn != NULL) && (uInLen != 0) && (pOut != NULL) && (uOutLen != NULL));
-	len2 = ((uInLen + 2) / 3) << 2;
-	if ((*uOutLen) < (len2 + 1)) return false;
-	p = pOut;
-	leven = 3 * (uInLen / 3);
-	for (i = 0; i < leven; i += 3)
-	{
-		*p++ = g_pCodes[pIn[0] >> 2];
-		*p++ = g_pCodes[((pIn[0] & 3) << 4) + (pIn[1] >> 4)];
-		*p++ = g_pCodes[((pIn[1] & 0xf) << 2) + (pIn[2] >> 6)];
-		*p++ = g_pCodes[pIn[2] & 0x3f];
-		pIn += 3;
-	}
-	if (i < uInLen)
-	{
-		unsigned char a = pIn[0];
-		unsigned char b = ((i + 1) < uInLen) ? pIn[1] : 0;
-		unsigned char c = 0;
-		*p++ = g_pCodes[a >> 2];
-		*p++ = g_pCodes[((a & 3) << 4) + (b >> 4)];
-		*p++ = ((i + 1) < uInLen) ? g_pCodes[((b & 0xf) << 2) + (c >> 6)] : '=';
-		*p++ = '=';
-	}
-	*p = 0; // Append NULL byte
-	*uOutLen = p - pOut;
-	return true;
-}
-
 bool toollib::Encode_Base64(const unsigned char *pIn, unsigned long uInLen, std::string& strOut)
 {
 	unsigned long i, len2, leven;
-	strOut = "";
-	//ASSERT((pIn != NULL) && (uInLen != 0) && (pOut != NULL) && (uOutLen != NULL));
 	len2 = ((uInLen + 2) / 3) << 2;
-	//if((*uOutLen) < (len2 + 1)) return false;
-	//p = pOut;
 	leven = 3 * (uInLen / 3);
+	strOut = "";
+	strOut.reserve(len2 + 1);
 	for (i = 0; i < leven; i += 3)
 	{
 		strOut += g_pCodes[pIn[0] >> 2];
@@ -90,38 +55,30 @@ bool toollib::Encode_Base64(const unsigned char *pIn, unsigned long uInLen, std:
 		strOut += ((i + 1) < uInLen) ? g_pCodes[((b & 0xf) << 2) + (c >> 6)] : '=';
 		strOut += '=';
 	}
-	//*p = 0; // Append NULL byte
-	//*uOutLen = p - pOut;
 	return true;
 }
 
-bool toollib::Decode_Base64(const std::string& strIn, unsigned char *pOut, unsigned int *uOutLen)
-{
-	return toollib::Decode_Base64((const unsigned char *)strIn.c_str(), strIn.length(), pOut, uOutLen);
-}
-
-bool toollib::Decode_Base64(const unsigned char *pIn, unsigned long uInLen, unsigned char *pOut, unsigned int *uOutLen)
+bool toollib::Decode_Base64(const std::string& strIn, std::string& strOut)
 {
 	unsigned long t, x, y, z;
 	unsigned char c;
 	unsigned long g = 3;
-	//ASSERT((pIn != NULL) && (uInLen != 0) && (pOut != NULL) && (uOutLen != NULL));
+	unsigned long uInLen = strIn.length();
+	strOut = "";
+	strOut.reserve(uInLen);
 	for (x = y = z = t = 0; x < uInLen; x++)
 	{
-		c = g_pMap[pIn[x]];
+		c = g_pMap[(unsigned char)strIn[x]];
 		if (c == 255) continue;
 		if (c == 254) { c = 0; g--; }
 		t = (t << 6) | c;
 		if (++y == 4)
 		{
-			if ((z + g) > *uOutLen) { return false; } // Buffer overflow
-			pOut[z++] = (unsigned char)((t >> 16) & 255);
-			if (g > 1) pOut[z++] = (unsigned char)((t >> 8) & 255);
-			if (g > 2) pOut[z++] = (unsigned char)(t & 255);
+			strOut += (unsigned char)((t >> 16) & 255);
+			if (g > 1) strOut += (unsigned char)((t >> 8) & 255);
+			if (g > 2) strOut += (unsigned char)(t & 255);
 			y = t = 0;
 		}
 	}
-	pOut[z] = 0; // Append NULL byte
-	*uOutLen = z;
 	return true;
 }

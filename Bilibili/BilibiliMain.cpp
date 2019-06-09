@@ -3,67 +3,23 @@
 #include "log.h"
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
+#include <thread>
 #include <time.h>
-#include <conio.h> //getch()
 
-const int HEART_INTERVAL = 300;
+const int HEART_INTERVAL = 300; 
 
-int GetPassword(std::string &psd) {
-	using namespace std;
-
-	int ret = 0;
-	char ch;
-	unsigned int ich;
-	psd = "";
-
-	while (1) {
-		ich = _getch();
-		if (!ich) {
-			continue;
-		}
-		//case cursor move
-		if (ich == 224) {
-			ch = _getch();
-			continue;
-		}
-		ch = ich;
-		//case enter
-		if (ch == 13) {
-			if (psd.size() > 0) {
-				cout << '\n';
-				return 0;
-			}
-			cout << "\nPassword is empty. Please reenter. \n";
-			continue;
-		}
-		//case backspace
-		if (ch == 8)
-		{
-			if (psd.size() == 0)
-				continue;
-			psd.erase(psd.end() - 1);
-			cout << "\b \b";
-			continue;
-		}
-		//noral case
-		psd += ch;
-		cout << "*";
-	}
-
-	return 0;
-}
-
-CBilibiliMain::CBilibiliMain():
+CBilibiliMain::CBilibiliMain() :
 	io_context_(),
 	heart_timer_(io_context_),
 	heart_flag_(false),
-	_dmsource(nullptr),
-	_apidm(new DanmuAPI()),
+	_userlist(new CBilibiliUserList()),
 	_lotterytv(new lottery_list()),
 	_lotterygu(new guard_list()),
 	_apilive(new CBilibiliLive()),
-	_userlist(new CBilibiliUserList()) {
+	_apidm(new DanmuAPI()),
+	_dmsource(nullptr) {
 
 	curmode = TOOL_EVENT::STOP;
 	curl_main_ = curl_easy_init();
@@ -87,7 +43,7 @@ CBilibiliMain::~CBilibiliMain() {
 
 void CBilibiliMain::PrintHelp() {
 	printf("\n Bilibili Tool \n");
-	printf("\n\
+	printf(u8"\n\
   > 1 userimport  \t 导入用户列表         \n\
   > 2 userexport  \t 导出用户列表         \n\
   > 3 userlist    \t 显示用户列表         \n\
@@ -107,7 +63,7 @@ void CBilibiliMain::PrintHelp() {
 
 int CBilibiliMain::Run() {
 	using namespace std;
-	
+
 	// Create the worker threads
 	pwork_ = std::make_shared< boost::asio::io_context::work>(io_context_);
 	// Create thread
@@ -115,9 +71,17 @@ int CBilibiliMain::Run() {
 		boost::bind(&boost::asio::io_service::run, &io_context_)
 		);
 
-	_apidm->set_event_handler(
+	_apidm->set_event_act(
 		std::bind(
-			&CBilibiliMain::post_msg,
+			&CBilibiliMain::post_msg_act,
+			this,
+			std::placeholders::_1,
+			std::placeholders::_2
+		));
+
+	_apidm->set_event_room(
+		std::bind(
+			&CBilibiliMain::post_msg_room,
 			this,
 			std::placeholders::_1,
 			std::placeholders::_2,
@@ -142,33 +106,45 @@ int CBilibiliMain::Run() {
 	return 0;
 }
 
-void CBilibiliMain::post_msg(unsigned msg, WPARAM wp, LPARAM lp) {
+void CBilibiliMain::post_msg_room(unsigned msg, unsigned rrid, unsigned opt) {
 	boost::asio::post(
 		io_context_,
 		boost::bind(
-			&CBilibiliMain::ProcessModuleMSG,
+			&CBilibiliMain::ProcessMSGRoom,
 			this,
 			msg,
-			wp,
-			lp
+			rrid,
+			opt
 		)
 	);
 }
 
-void CBilibiliMain::start_timer(unsigned sec) {
+void CBilibiliMain::post_msg_act(unsigned msg, std::shared_ptr<BILI_LOTTERYDATA> data) {
+	boost::asio::post(
+		io_context_,
+		boost::bind(
+			&CBilibiliMain::ProcessMSGAct,
+			this,
+			msg,
+			data
+		)
+	);
+}
+
+void CBilibiliMain::set_timer_refresh(unsigned sec) {
 	heart_timer_.expires_from_now(boost::posix_time::seconds(sec));
 	heart_timer_.async_wait(
 		boost::bind(
-			&CBilibiliMain::on_timer,
+			&CBilibiliMain::on_timer_refresh,
 			this,
 			boost::asio::placeholders::error
 		)
 	);
 }
 
-void CBilibiliMain::on_timer(boost::system::error_code ec) {
+void CBilibiliMain::on_timer_refresh(boost::system::error_code ec) {
 	if (ec) {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Timer: " << ec;
+		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Timer refresh: " << ec;
 		return;
 	}
 	if (thread_heart_ && thread_heart_->joinable()) {
@@ -179,45 +155,78 @@ void CBilibiliMain::on_timer(boost::system::error_code ec) {
 		// 若两操作同时发生 可能会有问题
 		return;
 	}
-	start_timer(HEART_INTERVAL);
+	set_timer_refresh(HEART_INTERVAL);
 	thread_heart_.reset(new std::thread(
 		&CBilibiliMain::UpdateLiveRoom, this
 	));
 }
 
-int CBilibiliMain::ProcessModuleMSG(unsigned msg, WPARAM wp, LPARAM lp) {
+void CBilibiliMain::set_timer_userheart(unsigned sec, unsigned type) {
+	heart_timer_.expires_from_now(boost::posix_time::seconds(sec));
+	heart_timer_.async_wait(
+		boost::bind(
+			&CBilibiliMain::on_timer_userheart,
+			this,
+			boost::asio::placeholders::error,
+			type
+		)
+	);
+}
+
+void CBilibiliMain::on_timer_userheart(boost::system::error_code ec, unsigned type) {
+	if (ec) {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Timer userheart: " << ec;
+		return;
+	}
+	if (thread_heart_ && thread_heart_->joinable()) {
+		thread_heart_->join();
+	}
+	if (heart_flag_) {
+		// 在停止时定时器会延迟收到取消信号
+		// 若两操作同时发生 可能会有问题
+		return;
+	}
+	set_timer_userheart(60, 0);
+	thread_heart_.reset(new std::thread(
+		&CBilibiliMain::HeartExp, this, type
+	));
+}
+
+int CBilibiliMain::ProcessMSGRoom(unsigned msg, unsigned rrid, unsigned opt) {
 	switch (msg) {
-	case MSG_NEWLOTTERY: {
-		JoinLottery(wp);
-		break;
-	}
-	case MSG_NEWGUARD0: {
-		// 房间上船事件
-		BILI_LOTTERYDATA *pinfo = (BILI_LOTTERYDATA *)wp;
-		JoinGuardGift(*pinfo);
-		delete pinfo;
-		break;
-	}
-	case MSG_NEWGUARD1: {
-		// 广播上船事件
-		JoinGuardGift(wp);
-		break;
-	}
-	case MSG_NEWSPECIALGIFT: {
-		BILI_ROOMEVENT *pinfo = (BILI_ROOMEVENT *)wp;
-		JoinSpecialGift(pinfo->rid, pinfo->loidl);
-		delete pinfo;
-		break;
-	}
 	case MSG_CLOSEROOM:
 	case MSG_CHANGEROOM1: {
 		// 房间下播
-		UpdateAreaRoom(wp, DM_ROOM_AREA(lp), true);
+		UpdateAreaRoom(rrid, DM_ROOM_AREA(opt), true);
 		break;
 	}
 	case MSG_CHANGEROOM2: {
 		// 房间上播
-		UpdateAreaRoom(wp, DM_ROOM_AREA(lp), false);
+		UpdateAreaRoom(rrid, DM_ROOM_AREA(opt), false);
+		break;
+	}
+	}
+	return 0;
+}
+
+int CBilibiliMain::ProcessMSGAct(unsigned msg, std::shared_ptr<BILI_LOTTERYDATA> data) {
+	switch (msg) {
+	case MSG_NEWLOTTERY: {
+		JoinLottery(data);
+		break;
+	}
+	case MSG_NEWGUARD0: {
+		// 房间上船事件
+		JoinGuardGift0(data);
+		break;
+	}
+	case MSG_NEWGUARD1: {
+		// 广播上船事件
+		JoinGuardGift1(data);
+		break;
+	}
+	case MSG_NEWSPECIALGIFT: {
+		JoinSpecialGift(data);
 		break;
 	}
 	}
@@ -238,27 +247,35 @@ int CBilibiliMain::ProcessCommand(std::string str) {
 		PrintHelp();
 	}
 	else if (!str.compare("1") || !str.compare("userimport")) {
-		_userlist->ImportUserList();
+		if (curmode == TOOL_EVENT::STOP) {
+			_userlist->ImportUserList();
+		}
 	}
 	else if (!str.compare("2") || !str.compare("userexport")) {
-		_userlist->ExportUserList();
+		if (curmode == TOOL_EVENT::STOP) {
+			_userlist->ExportUserList();
+		}
 	}
 	else if (!str.compare("3") || !str.compare("userlist")) {
 		_userlist->ShowUserList();
 	}
 	else if (!str.compare("4") || !str.compare("useradd")) {
-		std::string name, psd;
-		cout << "Account: ";
-		getline(cin, name);
-		cout << "Password: ";
-		GetPassword(psd);
-		_userlist->AddUser(name, psd);
+		if (curmode == TOOL_EVENT::STOP) {
+			std::string name, psd;
+			cout << "Account: ";
+			getline(cin, name);
+			cout << "Password: ";
+			GetPassword(psd);
+			_userlist->AddUser(name, psd);
+		}
 	}
 	else if (!str.compare("5") || !str.compare("userdel")) {
-		char tstr[30];
-		cout << "Account: ";
-		cin >> tstr;
-		_userlist->DeleteUser(tstr);
+		if (curmode == TOOL_EVENT::STOP) {
+			char tstr[30];
+			cout << "Account: ";
+			cin >> tstr;
+			_userlist->DeleteUser(tstr);
+		}
 	}
 	else if (!str.compare("6") || !str.compare("userre")) {
 		_userlist->ReloginAll();
@@ -292,7 +309,7 @@ int CBilibiliMain::ProcessCommand(std::string str) {
 		Debugfun(2);
 	}
 	else {
-		printf("未知命令\n");
+		printf(u8"未知命令\n");
 	}
 	return 1;
 }
@@ -303,7 +320,11 @@ int CBilibiliMain::StopMonitorALL() {
 	int ret = -1;
 
 	if (curmode == TOOL_EVENT::ONLINE) {
-		ret = _userlist->StopUserHeart();
+		heart_flag_ = true;
+		heart_timer_.cancel();
+		if (thread_heart_ && thread_heart_->joinable()) {
+			thread_heart_->join();
+		}
 		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Heart stopped.";
 	}
 	if (curmode == TOOL_EVENT::GET_SYSMSG_GIFT) {
@@ -343,10 +364,10 @@ int CBilibiliMain::StartUserHeart() {
 	}
 	curmode = TOOL_EVENT::ONLINE;
 
-	int ret = 0;
-	ret = _userlist->StartUserHeart();
+	heart_flag_ = false;
+	set_timer_userheart(1, 1);
 
-	return ret;
+	return 0;
 }
 
 int CBilibiliMain::StartMonitorPubEvent() {
@@ -357,7 +378,7 @@ int CBilibiliMain::StartMonitorPubEvent() {
 	curmode = TOOL_EVENT::GET_SYSMSG_GIFT;
 
 	if (_dmsource == nullptr) {
-		_dmsource = std::make_unique<CWSDanmu>();
+		_dmsource.reset(new CWSDanmu());
 		_dmsource->set_msg_handler(
 			std::bind(&event_base::process_data, _apidm, std::placeholders::_1)
 		);
@@ -403,15 +424,15 @@ int CBilibiliMain::StartMonitorHiddenEvent() {
 	heart_flag_ = false;
 
 	if (_dmsource == nullptr) {
-		_dmsource = std::make_unique<source_dmasio>();
+		_dmsource.reset(new source_dmasio());
 		_dmsource->set_msg_handler(
 			std::bind(&event_base::process_data, _apidm, std::placeholders::_1)
 		);
 		_dmsource->set_close_handler(
 			std::bind(
-				&event_base::connection_close, 
-				_apidm, 
-				std::placeholders::_1, 
+				&event_base::connection_close,
+				_apidm,
+				std::placeholders::_1,
 				std::placeholders::_2)
 		);
 		_dmsource->start();
@@ -419,7 +440,7 @@ int CBilibiliMain::StartMonitorHiddenEvent() {
 
 	// 连接符合人气条件的开播房间
 	// 在IO线程中开始操作
-	start_timer(1);
+	set_timer_refresh(1);
 
 	return 0;
 }
@@ -477,90 +498,95 @@ int CBilibiliMain::UpdateLiveRoom() {
 	return 0;
 }
 
-int CBilibiliMain::JoinLottery(int room)
+int CBilibiliMain::JoinLottery(std::shared_ptr<BILI_LOTTERYDATA> data)
 {
 	int ret = -1, count = 2;
-	ret = _lotterytv->CheckLottery(curl_main_, room);
+	ret = _lotterytv->CheckLottery(curl_main_, data->rrid);
 	while (ret&&count) {
 		Sleep(1000);
-		ret = _lotterytv->CheckLottery(curl_main_, room);
+		ret = _lotterytv->CheckLottery(curl_main_, data->rrid);
 		count--;
 	}
-	if (ret != 0)
+	if (ret != 0) {
 		return -1;
-	BILI_LOTTERYDATA pdata;
-	while (_lotterytv->GetNextLottery(pdata) == 0) {
-		_logfile << "{time:" << GetTimeStamp()
-			<< ",type:'" << pdata.type
-			<< "',ruid:" << pdata.rrid
-			<< ",loid:" << pdata.loid
-			<< "}," << std::endl;
-		
-		if (isSkip()) {
-			continue;
-		}
-		_userlist->JoinLotteryALL(&pdata);
 	}
-	return 0;
-}
-
-int CBilibiliMain::JoinGuardGift(int room)
-{
-	int ret = -1, count = 2;
-	ret = _lotterygu->CheckLottery(curl_main_, room);
-	while (ret&&count) {
-		Sleep(1000);
-		ret = _lotterygu->CheckLottery(curl_main_, room);
-		count--;
-	}
-	if (ret != 0)
-		return -1;
-	BILI_LOTTERYDATA pdata;
-	while (_lotterygu->GetNextLottery(pdata) == 0) {
+	while (_lotterytv->GetNextLottery(data) == 0) {
 		_logfile << "{time:" << GetTimeStamp()
-			<< ",type:'" << pdata.type << '_' << pdata.exinfo
-			<< "',ruid:" << pdata.rrid
-			<< ",loid:" << pdata.loid
+			<< ",type:'" << data->type
+			<< "',ruid:" << data->rrid
+			<< ",loid:" << data->loid
 			<< "}," << std::endl;
 
 		if (isSkip()) {
 			continue;
 		}
-		_userlist->JoinGuardALL(pdata);
+		_userlist->JoinLotteryALL(data);
+	}
+	return 0;
+}
+
+int CBilibiliMain::JoinGuardGift1(std::shared_ptr<BILI_LOTTERYDATA> data)
+{
+	int ret = -1, count = 2;
+	ret = _lotterygu->CheckLottery(curl_main_, data->rrid);
+	while (ret&&count) {
+		Sleep(1000);
+		ret = _lotterygu->CheckLottery(curl_main_, data->rrid);
+		count--;
+	}
+	if (ret != 0) {
+		return -1;
+	}
+	while (_lotterygu->GetNextLottery(data) == 0) {
+		_logfile << "{time:" << GetTimeStamp()
+			<< ",type:'" << data->type << '_' << data->exinfo
+			<< "',ruid:" << data->rrid
+			<< ",loid:" << data->loid
+			<< "}," << std::endl;
+
+		if (isSkip()) {
+			continue;
+		}
+		_userlist->JoinGuardALL(data);
 	}
 
 	return 0;
 }
 
-int CBilibiliMain::JoinGuardGift(BILI_LOTTERYDATA &pdata)
+int CBilibiliMain::JoinGuardGift0(std::shared_ptr<BILI_LOTTERYDATA> data)
 {
 	_logfile << "{time:" << GetTimeStamp()
-		<< ",type:'" << pdata.type << '_' << pdata.exinfo
-		<< "',ruid:" << pdata.rrid
-		<< ",loid:" << pdata.loid
+		<< ",type:'" << data->type << '_' << data->exinfo
+		<< "',ruid:" << data->rrid
+		<< ",loid:" << data->loid
 		<< "}," << std::endl;
 
 	if (isSkip()) {
 		return 0;
 	}
-	_userlist->JoinGuardALL(pdata);
+	_userlist->JoinGuardALL(data);
 
 	return 0;
 }
 
-int CBilibiliMain::JoinSpecialGift(int room, long long cid)
+int CBilibiliMain::JoinSpecialGift(std::shared_ptr<BILI_LOTTERYDATA> data)
 {
 	_logfile << "{time:" << GetTimeStamp()
 		<< ",type:'" << "storm"
-		<< "',ruid:" << room
-		<< ",loid:" << cid
+		<< "',ruid:" << data->rrid
+		<< ",loid:" << data->loid
 		<< "}," << std::endl;
 
 	if (isSkip()) {
 		return 0;
 	}
-	_userlist->JoinSpecialGiftALL(room, cid);
+	_userlist->JoinSpecialGiftALL(data);
 
+	return 0;
+}
+
+int CBilibiliMain::HeartExp(unsigned type) {
+	_userlist->HeartExp(type);
 	return 0;
 }
 
@@ -579,7 +605,7 @@ bool CBilibiliMain::isSkip() {
 int CBilibiliMain::SaveLogFile() {
 	int ret = 0;
 	char name[50];
-	sprintf_s(name, "[BILIMAIN]%sActHis.log", GetTimeString().c_str());
+	sprintf(name, "[BILIMAIN]%sActHis.log", GetTimeString().c_str());
 	if (_logfile.is_open()) {
 		_logfile.close();
 	}

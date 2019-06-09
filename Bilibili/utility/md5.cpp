@@ -1,6 +1,7 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "md5.h"
 #include <iostream>
+#include <math.h>
 
 // define
 #define UInt32 unsigned int
@@ -8,29 +9,29 @@
 #define BIT_OF_GROUP 512
 #define SRC_DATA_LEN 64
 
-// »ÃÊı¶¨Òå
+// å¹»æ•°å®šä¹‰
 const int kA = 0x67452301;
 const int kB = 0xefcdab89;
 const int kC = 0x98badcfe;
 const int kD = 0x10325476;
 const unsigned long long k_ti_num_integer = 4294967296;
 
-// ËÄ¸ö·ÇÏßĞÔº¯Êıºê¶¨Òå
+// å››ä¸ªéçº¿æ€§å‡½æ•°å®å®šä¹‰
 #define DEF_F(X, Y, Z ) ((( (X) & (Y) )|((~X)&(Z))))
 #define DEF_G(X, Y, Z)  (((X)&(Z))|((Y)&(~Z)))
 #define DEF_H(X, Y, Z)  ((X)^(Y)^(Z))
 #define DEF_I(X, Y, Z)  ((Y)^((X)|(~Z)))
 
-// ÇóÁ´½ÓÊıº¯Êıºê¶¨Òå
+// æ±‚é“¾æ¥æ•°å‡½æ•°å®å®šä¹‰
 #define FF(a, b, c, d, Mj, s, ti)  (a = b + CycleMoveLeft((a + DEF_F(b,c,d) + Mj + ti),s));
 #define GG(a, b, c, d, Mj, s, ti)  (a = b + CycleMoveLeft((a + DEF_G(b,c,d) + Mj + ti),s));
 #define HH(a, b, c, d, Mj, s, ti)  (a = b + CycleMoveLeft((a + DEF_H(b,c,d) + Mj + ti),s));
 #define II(a, b, c, d, Mj, s, ti)  (a = b + CycleMoveLeft((a + DEF_I(b,c,d) + Mj + ti),s));
 
 // function: CycleMoveLeft
-// @param src_num:Òª×óÒÆµÄÊı
-// @param bit_num_to_move:ÒªÒÆ¶¯µÄbitÎ»Êı
-// @return  Ñ­»·×óÒÆºóµÄ½á¹ûÊı
+// @param src_num:è¦å·¦ç§»çš„æ•°
+// @param bit_num_to_move:è¦ç§»åŠ¨çš„bitä½æ•°
+// @return  å¾ªç¯å·¦ç§»åçš„ç»“æœæ•°
 UInt32 CycleMoveLeft(unsigned int src_num, int bit_num_to_move) {
 	UInt32 src_num1 = src_num;
 	UInt32 src_num2 = src_num;
@@ -45,10 +46,10 @@ UInt32 CycleMoveLeft(unsigned int src_num, int bit_num_to_move) {
 }
 
 // function: FillData
-// @param in_data_ptr:    Òª¼ÓÃÜµÄĞÅÏ¢Êı¾İ
-// @param data_byte_len: Êı¾İµÄ×Ö½ÚÊı
-// @param out_data_ptr:  Ìî³ä±ØÒªĞÅÏ¢ºóµÄÊı¾İ
-// return : Ìî³äĞÅÏ¢ºóµÄÊı¾İ³¤¶È,ÒÔ×Ö½ÚÎªµ¥Î»
+// @param in_data_ptr:    è¦åŠ å¯†çš„ä¿¡æ¯æ•°æ®
+// @param data_byte_len: æ•°æ®çš„å­—èŠ‚æ•°
+// @param out_data_ptr:  å¡«å……å¿…è¦ä¿¡æ¯åçš„æ•°æ®
+// return : å¡«å……ä¿¡æ¯åçš„æ•°æ®é•¿åº¦,ä»¥å­—èŠ‚ä¸ºå•ä½
 UInt32 FillData(const char *in_data_ptr, int data_byte_len, char** out_data_ptr) {
 	int bit_num = data_byte_len * BIT_OF_BYTE;
 	int grop_num = bit_num / BIT_OF_GROUP;
@@ -59,7 +60,7 @@ UInt32 FillData(const char *in_data_ptr, int data_byte_len, char** out_data_ptr)
 		bit_need_fill += (BIT_OF_GROUP - SRC_DATA_LEN);
 	}
 	else {
-		bit_need_fill = (BIT_OF_GROUP - SRC_DATA_LEN) - mod_bit_num; //  ÕâÀï¶à¼ÓÁËÒ»¸öBIT_OF_GROUP£¬±ÜÃâbit_need_fillÕıºÃµÈÓÚ0,ÔİÊ±²»¼Ó
+		bit_need_fill = (BIT_OF_GROUP - SRC_DATA_LEN) - mod_bit_num; //  è¿™é‡Œå¤šåŠ äº†ä¸€ä¸ªBIT_OF_GROUPï¼Œé¿å…bit_need_fillæ­£å¥½ç­‰äº0,æš‚æ—¶ä¸åŠ 
 	}
 	int all_bit = bit_num + bit_need_fill;
 	if (0 < bit_need_fill) {
@@ -79,7 +80,7 @@ UInt32 FillData(const char *in_data_ptr, int data_byte_len, char** out_data_ptr)
 	return (all_bit / BIT_OF_BYTE + SRC_DATA_LEN / BIT_OF_BYTE);
 }
 
-// 4ÂÖÑ­»·Ëã·¨
+// 4è½®å¾ªç¯ç®—æ³•
 struct ParamDynamic {
 	UInt32 ua_;
 	UInt32 ub_;
@@ -193,13 +194,13 @@ void RotationCalculate(char *data_512_ptr, ParamDynamic & param) {
 	param.vd_last_ = param.ud_;
 }
 
-// ×ª»»³ÉÊ®Áù½øÖÆ×Ö·û´®Êä³ö
+// è½¬æ¢æˆåå…­è¿›åˆ¶å­—ç¬¦ä¸²è¾“å‡º
 std::string GetHexStr(unsigned int num_str) {
 	std::string hexstr = "";
 	char szch[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 	unsigned char *tmptr = (unsigned char *)&num_str;
 	int len = sizeof(num_str);
-	// Ğ¡¶Ë×Ö½ÚĞò£¬ÄæĞò´òÓ¡
+	// å°ç«¯å­—èŠ‚åºï¼Œé€†åºæ‰“å°
 	for (int i = 0; i < len; i++) {
 		unsigned char ch = tmptr[i] & 0xF0;
 		ch = ch >> 4;
@@ -211,8 +212,8 @@ std::string GetHexStr(unsigned int num_str) {
 }
 
 // function: Encode
-// @param src_info:Òª¼ÓÃÜµÄĞÅÏ¢
-// return :¼ÓÃÜºóµÄMD5Öµ
+// @param src_info:è¦åŠ å¯†çš„ä¿¡æ¯
+// return :åŠ å¯†åçš„MD5å€¼
 std::string toollib::Encode_MD5(std::string src_info) {
 	ParamDynamic param;
 	param.ua_ = kA;

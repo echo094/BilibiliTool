@@ -3,17 +3,12 @@
 #include "log.h"
 
 int main() {
-	setlocale(LC_ALL, "chs");
-	int ret = 1;
+#ifdef WIN32
+	// 设置控制台格式为UTF-8
+	SetConsoleOutputCP(65001);
+#endif
 	// 初始化log
 	boost_log_init();
-	// 初始化Socket
-	WSADATA wsaData;
-	ret = WSAStartup(MAKEWORD(2, 2), &wsaData);//协议库的版本信息
-	if (ret){
-		BOOST_LOG_SEV(g_logger::get(), error) << "[Main] Initialize SOCKET failed.";
-		return -1;
-	}
 	// 初始化libcurl库
 	curl_global_init(CURL_GLOBAL_ALL);
 
@@ -26,8 +21,6 @@ int main() {
 
 	// 清理libcurl库
 	curl_global_cleanup();
-	// 释放SOCKET库
-	WSACleanup();
 	// 清空log的sinks
 	boost_log_deinit();
 

@@ -103,7 +103,7 @@ void asioclient::post_write(context_info* context, const char *msg, const size_t
 	}
 	context->stat_ = ioconst::IO_SENDING;
 	context->len_send_ = len;
-	memcpy_s(context->buff_send_, ioconst::MAX_SEND_BUFF, msg, len);
+	memcpy(context->buff_send_, msg, len);
 	boost::asio::post(
 		io_context_,
 		boost::bind(
@@ -224,7 +224,7 @@ void asioclient::do_write(context_info* context, const char *msg, const size_t l
 	}
 	context->stat_ = ioconst::IO_SENDING;
 	context->len_send_ = len;
-	memcpy_s(context->buff_send_, ioconst::MAX_SEND_BUFF, msg, len);
+	memcpy(context->buff_send_, msg, len);
 	do_write(context);
 }
 

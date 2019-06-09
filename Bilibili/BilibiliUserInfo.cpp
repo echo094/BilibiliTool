@@ -9,20 +9,23 @@ using namespace rapidjson;
 
 const char PARAM_BUILD[] = "5230002";
 
-CBilibiliUserInfo::CBilibiliUserInfo()
+CBilibiliUserInfo::CBilibiliUserInfo() :
+	_httppackweb(new CHTTPPack()),
+	_httppackapp(new CHTTPPack("Mozilla/5.0 BiliDroid/5.23.2 (bbcallen@gmail.com)"))
 {
 	_useropt.fileid = 0;
 	_useropt.islogin = false;
-	_useropt.conf = 0;
+	_useropt.conf_coin = 0;
+	_useropt.conf_lottery = 0;
+	_useropt.conf_storm = 0;
+	_useropt.conf_guard = 0;
 	_urlapi = URL_LIVEAPI_HEAD;
 	_key_3des = "08E1CAAD409B840208E1CAAD";
 	curlweb = curl_easy_init();
 	curlapp = curl_easy_init();
-	_httppackweb = std::make_unique<CHTTPPack>();
 	_httppackweb->AddDefHeader("Accept-Language: zh-CN,zh;q=0.8");
 	_httppackweb->AddDefHeader("Connection: keep-alive");
 	_httppackweb->AddDefHeader("DNT: 1");
-	_httppackapp = std::make_unique<CHTTPPack>("Mozilla/5.0 BiliDroid/5.23.2 (bbcallen@gmail.com)");
 	_httppackapp->AddDefHeader("Buvid: A59813F7-2A50-42C5-A246-AF93A96374E320912infoc");
 	_httppackapp->AddDefHeader("Device-ID: KRkhFHdFd0J0RXBFOUU5Cj8KPQg_Dz4OOQkxBDUA");
 	_httppackapp->AddDefHeader("Display-ID: 759639-1523371597");
@@ -48,7 +51,7 @@ LOGINRET CBilibiliUserInfo::Login(int index, std::string username, std::string p
 	_useropt.password = password;
 
 	// 将账号转码
-	username = _strcoding.UrlEncode(_useropt.account);
+	username = CStrConvert::UrlEncode(_useropt.account);
 
 	// 移动端登录
 	password = _useropt.password;
@@ -96,10 +99,6 @@ LOGINRET CBilibiliUserInfo::Login(int index, std::string username, std::string p
 		return LOGINRET::NOTLOGIN;
 	}
 	_useropt.fileid = index;
-	// 默认开启所有功能
-	if (_useropt.conf == 0) {
-		_useropt.conf = 0xd3;
-	}
 	_useropt.islogin = true;
 
 	return LOGINRET::NOFAULT;
@@ -156,107 +155,114 @@ int CBilibiliUserInfo::FreshUserInfo() {
 }
 
 // 从文件导入指定账户
-int CBilibiliUserInfo::ReadFileAccount(std::string key, int index, char *addr) {
-	int ret;
-	int ilenck;
-	char *tmpch;
-	std::string tmps, tmpcookie, enstr;
-
-	tmps = "User" + std::to_string(index);
-	ilenck = ::GetPrivateProfileIntA(tmps.c_str(), "CookieLength", -1, addr);
-	if (ilenck < 0) {
-		return -1;
-	}
-
-	// 如果用户存在
+void CBilibiliUserInfo::ReadFileAccount(const std::string &key, const rapidjson::Value& data, int index) {
+	std::string enstr;
+	// 编号
 	_useropt.fileid = index;
-	if (ilenck < 256)
-		tmpch = new char[256];
-	else
-		tmpch = new char[ilenck + 10];
-	_useropt.uid = ::GetPrivateProfileIntA(tmps.c_str(), "UserID", 0, addr);
-	::GetPrivateProfileStringA(tmps.c_str(), "Username", "", tmpch, 30, addr);
-	_useropt.account = tmpch;
-
-	// 解密密码
-	ret = ::GetPrivateProfileStringA(tmps.c_str(), "Password", "", tmpch, 256, addr);
-	enstr = tmpch;
-	if (enstr == "") {
-		_useropt.password = "";
+	// UID
+	if (!data.HasMember("UserID") || !data["UserID"].IsUint()) {
+		throw "Key UserID error";
 	}
-	else {
-		ret = Decrypt_RSA_KeyBuff((char*)key.c_str(), enstr, _useropt.password);
-		if (!ret)
-			_useropt.password = "";
-	}
-
-	// 解密Cookie
-	ret = ::GetPrivateProfileStringA(tmps.c_str(), "Cookie", "", tmpch, ilenck+5, addr);
-	enstr = tmpch;
-	if (enstr == "") {
-		tmpcookie = "";
-	}
-	else {
-		ret = Decode_Base64(enstr, (unsigned char *)tmpch, (unsigned int *)&ilenck);
-		if (ret <= 0)
-			tmpcookie = "";
-		else {
-			tmpcookie = tmpch;
-			_httpcookie.ImportCookies(tmpcookie, curlweb);
-		}
-	}
-
-	// 移动端Token 需要加密
-	ret = ::GetPrivateProfileStringA(tmps.c_str(), "AccessToken", "", tmpch, 40, addr);
-	_useropt.tokena = tmpch;
-	ret = ::GetPrivateProfileStringA(tmps.c_str(), "RefreshToken", "", tmpch, 40, addr);
-	_useropt.tokenr = tmpch;
-
+	_useropt.uid = data["UserID"].GetUint();
 	// 获取配置信息 各种活动的参与参数
-	_useropt.conf = ::GetPrivateProfileIntA(tmps.c_str(), "Conf", 0, addr);
-
-	delete[] tmpch;
-	return 0;
+	if (!data.HasMember("Conf") || !data["Conf"].IsObject()) {
+		throw "Key Conf error";
+	}
+	_useropt.conf_coin = data["Conf"]["CoinExchange"].GetUint();
+	_useropt.conf_lottery = data["Conf"]["Lottery"].GetUint();
+	_useropt.conf_storm = data["Conf"]["Storm"].GetUint();
+	_useropt.conf_guard = data["Conf"]["Guard"].GetUint();
+	// 账号
+	if (!data.HasMember("Username") || !data["Username"].IsString()) {
+		throw "Key Username error";
+	}
+	_useropt.account = data["Username"].GetString();
+	// 密码
+	if (!data.HasMember("Password") || !data["Password"].IsString()) {
+		throw "Key Password error";
+	}
+	std::string buff = data["Password"].GetString();
+	bool ret = Decrypt_RSA_KeyBuff((char*)key.c_str(), buff, _useropt.password);
+	if (!ret) {
+		throw "Key Password data error";
+	}
+	// Cookie
+	if (!data.HasMember("Cookie") || !data["Cookie"].IsString()) {
+		throw "Key Cookie error";
+	}
+	buff = data["Cookie"].GetString();
+	std::string cookie;
+	ret = Decode_Base64(buff, cookie);
+	if (!ret) {
+		throw "Key Password data error";
+	}
+	_httpcookie.ImportCookies(cookie, curlweb);
+	// 移动端AccessToken 需要加密
+	if (!data.HasMember("AccessToken") || !data["AccessToken"].IsString()) {
+		throw "Key AccessToken error";
+	}
+	_useropt.tokena = data["AccessToken"].GetString();
+	// 移动端RefreshToken 需要加密
+	if (!data.HasMember("RefreshToken") || !data["RefreshToken"].IsString()) {
+		throw "Key RefreshToken error";
+	}
+	_useropt.tokenr = data["RefreshToken"].GetString();
 }
 
 // 将账户信息导出到文件
-int CBilibiliUserInfo::WriteFileAccount(std::string key, char *addr) {
-	int ret;
-	std::string tmps, tmpcookie, enstr;
-	char tcfg[10] = "";
+void CBilibiliUserInfo::WriteFileAccount(const std::string key, rapidjson::Document& doc) {
+	using namespace rapidjson;
+	Document::AllocatorType& allocator = doc.GetAllocator();
+	Value data(kObjectType);
 
-	// 序号错误则退出
-	if (_useropt.fileid == 0) {
-		return -1;
+	// UID
+	data.AddMember("UserID", _useropt.uid, allocator);
+	// 配置信息
+	Value conf(kObjectType);
+	conf.AddMember("CoinExchange", _useropt.conf_coin, allocator);
+	conf.AddMember("Lottery", _useropt.conf_lottery, allocator);
+	conf.AddMember("Storm", _useropt.conf_storm, allocator);
+	conf.AddMember("Guard", _useropt.conf_guard, allocator);
+	data.AddMember("Conf", conf.Move(), allocator);
+	// 账号
+	data.AddMember(
+		"Username",
+		Value(_useropt.account.c_str(), doc.GetAllocator()).Move(),
+		allocator
+	);
+	// 密码
+	std::string buff;
+	bool ret = Encrypt_RSA_KeyBuff((char*)key.c_str(), _useropt.password, buff);
+	if (!ret) {
+		throw "Key Password encrypt error";
 	}
-	tmps = "User" + std::to_string(_useropt.fileid);
-
-	ret = ::WritePrivateProfileStringA(tmps.c_str(), "UserID", std::to_string(_useropt.uid).c_str(), addr);
-	ret = ::WritePrivateProfileStringA(tmps.c_str(), "Username", _useropt.account.c_str(), addr);
-
-	// 加密密码
-	ret = Encrypt_RSA_KeyBuff((char*)key.c_str(), _useropt.password, enstr);
-	if (!ret)
-		enstr = "";
-	ret = ::WritePrivateProfileStringA(tmps.c_str(), "Password", enstr.c_str(), addr);
-
-	// 加密Cookie
-	_httpcookie.ExportCookies(tmpcookie, curlweb);
-	ret = Encode_Base64((const unsigned char *)tmpcookie.c_str(), tmpcookie.size(), enstr);
-	if (ret < 0)
-		enstr = "";
-	ret = ::WritePrivateProfileStringA(tmps.c_str(), "Cookie", enstr.c_str(), addr);
-	ret = ::WritePrivateProfileStringA(tmps.c_str(), "CookieLength", std::to_string(enstr.length()).c_str(), addr);
-
-	// 移动端Token
-	ret = ::WritePrivateProfileStringA(tmps.c_str(), "AccessToken", _useropt.tokena.c_str(), addr);
-	ret = ::WritePrivateProfileStringA(tmps.c_str(), "RefreshToken", _useropt.tokenr.c_str(), addr);
-
-	// 设置项
-	sprintf_s(tcfg, sizeof(tcfg), "%d", _useropt.conf);
-	ret = ::WritePrivateProfileStringA(tmps.c_str(), "Conf", tcfg, addr);
-
-	return 0;
+	data.AddMember(
+		"Password",
+		Value(buff.c_str(), doc.GetAllocator()).Move(),
+		allocator
+	);
+	// Cookie
+	std::string cookie;
+	_httpcookie.ExportCookies(cookie, curlweb);
+	ret = Encode_Base64((const unsigned char *)cookie.c_str(), cookie.size(), buff);
+	data.AddMember(
+		"Cookie",
+		Value(buff.c_str(), doc.GetAllocator()).Move(),
+		allocator
+	);
+	// 移动端AccessToken
+	data.AddMember(
+		"AccessToken",
+		Value(_useropt.tokena.c_str(), doc.GetAllocator()).Move(),
+		allocator
+	);
+	// 移动端RefreshToken
+	data.AddMember(
+		"RefreshToken",
+		Value(_useropt.tokenr.c_str(), doc.GetAllocator()).Move(),
+		allocator
+	);
+	doc.PushBack(data.Move(), allocator);
 }
 
 // 开启经验心跳
@@ -268,18 +274,13 @@ int CBilibiliUserInfo::ActStartHeart() {
 	// 双端观看奖励
 	_GetTaskInfo();
 	// 银瓜子领取信息获取
-	if (_useropt.conf & 0x02) {
-		_APIAndSilverCurrentTask();
-	}
-	else {
-		_heartopt.silvercount = -1;
-	}
+	_APIAndSilverCurrentTask();
 	// 签到
 	GetSign();
 	// 每日礼物
 	_APIv2GiftDaily();
 	// 兑换硬币
-	if (_useropt.conf & 0x01) {
+	if (_useropt.conf_coin == 1) {
 		_APIv1Silver2Coin();
 	}
 	// 登录硬币
@@ -307,28 +308,28 @@ int CBilibiliUserInfo::ActHeart() {
 	return 0;
 }
 
-int CBilibiliUserInfo::ActStorm(int roid, long long cid) {
+int CBilibiliUserInfo::ActStorm(int rrid, long long loid) {
 	// 风暴只领取一次 不管成功与否
-	if (_useropt.conf & 0x10) {
+	if (_useropt.conf_storm == 1) {
 		// 产生访问记录
-		_APIv1RoomEntry(roid);
+		_APIv1RoomEntry(rrid);
 		// 网页端API
-		_APIv1StormJoin(roid, cid, "", "");
+		_APIv1StormJoin(rrid, loid, "", "");
 		return 0;
 	}
-	if (_useropt.conf & 0x20) {
+	if (_useropt.conf_storm == 2) {
 		// 调用客户端API领取
-		_APIAndv1StormJoin(cid);
+		_APIAndv1StormJoin(loid);
 		return 0;
 	}
 	return 0;
 }
 
-int CBilibiliUserInfo::ActLottery(int rrid, int loid)
+int CBilibiliUserInfo::ActLottery(int rrid, long long loid)
 {
 	BILIRET bret;
 	int count;
-	if (_useropt.conf & 0x40) {
+	if (_useropt.conf_lottery == 1) {
 		// 产生访问记录
 		_APIv1RoomEntry(rrid);
 		// 网页端最多尝试三次
@@ -344,8 +345,8 @@ int CBilibiliUserInfo::ActLottery(int rrid, int loid)
 	return 0;
 }
 
-int CBilibiliUserInfo::ActGuard(const std::string &type, const int rrid, const int loid) {
-	if (_useropt.conf & 0x80) {
+int CBilibiliUserInfo::ActGuard(const std::string &type, const int rrid, const long long loid) {
+	if (_useropt.conf_guard == 1) {
 		// 产生访问记录
 		_APIv1RoomEntry(rrid);
 		// 网页端API
@@ -505,11 +506,11 @@ BILIRET CBilibiliUserInfo::_GetTaskInfo() const {
 		|| !doc.HasMember("data") || !doc["data"].IsObject()) {
 		return BILIRET::JSON_ERROR;
 	}
-	auto obj = doc["data"].GetObjectW();
+	auto obj = doc["data"].GetObject();
 	if (!obj.HasMember("double_watch_info") || !obj["double_watch_info"].IsObject()) {
 		return BILIRET::JSON_ERROR;
 	}
-	obj = obj["double_watch_info"].GetObjectW();
+	obj = obj["double_watch_info"].GetObject();
 	if (!obj.HasMember("status") || !obj["status"].IsInt()) {
 		return BILIRET::JSON_ERROR;
 	}
@@ -615,20 +616,19 @@ BILIRET CBilibiliUserInfo::_APIv1StormJoin(int roomID, long long cid, std::strin
 	std::string msg;
 	// 429需要验证码 400未抽中或已过期
 	if (ret) {
-		msg = _strcoding.UTF_8ToString(doc["msg"].GetString());
+		msg = doc["msg"].GetString();
 		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << _useropt.fileid << "] "
 			<< "Storm " << ret << " " << msg;
 		// 检查是否被封禁
 		if (ret == 400) {
-			if (msg.find("访问被拒绝") != -1) {
-				this->SetBanned();
+			if (CheckBanned(msg)) {
 				return BILIRET::NOFAULT;
 			}
 		}
 		return BILIRET::JOINEVENT_FAILED;
 	}
 	// 抽中的返回值为0
-	msg = _strcoding.UTF_8ToString(doc["data"]["mobile_content"].GetString());
+	msg = doc["data"]["mobile_content"].GetString();
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
 		<< "Storm " << msg;
 
@@ -656,7 +656,7 @@ BILIRET CBilibiliUserInfo::_APIv1Silver2Coin() const {
 		return BILIRET::JSON_ERROR;
 	}
 	ret = doc["code"].GetInt();
-	std::string msg = _strcoding.UTF_8ToString(doc["msg"].GetString());
+	std::string msg = doc["msg"].GetString();
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
 		<< "v1Silver2Coin: " << msg;
 
@@ -776,7 +776,7 @@ BILIRET CBilibiliUserInfo::_APIv2GiftBag() const {
 	rapidjson::Value &datalist = doc["data"]["list"];
 	unsigned int i;
 	for (i = 0; i < datalist.Size(); i++) {
-		giftname = _strcoding.UTF_8ToString(datalist[i]["gift_name"].GetString());
+		giftname = datalist[i]["gift_name"].GetString();
 		printf("Gift:%8s   Num:%5d   ", giftname.c_str(), datalist[i]["gift_num"].GetInt());
 		expiretime = datalist[i]["expire_at"].GetInt();
 		if (expiretime) {
@@ -813,11 +813,11 @@ BILIRET CBilibiliUserInfo::_APIv2GiftDaily() const {
 	ret = doc["data"]["bag_status"].GetInt();
 	if (ret == 1) {
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
-			<< "每日礼物领取成功";
+			<< u8"每日礼物领取成功";
 	}
 	else if (ret == 2) {
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
-			<< "每日礼物已领取";
+			<< u8"每日礼物已领取";
 	}
 	else {
 		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << _useropt.fileid << "] "
@@ -827,7 +827,7 @@ BILIRET CBilibiliUserInfo::_APIv2GiftDaily() const {
 	return BILIRET::NOFAULT;
 }
 
-BILIRET CBilibiliUserInfo::_APIv2LotteryJoin(const std::string &type, const int rrid, const int loid) {
+BILIRET CBilibiliUserInfo::_APIv2LotteryJoin(const std::string &type, const int rrid, const long long loid) {
 	int ret;
 	_httppackweb->url = _urlapi + "/lottery/v2/Lottery/join";
 	std::ostringstream oss;
@@ -869,7 +869,6 @@ BILIRET CBilibiliUserInfo::_APIv2LotteryJoin(const std::string &type, const int 
 	else {
 		tmpstr = doc["data"]["message"].GetString();
 	}
-	tmpstr = _strcoding.UTF_8ToString(tmpstr.c_str());
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
 		<< "Lottery " << tmpstr;
 
@@ -877,7 +876,7 @@ BILIRET CBilibiliUserInfo::_APIv2LotteryJoin(const std::string &type, const int 
 }
 
 // 通告礼物抽奖
-BILIRET CBilibiliUserInfo::_APIv3SmallTV(int rrid, int loid)
+BILIRET CBilibiliUserInfo::_APIv3SmallTV(int rrid, long long loid)
 {
 	int ret;
 	_httppackweb->url = _urlapi + "/xlive/lottery-interface/v3/smalltv/Join";
@@ -914,8 +913,9 @@ BILIRET CBilibiliUserInfo::_APIv3SmallTV(int rrid, int loid)
 			this->SetBanned();
 		}
 		std::string tmpstr;
-		if (doc.HasMember("message") && doc["message"].IsString())
-			tmpstr = _strcoding.UTF_8ToString(doc["message"].GetString());
+		if (doc.HasMember("message") && doc["message"].IsString()) {
+			tmpstr = doc["message"].GetString();
+		}
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
 			<< "Gift Error " << tmpstr;
 		return BILIRET::NOFAULT;
@@ -975,7 +975,7 @@ BILIRET CBilibiliUserInfo::_APIAndv2Login(std::string username, std::string pass
 	if (captcha != "") {
 		oss << "&captcha=" << captcha;
 	}
-	oss << "&mobi_app=android&password=" << _strcoding.UrlUTF8(password.c_str())
+	oss << "&mobi_app=android&password=" << _strcoding.UrlEncode(password.c_str())
 		<< "&platform=android&ts=" << GetTimeStamp()
 		<< "&username=" << username;
 	std::string sign;
@@ -1174,20 +1174,18 @@ BILIRET CBilibiliUserInfo::_APIAndv1StormJoin(long long cid) {
 	ret = doc["code"].GetInt();
 	std::string msg;
 	if (ret) {
-		msg = _strcoding.UTF_8ToString(doc["msg"].GetString());
+		msg = doc["msg"].GetString();
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
 			<< "Storm " << ret << " " << msg;
-
 		// 检查是否被封禁
 		if (ret == 400) {
-			if (msg.find("访问被拒绝") != -1) {
-				this->SetBanned();
+			if (CheckBanned(msg)) {
 				return BILIRET::NOFAULT;
 			}
 		}
 		return BILIRET::JOINEVENT_FAILED;
 	}
-	msg = _strcoding.UTF_8ToString(doc["data"]["mobile_content"].GetString());
+	msg = doc["data"]["mobile_content"].GetString();
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << _useropt.fileid << "] "
 		<< "Storm " << msg;
 
@@ -1226,9 +1224,21 @@ int CBilibiliUserInfo::AccountVerify() {
 	return 0;
 }
 
+bool CBilibiliUserInfo::CheckBanned(const std::string &msg) {
+	std::wstring wmsg;
+	CStrConvert::UTF8ToUTF16(msg, wmsg);
+	if (wmsg.find(L"访问被拒绝") != -1) {
+		this->SetBanned();
+		return true;
+	}
+	return false;
+}
+
 int CBilibiliUserInfo::SetBanned() {
-	// 账户被封禁时取消所有抽奖以及瓜子的领取
-	_useropt.conf = _useropt.conf & 0x1;
+	// 账户被封禁时取消所有抽奖
+	_useropt.conf_lottery = 0;
+	_useropt.conf_storm = 0;
+	_useropt.conf_guard = 0;
 	return 0;
 }
 

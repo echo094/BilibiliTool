@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 /*
 *******************************************************
 * brief: md5 encryption

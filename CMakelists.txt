@@ -43,10 +43,20 @@ include (CMakeHelpers)
 ############ Compiler specific setup
 
 if (MSVC)
-	# set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL /Gy /GF /Ox /Ob2 /Ot /Oi /MP /arch:SSE2 /fp:fast")
-	# set (CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG /INCREMENTAL:NO /OPT:REF /OPT:ICF")
-	add_definitions (-DUNICODE -D_UNICODE)
-	add_definitions (-D_WIN32_WINNT=0x0A00)
+  # set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL /Gy /GF /Ox /Ob2 /Ot /Oi /MP /arch:SSE2 /fp:fast")
+  # set (CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG /INCREMENTAL:NO /OPT:REF /OPT:ICF")
+  add_definitions (-DUNICODE -D_UNICODE)
+  add_definitions (-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
+  add_definitions (-DNOMINMAX)
+  add_definitions (-D_WIN32_WINNT=0x0A00)
+endif ()
+
+# clang
+  if (CMAKE_COMPILER_IS_CLANGXX)
+  set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++0x -stdlib=libc++") # todo: is libc++ really needed here?
+  if (NOT APPLE)
+    add_definitions (-DNDEBUG -Wall -Wno-padded) # todo: should we use CMAKE_C_FLAGS for these?
+  endif ()
 endif ()
 
 ############ Dependencies
@@ -112,21 +122,25 @@ endif ()
 
 message ("** Configuring RapidJSON")
 set (RapidJSON_ROOT ${RapidJSON_ROOT} CACHE PATH "RapidJSON_ROOT dependency path" FORCE)
-message (STATUS "-- Using RapidJSON_ROOT")
-message (STATUS "       " ${RapidJSON_ROOT})
-set (RAPIDJSON_INCLUDE_DIR ${RapidJSON_ROOT})
-if(${RapidJSON_ROOT} STREQUAL "")
-	message (FATAL_ERROR "Failed to find required dependency: RapidJSON")
-endif()
+if (EXISTS "${RapidJSON_ROOT}/rapidjson/document.h")
+  message (STATUS "-- Using RapidJSON_ROOT")
+  message (STATUS "       " ${RapidJSON_ROOT})
+  set (RAPIDJSON_INCLUDE_DIR ${RapidJSON_ROOT})
+else ()
+  message ("Cannot find ./rapidjson/document.h")
+  message (FATAL_ERROR "Failed to find required dependency: RapidJSON")
+endif ()
 
 message ("** Configuring WebsocketPP")
 set (WebsocketPP_ROOT ${WebsocketPP_ROOT} CACHE PATH "WebsocketPP_ROOT dependency path" FORCE)
-message (STATUS "-- Using WebsocketPP_ROOT")
-message (STATUS "       " ${WebsocketPP_ROOT})
-set (WEPP_INCLUDE_DIR ${WebsocketPP_ROOT})
-if(${WebsocketPP_ROOT} STREQUAL "")
-	message (FATAL_ERROR "Failed to find required dependency: WebsocketPP")
-endif()
+if (EXISTS "${WebsocketPP_ROOT}/websocketpp/version.hpp")
+  message (STATUS "-- Using WebsocketPP_ROOT")
+  message (STATUS "       " ${WebsocketPP_ROOT})
+  set (WEPP_INCLUDE_DIR ${WebsocketPP_ROOT})
+else ()
+  message ("Cannot find ./websocketpp/version.hpp")
+  message (FATAL_ERROR "Failed to find required dependency: WebsocketPP")
+endif ()
 
 message ("** Configuring ZLIB")
 set (ZLIB_ROOT ${ZLIB_ROOT} CACHE PATH "ZLIB_ROOT dependency path" FORCE)
@@ -153,7 +167,3 @@ message ("* Generating projects")
 
 ## 主程序
 add_subdirectory (Bilibili)
-## 配置程序
-if (MSVC)
-  add_subdirectory (ToolConfig)
-endif ()

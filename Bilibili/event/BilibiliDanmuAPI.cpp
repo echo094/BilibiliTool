@@ -252,9 +252,9 @@ int DanmuAPI::ParseSTORMMSG(rapidjson::Document &doc, const unsigned room) {
 		if (!id) {
 			return -1;
 		}
-		BILI_ROOMEVENT *pinfo = new BILI_ROOMEVENT;
-		pinfo->rid = room;
-		pinfo->loidl = id;
+		std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
+		data->rrid = room;
+		data->loid = id;
 		int num = 0;
 		std::string content;
 		if (doc["data"]["39"].HasMember("num") && doc["data"]["39"]["num"].IsInt()) {
@@ -265,7 +265,7 @@ int DanmuAPI::ParseSTORMMSG(rapidjson::Document &doc, const unsigned room) {
 		}
 		BOOST_LOG_SEV(g_logger::get(), trace) << "[DanmuAPI] storm " << room
 			<< " num:" << num << " content:" << content;
-		event_base::post_storm_msg(pinfo);
+		event_base::post_storm_msg(data);
 		return 0;
 	}
 	if (tstr == "end") {
@@ -307,9 +307,9 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, const unsigned room, const u
 	int rrid = doc["real_roomid"].GetInt();
 
 	// 如果是全区广播需要过滤重复消息
-	std::string tstr;
-	tstr = doc["msg_common"].GetString();
-	std::wstring wmsg = _strcoding.UTF_8ToWString(tstr.c_str());
+	std::string tstr = doc["msg_common"].GetString();
+	std::wstring wmsg;
+	CStrConvert::UTF8ToUTF16(tstr, wmsg);
 	if (wmsg.find(L"全区广播") != -1) {
 		if (area != 1) {
 			return 0;
@@ -325,9 +325,9 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, const unsigned room, const u
 // 处理广播事件总督上船消息
 int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, const unsigned room, const unsigned area) {
 	// 过滤当前房间的开通信息
-	std::string tstr;
-	tstr = doc["msg_common"].GetString();
-	std::wstring wmsg = _strcoding.UTF_8ToWString(tstr.c_str());
+	std::string tstr = doc["msg_common"].GetString();
+	std::wstring wmsg;
+	CStrConvert::UTF8ToUTF16(tstr, wmsg);
 	if (wmsg.find(L"在本房间") != -1) {
 		return 0;
 	}
@@ -345,12 +345,12 @@ int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, const unsigned room, const
 int DanmuAPI::ParseGUARDLO(rapidjson::Document &doc, const unsigned room) {
 	int btype = doc["data"]["privilege_type"].GetInt();
 	if (btype != 1) {
-		BILI_LOTTERYDATA *pinfo = new BILI_LOTTERYDATA;
-		pinfo->rrid = room;
-		pinfo->loid = doc["data"]["id"].GetInt();
-		pinfo->exinfo = btype;
-		pinfo->type = doc["data"]["lottery"]["keyword"].GetString();
-		event_base::post_guard23_msg(pinfo);
+		std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
+		data->rrid = room;
+		data->loid = doc["data"]["id"].GetInt();
+		data->exinfo = btype;
+		data->type = doc["data"]["lottery"]["keyword"].GetString();
+		event_base::post_guard23_msg(data);
 	}
 	return 0;
 }

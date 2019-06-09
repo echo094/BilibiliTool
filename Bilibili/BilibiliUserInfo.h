@@ -4,13 +4,10 @@
 2 导出账号信息时自动从CURL句柄获取最新的Cookie信息。
 
 关于配置信息的说明:
-0x01 硬币兑换
-0x02 银瓜子
-0x04 Web端运营抽奖
-0x08 客户端运营抽奖
-0x10 Web端风暴抽奖
-0x20 客户端风暴抽奖
-0x40 Web端小电视抽奖
+conf_coin    硬币兑换
+conf_lottery 各种抽奖
+conf_storm   风暴
+conf_guard   亲密度
 */
 #pragma once
 #include <string>
@@ -32,15 +29,20 @@ typedef struct _BILIUSEROPT
 {
 	// 配置文件中的序号
 	int fileid;
-	int conf; // 配置信息
-	bool islogin;
 	unsigned uid;
+	// 配置信息
+	unsigned conf_coin;
+	unsigned conf_lottery;
+	unsigned conf_storm;
+	unsigned conf_guard;
 	std::string account;
 	std::string password;
 	std::string tokena,tokenr;
+
 	std::string tokenjct;
 	std::string visitid;
 
+	bool islogin;
 	int silver_minute;
 	int silver_count;
 	long long int silver_start;
@@ -88,21 +90,21 @@ public:
 	LOGINRET CheckLogin();
 	// 获取用户信息
 	int FreshUserInfo();
-	// 从文件导入指定账户
-	int ReadFileAccount(std::string key, int index, char *addr);
+	// 从文件导入指定账户 出错时向外抛出异常 
+	void ReadFileAccount(const std::string &key, const rapidjson::Value& data, int index);
 	// 将账户信息导出到文件
-	int WriteFileAccount(std::string key, char *addr);
+	void WriteFileAccount(const std::string key, rapidjson::Document& doc);
 public:
 	// 开启经验心跳
 	int ActStartHeart();
 	// 经验心跳
 	int ActHeart();
 	// 节奏风暴
-	int ActStorm(int roid, long long cid);
+	int ActStorm(int rrid, long long loid);
 	// 通告礼物
-	int ActLottery(int rrid, int loid);
+	int ActLottery(int rrid, long long loid);
 	// 上船低保
-	int ActGuard(const std::string &type, const int rrid, const int loid);
+	int ActGuard(const std::string &type, const int rrid, const long long loid);
 
 // 其它直播API
 protected:
@@ -143,12 +145,12 @@ protected:
 	// 领取每日礼物
 	BILIRET _APIv2GiftDaily() const;
 	// 上船低保领取
-	BILIRET _APIv2LotteryJoin(const std::string &type, const int rrid, const int loid);
+	BILIRET _APIv2LotteryJoin(const std::string &type, const int rrid, const long long loid);
 
 // APIv3
 protected:
 	// 通告礼物抽奖
-	BILIRET _APIv3SmallTV(int rrid, int loid);
+	BILIRET _APIv3SmallTV(int rrid, long long loid);
 
 // 安卓端API 
 private:
@@ -170,6 +172,8 @@ protected:
 	int GetToken(BILIUSEROPT &opt);
 	// 账户权限验证
 	int AccountVerify();
+	// 检测账户是否被封禁
+	bool CheckBanned(const std::string &msg);
 	// 账户被封禁
 	int SetBanned();
 

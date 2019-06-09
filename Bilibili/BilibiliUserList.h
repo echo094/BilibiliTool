@@ -1,7 +1,13 @@
 ﻿#pragma once
 #include "BilibiliUserInfo.h"
+#include <atomic>
 #include <queue> 
 #include <list>
+#include <boost/thread/thread.hpp>
+
+#ifndef MAX_PATH
+#define MAX_PATH 260
+#endif
 
 //功能模块编号
 enum class TOOL_EVENT {
@@ -14,24 +20,18 @@ enum class TOOL_EVENT {
 	DEBUG2,
 };
 
-// 传递给线程的数据结构体
-class CBilibiliUserList;
+// 传递给线程的数据结构体=
 typedef struct _THARED_DATAEX
 {
-	CBilibiliUserList *ptr;
 	std::string str;
-	int id1, id2;
-	long long id3;
+	int rrid;
+	long long loid;
 }THARED_DATAEX, *PTHARED_DATAEX;
 
 class CBilibiliUserList
 {
 private:
-	DWORD _parentthread;//上级消息线程
-	bool _isworking[2]; //线程运行循环标志
-	DWORD _msgthread;//当前主消息循环
-	HANDLE _lphandle[2];//线程句柄列表
-	TOOL_EVENT m_workmode;//工作模式
+	unsigned long _parentthread;//上级消息线程
 
 private:
 	char _cfgfile[MAX_PATH];
@@ -41,10 +41,10 @@ private:
 	std::string pubkey, prikey;//ini文件中密码的加密解密key
 
 private:
-	// 目前同一时间只能进行一次请求 不管是不是同一用户
-	CRITICAL_SECTION _csthread;
 	// 正在运行的线程计数;
-	int _threadcount;
+	std::atomic<int> _threadcount;
+	// 线程互斥量 过渡方案
+	boost::shared_mutex rwmutex_;
 
 public:
 	explicit CBilibiliUserList();
@@ -62,28 +62,24 @@ public:
 	int GetUserInfoALL();
 public:
 	//设置父级线程ID
-	int SetNotifyThread(DWORD id);
-	int StartUserHeart();
-	int StopUserHeart();
+	int SetNotifyThread(unsigned long id);
 	// 检测并等待抽奖线程停止
 	int WaitActThreadStop();
-	int JoinLotteryALL(BILI_LOTTERYDATA *data);
-	int JoinGuardALL(BILI_LOTTERYDATA &data);
-	int JoinSpecialGiftALL(int roomID, long long cid);
+	int JoinLotteryALL(std::shared_ptr<BILI_LOTTERYDATA> data);
+	int JoinGuardALL(std::shared_ptr<BILI_LOTTERYDATA> data);
+	int JoinSpecialGiftALL(std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 经验心跳
+	int HeartExp(int firsttime = 0);
 
 protected:
 	// 查找用户
 	CBilibiliUserInfo* SearchUser(std::string username);
-	// 经验心跳
-	int _HeartExp(int firsttime = 0);
 	// 小电视领取线程
-	static DWORD WINAPI Thread_ActLottery(PVOID lpParameter);
+	void Thread_ActLottery(PTHARED_DATAEX pdata);
 	// 舰队低保领取线程
-	static DWORD WINAPI Thread_ActGuard(PVOID lpParameter);
+	void Thread_ActGuard(PTHARED_DATAEX pdata);
 	// 节奏领取线程
-	static DWORD WINAPI Thread_ActStorm(PVOID lpParameter);
-	// 消息线程
-	static DWORD WINAPI Thread_UserListMSG(PVOID lpParameter);
+	void Thread_ActStorm(PTHARED_DATAEX pdata);
 	// 取随机数
 	int _GetRand(int start, int len);
 };

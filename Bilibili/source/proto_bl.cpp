@@ -39,7 +39,7 @@ int protobl::CheckMessage(const unsigned char *str) {
 int protobl::MakeFlashConnectionInfo(unsigned char* str, int len, int room) {
 	memset(str, 0, len);
 	int buflen;
-	buflen = sprintf_s((char*)str + 16, len - 16, "{\"uid\":%I64d,\"clientver\":\"%s\",\"roomid\":%d,\"protover\":%d,\"platform\":\"%s\"}",
+	buflen = sprintf((char*)str + 16, "{\"uid\":%lld,\"clientver\":\"%s\",\"roomid\":%d,\"protover\":%d,\"platform\":\"%s\"}",
 		GetRUID(), DM_FLASH_VER, room, DM_FLASH_PROTO, "flash");
 	if (buflen == -1) {
 		return -1;
@@ -67,7 +67,7 @@ int protobl::MakeWebConnectionInfo(unsigned char* str, int len, int room) {
 	memset(str, 0, len);
 	int buflen;
 	//构造发送的字符串
-	buflen = sprintf_s((char*)str + 16, len - 16, "{\"uid\":0,\"roomid\":%d,\"protover\":%d,\"platform\":\"%s\",\"clientver\":\"%s\"}",
+	buflen = sprintf((char*)str + 16, "{\"uid\":0,\"roomid\":%d,\"protover\":%d,\"platform\":\"%s\",\"clientver\":\"%s\"}",
 		room, DM_WEB_PROTO, "web", DM_WEB_VER);
 	if (buflen == -1) {
 		return -1;
@@ -85,7 +85,7 @@ int protobl::MakeWebHeartInfo(unsigned char* str, int len) {
 	memset(str, 0, len);
 	int buflen;
 	//构造发送的字符串
-	buflen = sprintf_s((char*)str + 16, len - 16, "[object Object]");
+	buflen = sprintf((char*)str + 16, "[object Object]");
 	if (buflen == -1) {
 		return -1;
 	}

@@ -2,8 +2,11 @@
 #include <string>
 #include <boost/shared_array.hpp>
 
-const char DEF_CONFIGGILE_NAME[] = "\\BiliConfig.ini";
-const unsigned MSG_BILI_THREADCLOSE = WM_USER + 611;
+#ifdef WIN32
+const char DEF_CONFIGGILE_NAME[] = "\\BiliConfig.json";
+#else
+const char DEF_CONFIGGILE_NAME[] = "/BiliConfig.json";
+#endif
 
 const char APP_KEY[] = "1d8b6e7d45233436";
 const char APP_SECRET[] = "560c52ccd288fed045859ed18bffd973";
@@ -47,19 +50,11 @@ typedef struct _MSG_INFO{
 
 }MSG_INFO;
 
-typedef struct _BILI_ROOMEVENT
-{
-	int rid = 0;
-	int loids = 0;
-	int exinfo = 0;
-	long long loidl = 0; 
-}BILI_ROOMEVENT;
-
 typedef struct _BILI_LOTTERYDATA
 {
 	time_t time = 0;
 	int srid = 0, rrid = 0;
-	int loid = 0;
+	long long loid = 0;
 	int exinfo = 0;
 	std::string type;
 }BILI_LOTTERYDATA, *PBILI_LOTTERYDATA;

@@ -5,19 +5,7 @@
 
 #pragma once
 
-#include "targetver.h"
-
 #include <stdio.h>
-#include <tchar.h>
-
-
-
-// TODO: 在此处引用程序需要的其他头文件
-
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include "windows.h"
 
 #include "BilibiliStruct.h"
 
@@ -26,6 +14,7 @@
 #include "sslex.h"
 #include "utility/md5.h"
 #include "utility/strconvert.h"
+#include "utility/platform.h"
 using namespace toollib;
 
 #include "rapidjson/document.h"
@@ -34,4 +23,3 @@ using namespace toollib;
 #include "rapidjson/encodings.h"
 #include "rapidjson/filereadstream.h"   // FileReadStream
 #include "rapidjson/encodedstream.h"    // AutoUTFInputStream
-

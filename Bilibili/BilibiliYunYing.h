@@ -14,7 +14,7 @@ public:
 	// 查询抽奖入口函数
 	int CheckLottery(CURL *pcurl, int room);
 	// 获取最近的一条抽奖信息
-	int GetNextLottery(BILI_LOTTERYDATA &pla);
+	int GetNextLottery(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 显示漏掉的抽奖事件
 	void ShowMissingLottery();
 	// 清空漏掉的抽奖事件
@@ -32,9 +32,9 @@ protected:
 
 protected:
 	unique_ptr<CHTTPPack> m_httppack;
-	int m_curid;
+	long long m_curid;
 	std::list<PBILI_LOTTERYDATA> m_lotteryactive;
-	std::set<int> m_missingid;
+	std::set<long long> m_missingid;
 };
 
 class lottery_list : public event_list_base
@@ -45,7 +45,7 @@ protected:
 	void _UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid) override;
 
 private:
-	bool _CheckLoid(const int id);
+	bool _CheckLoid(const long long id);
 };
 
 class guard_list : public event_list_base
@@ -62,8 +62,8 @@ class CBilibiliLive
 protected:
 	unique_ptr<CHTTPPack> _httppack;
 public:
-	CBilibiliLive() {
-		_httppack = std::make_unique<CHTTPPack>();
+	CBilibiliLive() :
+		_httppack(new CHTTPPack()) {
 	}
 	~CBilibiliLive() {
 		_httppack = nullptr;
