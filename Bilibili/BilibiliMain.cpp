@@ -17,12 +17,12 @@ CBilibiliMain::CBilibiliMain() :
 	io_context_(),
 	heart_timer_(io_context_),
 	heart_flag_(false),
-	_userlist(new CBilibiliUserList()),
 	_lotterytv(new lottery_list()),
 	_lotterygu(new guard_list()),
 	_apilive(new CBilibiliLive()),
 	_apidm(new event_dmmsg()),
-	_dmsource(nullptr) {
+	_dmsource(nullptr),
+	_userlist(new dest_user()) {
 
 	curmode = TOOL_EVENT::STOP;
 	curl_main_ = curl_easy_init();

@@ -1,18 +1,18 @@
 ﻿#include "stdafx.h"
-#include "BilibiliUserList.h"
+#include "dest_user.h"
 #include <fstream>
 #include <functional>
 #include <thread>
 #include "logger/log.h"
 
-CBilibiliUserList::CBilibiliUserList()
-{
-	_parentthread = 0;
-	_threadcount = 0;
+dest_user::dest_user() :
+	_parentthread(0),
+	_threadcount(0),
+	_heartcount(0),
+	_usercount(0) {
 
 	GetDir(_cfgfile, sizeof(_cfgfile));
 	strcat(_cfgfile, DEF_CONFIGGILE_NAME);
-	_usercount = 0;
 
 	pubkey = "-----BEGIN PUBLIC KEY-----\
 \nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDqDG9LqVmteJ3xsWv6u/lAt6cU\
@@ -35,101 +35,18 @@ CBilibiliUserList::CBilibiliUserList()
 \nt8m+akI8uiRx6d6KTzCZAkBVZQV47puvjcLD75yUhQN5cUO7iqdeFQTFMYcv72DM\
 \naIzBAtlfQDwItQM7Ylkquj+Ns2MbYotX5RxWlLmKE15u\
 \n-----END RSA PRIVATE KEY-----";
-
 }
 
-CBilibiliUserList::~CBilibiliUserList()
-{
-	ClearUserList();
-	//删除客户端列表的互斥量
+dest_user::~dest_user() {
+	_ClearUserList();
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[UserList] Stop.";
 }
 
-int  CBilibiliUserList::AddUser(std::string username, std::string password) {
-	if (SearchUser(username)) {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] " << username << " is already in the list.";
-		return -1;
-	}
-	CBilibiliUserInfo *puser = new CBilibiliUserInfo;
-	LOGINRET lret;
-	lret = puser->Login(_usercount + 1, username, password);
-	if (lret == LOGINRET::NOFAULT) {
-		_usercount++;
-		_userlist.push_back(puser);
-		BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] " << username << " logged in successfully.";
-		return 0;
-	}
-	else {
-		delete puser;
-		if (lret == LOGINRET::NOTVALID) {
-			BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] " << username << " is not valid.";
-		}
-		else {
-			BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] " << username <<  " logged in failed.";
-		}
-	}
-	return -1;
-}
-
-int  CBilibiliUserList::DeleteUser(std::string username)
-{
-	std::list<CBilibiliUserInfo*>::iterator itor;
-	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
-		if ((*itor)->GetUsername() == username) {
-			break;
-		}
-	}
-	if (itor == _userlist.end()) {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] " << username << " does not exist.";
-		return -1;
-	}
-	// 删除该用户
-	int isn = (*itor)->GetFileSN();
-	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] " << username << " deleted.";
-	delete *itor;
-	itor = _userlist.erase(itor);
-	if (isn == _usercount) {
-		_usercount--;
-		return 0;
-	}
-	// 如果该用户不是编号最大的 需要修改编号
-	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
-		if ((*itor)->GetFileSN() == _usercount) {
-			(*itor)->SetFileSN(isn);
-			break;
-		}
-	}
-	_usercount--;
-	return 0;
-}
-
-int CBilibiliUserList::ClearUserList()
-{
-	std::list<CBilibiliUserInfo*>::iterator itor;
-	for (itor = _userlist.begin(); itor != _userlist.end();) {
-		delete *itor;
-		itor = _userlist.erase(itor);
-	}
-	_usercount = 0;
-	return 0;
-}
-
-int CBilibiliUserList::ShowUserList()
-{
-	printf("[UserList] Count: %d \n", _usercount);
-	std::list<CBilibiliUserInfo*>::iterator itor;
-	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
-		printf("%d %s \n", (*itor)->GetFileSN(), (*itor)->GetUsername().c_str());
-	}
-	return 0;
-}
-
-int CBilibiliUserList::ImportUserList()
-{
+int dest_user::ImportUserList() {
 	using std::ios;
 	using namespace rapidjson;
 
-	ClearUserList();
+	_ClearUserList();
 
 	std::ifstream infile;
 	infile.open(_cfgfile, std::ios::in | std::ios::binary);
@@ -156,12 +73,13 @@ int CBilibiliUserList::ImportUserList()
 		if (!data.IsArray()) {
 			throw "Data is not array";
 		}
+		_user_list.reserve(data.Size());
 		for (unsigned i = 0; i < data.Size(); i++) {
-			CBilibiliUserInfo *puser = new CBilibiliUserInfo;
-			puser->ReadFileAccount(prikey, data[i], i + 1);
+			std::shared_ptr<CBilibiliUserInfo> new_user(new CBilibiliUserInfo);
+			new_user->ReadFileAccount(prikey, data[i], i + 1);
 			// 无异常则读取成功
 			_usercount++;
-			_userlist.push_back(puser);
+			_user_list.push_back(new_user);
 			BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Import user " << i + 1 << " success.";
 		}
 	}
@@ -170,12 +88,10 @@ int CBilibiliUserList::ImportUserList()
 		return 0;
 	}
 
-	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Import " << _usercount << " user(s).";
-
 	return 0;
 }
 
-int CBilibiliUserList::ExportUserList() {
+int dest_user::ExportUserList() {
 	using namespace rapidjson;
 
 	if (_usercount == 0) {
@@ -186,7 +102,7 @@ int CBilibiliUserList::ExportUserList() {
 	try {
 		Document data;
 		data.SetArray();
-		for (auto itor = _userlist.begin(); itor != _userlist.end(); itor++) {
+		for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
 			(*itor)->WriteFileAccount(pubkey, data);
 		}
 		StringBuffer buffer;
@@ -200,15 +116,59 @@ int CBilibiliUserList::ExportUserList() {
 		return 0;
 	}
 
-	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Export " << _usercount << " user(s).";
+	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Export end.";
 
 	return 0;
 }
 
-int CBilibiliUserList::ReloginAll()
-{
+int dest_user::ShowUserList() {
+	printf("[UserList] Count: %d \n", _usercount);
 	std::list<CBilibiliUserInfo*>::iterator itor;
-	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
+		printf("%d %s \n", (*itor)->GetFileSN(), (*itor)->GetUsername().c_str());
+	}
+	return 0;
+}
+
+int  dest_user::AddUser(std::string username, std::string password) {
+	if (_IsExistUser(username)) {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] " << username << " is already in the list.";
+		return -1;
+	}
+	std::shared_ptr<CBilibiliUserInfo> new_user(new CBilibiliUserInfo);
+	LOGINRET lret = new_user->Login(_usercount + 1, username, password);
+	if (lret == LOGINRET::NOFAULT) {
+		_usercount++;
+		_user_list.push_back(new_user);
+		BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] " << username << " logged in successfully.";
+		return 0;
+	}
+	if (lret == LOGINRET::NOTVALID) {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] " << username << " is not valid.";
+	}
+	else {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] " << username << " logged in failed.";
+	}
+
+	return -1;
+}
+
+int  dest_user::DeleteUser(std::string username) {
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
+		if ((*itor)->GetUsername() != username) {
+			continue;
+		}
+		// 删除该用户
+		itor = _user_list.erase(itor);
+		BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] " << username << " deleted.";
+		return 0;
+	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] " << username << " does not exist.";
+	return -1;
+}
+
+int dest_user::ReloginAll() {
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
 		switch ((*itor)->Relogin()) {
 		case LOGINRET::NOFAULT:
 			printf("[UserList] Account %s Logged in. \n", (*itor)->GetUsername().c_str());
@@ -224,10 +184,8 @@ int CBilibiliUserList::ReloginAll()
 	return 0;
 }
 
-int CBilibiliUserList::CheckUserStatusALL()
-{
-	std::list<CBilibiliUserInfo*>::iterator itor;
-	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
+int dest_user::CheckUserStatusALL() {
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
 		switch ((*itor)->CheckLogin()) {
 		case LOGINRET::NOFAULT:
 			printf("[UserList] Account %s Logged in. \n", (*itor)->GetUsername().c_str());
@@ -243,104 +201,45 @@ int CBilibiliUserList::CheckUserStatusALL()
 	return 0;
 }
 
-int CBilibiliUserList::GetUserInfoALL()
-{
-	std::list<CBilibiliUserInfo*>::iterator itor;
-	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
-		if (!(*itor)->getLoginStatus())
+int dest_user::GetUserInfoALL() {
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
+		if (!(*itor)->getLoginStatus()) {
 			continue;
-
+		}
 		(*itor)->FreshUserInfo();
 	}
 	return 0;
 }
 
+void dest_user::_ClearUserList() {
+	_user_list.clear();
+}
+
+bool dest_user::_IsExistUser(std::string username) {
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
+		if ((*itor)->GetUsername() == username) {
+			return true;
+		}
+	}
+	return false;
+}
 
 
-int CBilibiliUserList::SetNotifyThread(unsigned long id)
-{
+
+int dest_user::SetNotifyThread(unsigned long id) {
 	if (id >= 0)
 		_parentthread = id;
 	return 0;
 }
 
-int CBilibiliUserList::WaitActThreadStop()
-{
+int dest_user::WaitActThreadStop() {
 	while (_threadcount)
 		Sleep(100);
 	return 0;
 }
 
-int CBilibiliUserList::JoinLotteryALL(std::shared_ptr<BILI_LOTTERYDATA> data)
-{
-	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Gift Room: " << data->rrid << " ID: " << data->loid;
-	// 当前没有用户则不领取
-	if (!_usercount)
-		return 0;
-
-	PTHARED_DATAEX pdata = new THARED_DATAEX;
-	pdata->rrid = data->rrid;
-	pdata->loid = data->loid;
-	// 配置节奏ID并创建领取线程
-	_threadcount++;
-	auto task = std::thread(std::bind(
-		&CBilibiliUserList::Thread_ActLottery,
-		this,
-		pdata)
-	);
-	task.detach();
-
-	return 0;
-}
-
-int CBilibiliUserList::JoinGuardALL(std::shared_ptr<BILI_LOTTERYDATA> data)
-{
-	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Guard Room: " << data->rrid << " ID: " << data->loid;
-	// 当前没有用户则不领取
-	if (!_usercount)
-		return 0;
-
-	PTHARED_DATAEX pdata = new THARED_DATAEX;
-	pdata->rrid = data->rrid;
-	pdata->loid = data->loid;
-	pdata->str = data->type;
-	// 配置节奏ID并创建领取线程
-	_threadcount++;
-	auto task = std::thread(std::bind(
-		&CBilibiliUserList::Thread_ActGuard,
-		this,
-		pdata)
-	);
-	task.detach();
-
-	return 0;
-}
-
-int CBilibiliUserList::JoinSpecialGiftALL(std::shared_ptr<BILI_LOTTERYDATA> data)
-{
-	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] SpecialGift Room: " << data->rrid;
-	// 当前没有用户则不领取
-	if (!_usercount)
-		return 0;
-
-	PTHARED_DATAEX pdata = new THARED_DATAEX;
-	pdata->rrid = data->rrid;
-	pdata->loid = data->loid;
-	// 配置节奏ID并创建领取线程
-	_threadcount++;
-	auto task = std::thread(std::bind(
-		&CBilibiliUserList::Thread_ActStorm,
-		this,
-		pdata)
-	);
-	task.detach();
-
-	return 0;
-}
-
-int CBilibiliUserList::HeartExp(int firsttime)
-{
-	if (_userlist.empty()) {
+int dest_user::HeartExp(int firsttime) {
+	if (_user_list.empty()) {
 		return 0;
 	}
 
@@ -356,8 +255,7 @@ int CBilibiliUserList::HeartExp(int firsttime)
 		}
 	}
 
-	std::list<CBilibiliUserInfo*>::iterator itor;
-	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
 		if (!(*itor)->getLoginStatus())
 			continue;
 		if (_heartcount == 0) {
@@ -370,25 +268,77 @@ int CBilibiliUserList::HeartExp(int firsttime)
 	return 0;
 }
 
-CBilibiliUserInfo*  CBilibiliUserList::SearchUser(std::string username)
-{
-	std::list<CBilibiliUserInfo*>::iterator itor;
-	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
-		if ((*itor)->GetUsername() == username)
-			return *itor;
-	}
-	return NULL;
+int dest_user::JoinLotteryALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
+	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Gift Room: " << data->rrid << " ID: " << data->loid;
+	// 当前没有用户则不领取
+	if (!_usercount)
+		return 0;
+
+	PTHARED_DATAEX pdata = new THARED_DATAEX;
+	pdata->rrid = data->rrid;
+	pdata->loid = data->loid;
+	// 配置节奏ID并创建领取线程
+	_threadcount++;
+	auto task = std::thread(std::bind(
+		&dest_user::Thread_ActLottery,
+		this,
+		pdata)
+	);
+	task.detach();
+
+	return 0;
 }
 
-void CBilibiliUserList::Thread_ActLottery(PTHARED_DATAEX pdata)
-{
+int dest_user::JoinGuardALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
+	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Guard Room: " << data->rrid << " ID: " << data->loid;
+	// 当前没有用户则不领取
+	if (!_usercount)
+		return 0;
+
+	PTHARED_DATAEX pdata = new THARED_DATAEX;
+	pdata->rrid = data->rrid;
+	pdata->loid = data->loid;
+	pdata->str = data->type;
+	// 配置节奏ID并创建领取线程
+	_threadcount++;
+	auto task = std::thread(std::bind(
+		&dest_user::Thread_ActGuard,
+		this,
+		pdata)
+	);
+	task.detach();
+
+	return 0;
+}
+
+int dest_user::JoinSpecialGiftALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
+	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] SpecialGift Room: " << data->rrid;
+	// 当前没有用户则不领取
+	if (!_usercount)
+		return 0;
+
+	PTHARED_DATAEX pdata = new THARED_DATAEX;
+	pdata->rrid = data->rrid;
+	pdata->loid = data->loid;
+	// 配置节奏ID并创建领取线程
+	_threadcount++;
+	auto task = std::thread(std::bind(
+		&dest_user::Thread_ActStorm,
+		this,
+		pdata)
+	);
+	task.detach();
+
+	return 0;
+}
+
+void dest_user::Thread_ActLottery(PTHARED_DATAEX pdata) {
 	// 等待领取
 	BOOST_LOG_SEV(g_logger::get(), trace) << "[UserList] Thread join gift: " << pdata->loid;
 	Sleep(_GetRand(5000, 5000));
 	// 领取为防止冲突 同一时间只能有一个用户在领取
 	// 在同一抽奖的两次抽奖之间增加间隔
-	std::list<CBilibiliUserInfo*>::iterator itor;
-	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
 		if (!(*itor)->getLoginStatus())
 			continue;
 		Sleep(_GetRand(1000, 1500));
@@ -402,13 +352,11 @@ void CBilibiliUserList::Thread_ActLottery(PTHARED_DATAEX pdata)
 	_threadcount--;
 }
 
-void CBilibiliUserList::Thread_ActGuard(PTHARED_DATAEX pdata)
-{
+void dest_user::Thread_ActGuard(PTHARED_DATAEX pdata) {
 	// 等待领取
 	BOOST_LOG_SEV(g_logger::get(), trace) << "[UserList] Thread join guard: " << pdata->loid;
 	Sleep(_GetRand(5000, 5000));
-	std::list<CBilibiliUserInfo*>::iterator itor;
-	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
 		if (!(*itor)->getLoginStatus())
 			continue;
 		Sleep(_GetRand(1000, 1500));
@@ -422,15 +370,13 @@ void CBilibiliUserList::Thread_ActGuard(PTHARED_DATAEX pdata)
 	_threadcount--;
 }
 
-void CBilibiliUserList::Thread_ActStorm(PTHARED_DATAEX pdata)
-{
+void dest_user::Thread_ActStorm(PTHARED_DATAEX pdata) {
 	// 等待领取
 	BOOST_LOG_SEV(g_logger::get(), trace) << "[UserList] Thread join guard: " << pdata->loid;
 	// Sleep(_GetRand(8000, 4000));
 	// 领取为防止冲突 同一时间只能有一个用户在领取
 	// 在同一抽奖的两次抽奖之间增加间隔
-	std::list<CBilibiliUserInfo*>::iterator itor;
-	for (itor = _userlist.begin(); itor != _userlist.end(); itor++) {
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
 		if (!(*itor)->getLoginStatus())
 			continue;
 		Sleep(_GetRand(1000, 1500));
@@ -444,7 +390,7 @@ void CBilibiliUserList::Thread_ActStorm(PTHARED_DATAEX pdata)
 	_threadcount--;
 }
 
-int CBilibiliUserList::_GetRand(int start, int len)
+int dest_user::_GetRand(int start, int len)
 {
 	srand((unsigned int)time(0));
 	return rand() % len + start;

@@ -11,7 +11,7 @@ http://www.lyyyuna.com/2016/03/14/bilibili-danmu01/
 #include <boost/asio.hpp>
 #include "event/event_base.h"
 #include "source/source_base.h"
-#include "BilibiliUserList.h"
+#include "dest/dest_user.h"
 #include "BilibiliYunYing.h"
 
 #include <memory>
@@ -95,8 +95,6 @@ private:
 	CURL *curl_main_, *curl_heart_;
 	// 日志文件句柄
 	std::fstream _logfile;
-	// 账户列表类
-	unique_ptr<CBilibiliUserList> _userlist;
 	// 小电视信息处理类
 	unique_ptr<lottery_list> _lotterytv;
 	// 上船信息处理类
@@ -107,4 +105,6 @@ private:
 	shared_ptr<event_base> _apidm;
 	// 弹幕连接
 	unique_ptr<source_base> _dmsource;
+	// 账户列表类
+	unique_ptr<dest_user> _userlist;
 };
