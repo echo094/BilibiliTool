@@ -4,8 +4,7 @@
 #include <iostream>
 #include <sstream> 
 #include <fstream>  
-#include "log.h"
-using namespace rapidjson;
+#include "logger/log.h"
 
 const char PARAM_BUILD[] = "5230002";
 
@@ -51,7 +50,7 @@ LOGINRET CBilibiliUserInfo::Login(int index, std::string username, std::string p
 	_useropt.password = password;
 
 	// 将账号转码
-	username = CStrConvert::UrlEncode(_useropt.account);
+	username = toollib::UrlEncode(_useropt.account);
 
 	// 移动端登录
 	password = _useropt.password;
@@ -975,7 +974,7 @@ BILIRET CBilibiliUserInfo::_APIAndv2Login(std::string username, std::string pass
 	if (captcha != "") {
 		oss << "&captcha=" << captcha;
 	}
-	oss << "&mobi_app=android&password=" << _strcoding.UrlEncode(password.c_str())
+	oss << "&mobi_app=android&password=" << toollib::UrlEncode(password.c_str())
 		<< "&platform=android&ts=" << GetTimeStamp()
 		<< "&username=" << username;
 	std::string sign;
@@ -1226,7 +1225,7 @@ int CBilibiliUserInfo::AccountVerify() {
 
 bool CBilibiliUserInfo::CheckBanned(const std::string &msg) {
 	std::wstring wmsg;
-	CStrConvert::UTF8ToUTF16(msg, wmsg);
+	toollib::UTF8ToUTF16(msg, wmsg);
 	if (wmsg.find(L"访问被拒绝") != -1) {
 		this->SetBanned();
 		return true;

@@ -1,9 +1,8 @@
 ﻿#include "stdafx.h"
 #include "BilibiliYunYing.h"
-#include "log.h"
 #include <sstream>
 #include <iostream>
-using namespace rapidjson;
+#include "logger/log.h"
 
 bool sortbiliyunyingdata(const PBILI_LOTTERYDATA & item1, const PBILI_LOTTERYDATA & item2) {
 	return item1->loid < item2->loid;

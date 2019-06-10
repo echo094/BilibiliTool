@@ -1,8 +1,7 @@
-﻿#include "stdafx.h"
-#include "httpex.h"
-using namespace toollib;
-#include<iostream>
+﻿#include "httpex.h"
+#include <iostream>
 #include <sstream>
+using namespace toollib;
 
 CHTTPPack::CHTTPPack(const char *ua) {
 	strcpy(useragent, ua);

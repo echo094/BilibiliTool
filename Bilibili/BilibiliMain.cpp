@@ -1,12 +1,15 @@
 ﻿#include "stdafx.h"
 #include "BilibiliMain.h"
-#include "log.h"
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <thread>
 #include <time.h>
+#include "logger/log.h"
+#include "event/event_dmmsg.h"
+#include "source/source_dmws.h"
+#include "source/source_dmasio.h"
 
 const int HEART_INTERVAL = 300; 
 
@@ -18,7 +21,7 @@ CBilibiliMain::CBilibiliMain() :
 	_lotterytv(new lottery_list()),
 	_lotterygu(new guard_list()),
 	_apilive(new CBilibiliLive()),
-	_apidm(new DanmuAPI()),
+	_apidm(new event_dmmsg()),
 	_dmsource(nullptr) {
 
 	curmode = TOOL_EVENT::STOP;
@@ -378,7 +381,7 @@ int CBilibiliMain::StartMonitorPubEvent() {
 	curmode = TOOL_EVENT::GET_SYSMSG_GIFT;
 
 	if (_dmsource == nullptr) {
-		_dmsource.reset(new CWSDanmu());
+		_dmsource.reset(new source_dmws());
 		_dmsource->set_msg_handler(
 			std::bind(&event_base::process_data, _apidm, std::placeholders::_1)
 		);

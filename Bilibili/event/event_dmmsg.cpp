@@ -1,6 +1,6 @@
-﻿#include "stdafx.h"
-#include "event/BilibiliDanmuAPI.h"
-#include "log.h"
+﻿#include "event_dmmsg.h"
+#include "logger/log.h"
+#include "utility/strconvert.h"
 
 enum {
 	DM_NONE = 0,
@@ -86,7 +86,7 @@ struct tagDANMUMSGSYS
 	std::string url;
 };
 
-void DanmuAPI::InitCMD() {
+void event_dmmsg::InitCMD() {
 	m_cmdid["CHANGE_ROOM_INFO"] = DM_CHANGE_ROOM_INFO;
 	m_cmdid["CUT_OFF"] = DM_CUT_OFF;
 	m_cmdid["LIVE"] = DM_LIVE;
@@ -153,39 +153,39 @@ void DanmuAPI::InitCMD() {
 	m_cmdid["WELCOME_ACTIVITY"] = DM_WELCOME_ACTIVITY;
 }
 
-void DanmuAPI::process_data(MSG_INFO *data)
+void event_dmmsg::process_data(MSG_INFO *data)
 {
 	int ret;
 	switch (data->type) {
 	case 0x03: {
 		// int value = str[1] << 16 | str[2] << 8 | str[3];
-		// BOOST_LOG_SEV(g_logger::get(), trace) << "[DanmuAPI] " << room << " Popular:" << value;
+		// BOOST_LOG_SEV(g_logger::get(), trace) << "[DMMSG] " << room << " Popular:" << value;
 		break;
 	}
 	case 0x05: {
 		ret = ParseJSON(data);
 		if (ret) {
-			BOOST_LOG_SEV(g_logger::get(), debug) << "[DanmuAPI] " << data->id << " DMNEW: " << data->buff.get();
+			BOOST_LOG_SEV(g_logger::get(), debug) << "[DMMSG] " << data->id << " DMNEW: " << data->buff.get();
 		}
 		break;
 	}
 	case 0x08: {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[DanmuAPI] " << data->id << " Link start...";
+		BOOST_LOG_SEV(g_logger::get(), info) << "[DMMSG] " << data->id << " Link start...";
 		break;
 	}
 	default: {
-		BOOST_LOG_SEV(g_logger::get(), error) << "[DanmuAPI] " << data->id << " Unknown msg type: " << data->type;
+		BOOST_LOG_SEV(g_logger::get(), error) << "[DMMSG] " << data->id << " Unknown msg type: " << data->type;
 		break;
 	}
 	}
 }
 
-int DanmuAPI::ParseJSON(MSG_INFO *data) {
+int event_dmmsg::ParseJSON(MSG_INFO *data) {
 	rapidjson::Document doc;
 	doc.Parse(data->buff.get());
 
 	if (!doc.IsObject() || !doc.HasMember("cmd") || !doc["cmd"].IsString()) {
-		BOOST_LOG_SEV(g_logger::get(), error) << "[DanmuAPI] " << data->id << " JSON Wrong.";
+		BOOST_LOG_SEV(g_logger::get(), error) << "[DMMSG] " << data->id << " JSON Wrong.";
 		return -1;
 	}
 	std::string strtype = doc["cmd"].GetString();
@@ -231,7 +231,7 @@ int DanmuAPI::ParseJSON(MSG_INFO *data) {
 	return 0;
 }
 
-int DanmuAPI::ParseSTORMMSG(rapidjson::Document &doc, const unsigned room) {
+int event_dmmsg::ParseSTORMMSG(rapidjson::Document &doc, const unsigned room) {
 	if (!doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("39")
 		|| !doc["data"]["39"].IsObject() || !doc["data"]["39"].HasMember("action")) {
 		return -1;
@@ -263,7 +263,7 @@ int DanmuAPI::ParseSTORMMSG(rapidjson::Document &doc, const unsigned room) {
 		if (doc["data"]["39"].HasMember("content") && doc["data"]["39"]["content"].IsString()) {
 			content = doc["data"]["39"]["content"].GetString();
 		}
-		BOOST_LOG_SEV(g_logger::get(), trace) << "[DanmuAPI] storm " << room
+		BOOST_LOG_SEV(g_logger::get(), trace) << "[DMMSG] storm " << room
 			<< " num:" << num << " content:" << content;
 		event_base::post_storm_msg(data);
 		return 0;
@@ -274,7 +274,7 @@ int DanmuAPI::ParseSTORMMSG(rapidjson::Document &doc, const unsigned room) {
 	return -1;
 }
 
-int DanmuAPI::ParseNOTICEMSG(rapidjson::Document &doc, const unsigned room, const unsigned area) {
+int event_dmmsg::ParseNOTICEMSG(rapidjson::Document &doc, const unsigned room, const unsigned area) {
 	// 如果消息不含有房间ID 则说明不是抽奖信息
 	if (!doc.HasMember("msg_type") || !doc["msg_type"].IsInt()) {
 		return -1;
@@ -299,7 +299,7 @@ int DanmuAPI::ParseNOTICEMSG(rapidjson::Document &doc, const unsigned room, cons
 	return -1;
 }
 
-int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, const unsigned room, const unsigned area) {
+int event_dmmsg::ParseSYSMSG(rapidjson::Document &doc, const unsigned room, const unsigned area) {
 	// 如果消息不含有房间ID 则说明不是抽奖信息
 	if (!doc.HasMember("real_roomid") || !doc["real_roomid"].IsInt()) {
 		return -1;
@@ -309,7 +309,7 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, const unsigned room, const u
 	// 如果是全区广播需要过滤重复消息
 	std::string tstr = doc["msg_common"].GetString();
 	std::wstring wmsg;
-	CStrConvert::UTF8ToUTF16(tstr, wmsg);
+	toollib::UTF8ToUTF16(tstr, wmsg);
 	if (wmsg.find(L"全区广播") != -1) {
 		if (area != 1) {
 			return 0;
@@ -323,11 +323,11 @@ int DanmuAPI::ParseSYSMSG(rapidjson::Document &doc, const unsigned room, const u
 }
 
 // 处理广播事件总督上船消息
-int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, const unsigned room, const unsigned area) {
+int event_dmmsg::ParseGUARDMSG(rapidjson::Document &doc, const unsigned room, const unsigned area) {
 	// 过滤当前房间的开通信息
 	std::string tstr = doc["msg_common"].GetString();
 	std::wstring wmsg;
-	CStrConvert::UTF8ToUTF16(tstr, wmsg);
+	toollib::UTF8ToUTF16(tstr, wmsg);
 	if (wmsg.find(L"在本房间") != -1) {
 		return 0;
 	}
@@ -342,7 +342,7 @@ int DanmuAPI::ParseGUARDMSG(rapidjson::Document &doc, const unsigned room, const
 }
 
 // 处理房间事件非总督上船消息
-int DanmuAPI::ParseGUARDLO(rapidjson::Document &doc, const unsigned room) {
+int event_dmmsg::ParseGUARDLO(rapidjson::Document &doc, const unsigned room) {
 	int btype = doc["data"]["privilege_type"].GetInt();
 	if (btype != 1) {
 		std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());

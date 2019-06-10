@@ -3,7 +3,7 @@
 #include <fstream>
 #include <functional>
 #include <thread>
-#include "log.h"
+#include "logger/log.h"
 
 CBilibiliUserList::CBilibiliUserList()
 {

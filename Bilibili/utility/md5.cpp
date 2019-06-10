@@ -1,5 +1,4 @@
-﻿#include "stdafx.h"
-#include "md5.h"
+﻿#include "md5.h"
 #include <iostream>
 #include <math.h>
 

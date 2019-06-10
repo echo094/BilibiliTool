@@ -60,10 +60,6 @@ private:
 	BILIUSEROPT _useropt;
 	// 心跳包配置
 	tagHeartInfo _heartopt;
-
-// 工具成员
-private:
-	CStrConvert _strcoding;
 	
 public:
 	explicit CBilibiliUserInfo();

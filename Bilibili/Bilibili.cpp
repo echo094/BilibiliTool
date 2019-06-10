@@ -1,6 +1,6 @@
 ﻿#include "stdafx.h"
 #include "BilibiliMain.h"
-#include "log.h"
+#include "logger/log.h"
 
 int main() {
 #ifdef WIN32

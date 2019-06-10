@@ -1,5 +1,4 @@
-﻿#include "stdafx.h"
-#include "source_base.h"
+﻿#include "source_base.h"
 
 int source_base::stop() {
 	con_list_.clear();

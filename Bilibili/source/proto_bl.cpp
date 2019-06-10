@@ -1,5 +1,4 @@
-﻿#include "stdafx.h"
-#include "proto_bl.h"
+﻿#include "proto_bl.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

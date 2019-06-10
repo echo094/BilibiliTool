@@ -1,5 +1,4 @@
-﻿#include "stdafx.h"
-#include "asioclient.h"
+﻿#include "asioclient.h"
 #include <cstring>
 #include <boost/bind.hpp>
 #include <boost/ref.hpp>

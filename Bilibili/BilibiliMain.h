@@ -5,13 +5,13 @@ http://www.lyyyuna.com/2016/03/14/bilibili-danmu01/
 */
 
 #pragma once
+#include <fstream>
 #include <functional>
 #include <memory>
 #include <boost/asio.hpp>
+#include "event/event_base.h"
+#include "source/source_base.h"
 #include "BilibiliUserList.h"
-#include "event/BilibiliDanmuAPI.h"
-#include "source/BilibiliDanmuWS.h"
-#include "source/source_dmasio.h"
 #include "BilibiliYunYing.h"
 
 #include <memory>

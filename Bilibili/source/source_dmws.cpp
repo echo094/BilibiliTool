@@ -1,25 +1,24 @@
-﻿#include "stdafx.h"
+﻿#include "source_dmws.h"
 #include <ctime>
 #include <iostream>
 #include <list>
-#include "BilibiliDanmuWS.h"
+#include "logger/log.h"
 #include "proto_bl.h"
-#include "log.h"
 
 // const char DM_WSSERVER[] = "ws://broadcastlv.chat.bilibili.com:2244/sub";
 const char DM_WSSSERVER[] = "wss://broadcastlv.chat.bilibili.com:443/sub";
 
-CWSDanmu::CWSDanmu() {
+source_dmws::source_dmws() {
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[DMWS] Create.";
 	_isworking = false;
 }
 
-CWSDanmu::~CWSDanmu() {
+source_dmws::~source_dmws() {
 	stop();
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[DMWS] Destroy.";
 }
 
-void CWSDanmu::on_timer(websocketpp::lib::error_code const & ec) {
+void source_dmws::on_timer(websocketpp::lib::error_code const & ec) {
 	if (ec) {
 		// there was an error, stop telemetry
 		m_client.get_alog().write(websocketpp::log::alevel::app,
@@ -50,20 +49,20 @@ void CWSDanmu::on_timer(websocketpp::lib::error_code const & ec) {
 	this->set_timer(30000);
 }
 
-void CWSDanmu::on_open(connection_metadata *it) {
+void source_dmws::on_open(connection_metadata *it) {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[DMWS] WebSocket Open: " << it->get_id();
 	SendConnectionInfo(it);
 }
 
-void CWSDanmu::on_fail(connection_metadata *it) {
+void source_dmws::on_fail(connection_metadata *it) {
 	BOOST_LOG_SEV(g_logger::get(), warning) << "[DMWS] WebSocket Error: " << it->get_id() << " " << it->get_error_reason();
 }
 
-void CWSDanmu::on_close(connection_metadata *it) {
+void source_dmws::on_close(connection_metadata *it) {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[DMWS] WebSocket Close: " << it->get_id() << " " << it->get_error_reason();
 }
 
-void CWSDanmu::on_message(connection_metadata *it, std::string &msg, int len) {
+void source_dmws::on_message(connection_metadata *it, std::string &msg, int len) {
 	int label = it->get_id();
 	int pos = 0, ireclen;
 	while (pos < len) {
@@ -113,7 +112,7 @@ void CWSDanmu::on_message(connection_metadata *it, std::string &msg, int len) {
 	msg.clear();
 }
 
-int CWSDanmu::start() {
+int source_dmws::start() {
 	if (_isworking)
 		return -1;
 
@@ -123,7 +122,7 @@ int CWSDanmu::start() {
 	return 0;
 }
 
-int CWSDanmu::stop() {
+int source_dmws::stop() {
 	if (!_isworking)
 		return 0;
 
@@ -137,7 +136,7 @@ int CWSDanmu::stop() {
 	return 0;
 }
 
-int CWSDanmu::add_context(const unsigned id, const ROOM_INFO& info) {
+int source_dmws::add_context(const unsigned id, const ROOM_INFO& info) {
 	int ret;
 	std::string url = DM_WSSSERVER;
 	ret = this->connect(id, url);
@@ -151,7 +150,7 @@ int CWSDanmu::add_context(const unsigned id, const ROOM_INFO& info) {
 	return 0;
 }
 
-int CWSDanmu::del_context(const unsigned id) {
+int source_dmws::del_context(const unsigned id) {
 	if (!source_base::is_exist(id)) {
 		return -1;
 	}
@@ -162,16 +161,16 @@ int CWSDanmu::del_context(const unsigned id) {
 	return 0;
 }
 
-int CWSDanmu::update_context(std::set<unsigned> &nlist, const unsigned opt) {
+int source_dmws::update_context(std::set<unsigned> &nlist, const unsigned opt) {
 	return 0;
 }
 
-void CWSDanmu::show_stat() {
+void source_dmws::show_stat() {
 	source_base::show_stat();
 	printf("IO count: %ld \n", m_connection_list.size());
 }
 
-int CWSDanmu::SendConnectionInfo(connection_metadata *it) {
+int source_dmws::SendConnectionInfo(connection_metadata *it) {
 	unsigned char cmdstr[128];
 	int len = protobl::MakeWebConnectionInfo(cmdstr, 128, it->get_id());
 	websocketpp::lib::error_code ec;
@@ -184,7 +183,7 @@ int CWSDanmu::SendConnectionInfo(connection_metadata *it) {
 	return 0;
 }
 
-int CWSDanmu::SendHeartInfo(connection_metadata &it) {
+int source_dmws::SendHeartInfo(connection_metadata &it) {
 	unsigned char cmdstr[128];
 	int len = protobl::MakeWebHeartInfo(cmdstr, 128);
 	websocketpp::lib::error_code ec;

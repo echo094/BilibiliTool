@@ -1,5 +1,4 @@
-﻿#include "stdafx.h"
-#include "base64.h"
+﻿#include "base64.h"
 #include <sstream>
 
 static const char *g_pCodes =

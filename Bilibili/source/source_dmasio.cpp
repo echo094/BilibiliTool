@@ -1,10 +1,7 @@
-﻿#include "stdafx.h"
-
+﻿#include "source_dmasio.h"
 #include <zlib.h>
-
-#include "source_dmasio.h"
+#include "logger/log.h"
 #include "proto_bl.h"
-#include "log.h"
 
 const char DM_TCPSERVER[] = "broadcastlv.chat.bilibili.com";
 const char DM_TCPPORTSTR[] = "2243";

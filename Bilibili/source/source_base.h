@@ -4,6 +4,7 @@
 #include <set>
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/shared_mutex.hpp>
+#include "BilibiliStruct.h"
 
 typedef struct _ROOM_INFO {
 	// 编号

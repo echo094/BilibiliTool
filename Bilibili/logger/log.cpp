@@ -1,5 +1,4 @@
-﻿#include "stdafx.h"
-#include "log.h"
+﻿#include "log.h"
 
 #include <iomanip>
 #include <iostream>

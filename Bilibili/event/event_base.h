@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <functional>
 #include <map>
+#include "BilibiliStruct.h"
 
 enum {
 	MSG_NEWLOTTERY = 612,

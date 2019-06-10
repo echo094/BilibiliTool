@@ -1,19 +1,20 @@
 ﻿#pragma once
 #include <map>
 #include "event/event_base.h"
+#include "rapidjson/document.h"
 
 #define DM_ROOM_AREA(x) (x & 0xf)
 
 const unsigned DM_PUBEVENT = 0x10;
 const unsigned DM_HIDDENEVENT = 0x20;
 
-class DanmuAPI :
+class event_dmmsg :
 	public event_base {
 public:
-	DanmuAPI() {
+	event_dmmsg() {
 		InitCMD();
 	}
-	~DanmuAPI() {
+	~event_dmmsg() {
 	}
 
 private:

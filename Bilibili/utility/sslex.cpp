@@ -1,5 +1,4 @@
-﻿#include "stdafx.h"
-#include "sslex.h"
+﻿#include "sslex.h"
 #include "base64.h"
 using namespace toollib;
 

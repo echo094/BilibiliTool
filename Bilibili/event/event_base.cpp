@@ -1,6 +1,5 @@
-﻿#include "stdafx.h"
-#include "event/event_base.h"
-#include "log.h"
+﻿#include "event_base.h"
+#include "logger/log.h"
 
 void event_base::set_event_act(event_act h) {
 	event_act_ = h;

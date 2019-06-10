@@ -9,10 +9,10 @@
 
 #include "BilibiliStruct.h"
 
-#include "base64.h"
-#include "httpex.h"
-#include "sslex.h"
+#include "utility/base64.h"
 #include "utility/md5.h"
+#include "utility/httpex.h"
+#include "utility/sslex.h"
 #include "utility/strconvert.h"
 #include "utility/platform.h"
 using namespace toollib;

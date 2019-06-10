@@ -11,14 +11,10 @@ namespace toollib {
 	long long GetTimeStamp();
 	std::string GetTimeString();
 
-	class CStrConvert
-	{
-	public:
-		static std::string UrlEncode(const std::string& str);
-		static bool UTF8ToUTF16(const std::string &in, std::wstring &out);
-		static std::wstring UTF8ToUTF16(const std::string &in);
-		static bool UTF16ToUTF8(const std::wstring &in, std::string &out);
-	};
+	std::string UrlEncode(const std::string& str);
+	bool UTF8ToUTF16(const std::string &in, std::wstring &out);
+	std::wstring UTF8ToUTF16(const std::string &in);
+	bool UTF16ToUTF8(const std::wstring &in, std::string &out);
 
 }
 

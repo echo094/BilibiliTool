@@ -1,14 +1,14 @@
 ﻿#pragma once
 #include <fstream>
-#include "tcpio/wsclient.h"
 #include "source/source_base.h"
+#include "transport/wsclient.h"
 
-class CWSDanmu: 
+class source_dmws: 
 	public source_base,
 	public websocket_endpoint {
 public:
-	CWSDanmu();
-	~CWSDanmu();
+	source_dmws();
+	~source_dmws();
 
 protected:
 	void on_timer(websocketpp::lib::error_code const & ec) override;
