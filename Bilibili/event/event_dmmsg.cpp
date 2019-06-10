@@ -1,5 +1,6 @@
 ﻿#include "event_dmmsg.h"
 #include "logger/log.h"
+#include "utility/platform.h"
 #include "utility/strconvert.h"
 
 enum {

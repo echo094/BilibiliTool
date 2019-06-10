@@ -71,7 +71,7 @@ namespace toollib {
 		return false;
 	}
 
-	std::wstring toollib::UTF8ToUTF16(const std::string & in) {
+	std::wstring UTF8ToUTF16(const std::string & in) {
 		std::wstring out;
 		UTF8ToUTF16(in, out);
 		return out;
