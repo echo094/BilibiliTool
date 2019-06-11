@@ -3,21 +3,17 @@
 #include <memory>
 #include <vector>
 #include <boost/thread/thread.hpp>
-#include "BilibiliUserInfo.h"
+#include "user_info.h"
+#include "BilibiliStruct.h"
 
 #ifndef MAX_PATH
 #define MAX_PATH 260
 #endif
 
-//功能模块编号
-enum class TOOL_EVENT {
-	EXIT = 0,
-	STOP = 10,
-	ONLINE,
-	GET_SYSMSG_GIFT,
-	GET_HIDEN_GIFT,
-	DEBUG1,
-	DEBUG2,
+enum class LOGINRET {
+	NOFAULT,
+	NOTLOGIN,
+	NOTVALID
 };
 
 // 传递给线程的数据结构体=
@@ -73,6 +69,24 @@ public:
 	int JoinSpecialGiftALL(std::shared_ptr<BILI_LOTTERYDATA> data);
 
 private:
+	// 新用户登录
+	LOGINRET _ActLogin(std::shared_ptr<user_info> &user, int index, std::string username, std::string password);
+	// 重新登录
+	LOGINRET _ActRelogin(std::shared_ptr<user_info> &user);
+	// 导入用户验证
+	LOGINRET _ActCheckLogin(std::shared_ptr<user_info> &user);
+	// 获取用户信息
+	int _ActGetUserInfo(const std::shared_ptr<user_info> &user);
+	// 首次经验心跳
+	void _ActHeartFirst(std::shared_ptr<user_info> &user);
+	// 持续经验心跳
+	void _ActHeartContinue(std::shared_ptr<user_info> &user);
+	// 通告礼物
+	int _ActLottery(std::shared_ptr<user_info> &user, int rrid, long long loid);
+	// 上船低保
+	int _ActGuard(std::shared_ptr<user_info> &user, const std::string &type, const int rrid, const long long loid);
+	// 节奏风暴
+	int _ActStorm(std::shared_ptr<user_info> &user, int rrid, long long loid);
 	// 抽奖线程
 	void Thread_ActLottery(PTHARED_DATAEX pdata);
 	// 舰队低保领取线程
@@ -93,6 +107,6 @@ private:
 	char _cfgfile[MAX_PATH];
 	unsigned _heartcount;
 	unsigned _usercount;
-	std::vector<std::shared_ptr<CBilibiliUserInfo> > _user_list;
+	std::vector<std::shared_ptr<user_info> > _user_list;
 	std::string pubkey, prikey;//ini文件中密码的加密解密key
 };

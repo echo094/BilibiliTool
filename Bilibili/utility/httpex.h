@@ -32,42 +32,46 @@ using std::unique_ptr;
 
 namespace toollib {
 
-	class CHTTPPack
-	{
-
+	class CHTTPPack {
 	public:
 		CHTTPPack(const char *ua = DEF_UA_FF);
-		void AddDefHeader(const char *str);
+		void AddHeaderInf(const char *str);
+		void AddHeaderManual(const char *str);
 		void ClearHeader();
 		void ClearRec();
-		void AddHeaderManual(const char *str);
 
 	private:
 		// 不会更改的HTTP头数量
-		unsigned header_num_def;
+		unsigned header_num_inf;
 	public:
 		char useragent[255];
-		std::string url, send_data;
+		std::string url;
 		std::vector<std::string> send_header;
+		std::string send_data;
 		std::string recv_data;
 	};
 
-	class CCookiePack
-	{
-	private:
-		std::string cookie;
-		//Cookie相关
-	public:
-		int ImportCookies(const std::string &str, CURL *pcurl = NULL);
-		int ExportCookies(std::string &str, CURL *pcurl = NULL);
-		//将Cookie应用到CURL句柄
-		int ApplyCookies(CURL *pcurl);
-		//将CURL句柄中的cookie更新到类变量中
-		int UpdateCookies(CURL *pcurl);
-		//查找特定名称的Cookie值
-		int GetCookie(std::string &name, std::string &value);
-		int GetCookieTime(std::string &name, int &value) const;
-	};
+	// /*
+	// CURL的Cookie有7项内容 用制表符隔开
+	// 第5项是时间
+	// 第6项是名称
+	// 第7项是数值
+	// */
+
+	// 从Cookie字符串导入 必须格式正确
+	// 执行成功返回值为 0
+	int HttpImportCookie(CURL *pcurl, const std::string &str);
+	// 导出Cookie到字符串
+	// 执行成功返回值为 0
+	int HttpExportCookie(CURL *pcurl, std::string &str);
+	// 获取指定名称的Cookie 成功时返回的数组长度为7
+	std::vector<std::string> HttpGetCookieData(CURL *pcurl, const char* ckname);
+	// 获取指定Cookie的数值
+	// 成功时返回值为 0
+	int HttpGetCookieVal(CURL *pcurl, const char* ckname, std::string &ckval);
+	// 获取指定Cookie的数值
+	// 成功时返回值为 0
+	int HttpGetCookieTime(CURL *pcurl, const char* ckname, int &val);
 
 	int HttpGetEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack);
 	int HttpPostEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack);

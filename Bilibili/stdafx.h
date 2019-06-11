@@ -9,17 +9,9 @@
 
 #include "BilibiliStruct.h"
 
-#include "utility/base64.h"
-#include "utility/md5.h"
 #include "utility/httpex.h"
-#include "utility/sslex.h"
 #include "utility/strconvert.h"
 #include "utility/platform.h"
 using namespace toollib;
 
 #include "rapidjson/document.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/encodings.h"
-#include "rapidjson/filereadstream.h"   // FileReadStream
-#include "rapidjson/encodedstream.h"    // AutoUTFInputStream

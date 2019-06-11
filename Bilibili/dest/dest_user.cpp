@@ -1,9 +1,14 @@
-﻿#include "stdafx.h"
-#include "dest_user.h"
+﻿#include "dest_user.h"
 #include <fstream>
 #include <functional>
+#include <iostream>
 #include <thread>
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
+#include "utility/platform.h"
+#include "utility/strconvert.h"
 #include "logger/log.h"
+#include "api_bl.h" 
 
 dest_user::dest_user() :
 	_parentthread(0),
@@ -75,7 +80,7 @@ int dest_user::ImportUserList() {
 		}
 		_user_list.reserve(data.Size());
 		for (unsigned i = 0; i < data.Size(); i++) {
-			std::shared_ptr<CBilibiliUserInfo> new_user(new CBilibiliUserInfo);
+			std::shared_ptr<user_info> new_user(new user_info);
 			new_user->ReadFileAccount(prikey, data[i], i + 1);
 			// 无异常则读取成功
 			_usercount++;
@@ -123,7 +128,7 @@ int dest_user::ExportUserList() {
 
 int dest_user::ShowUserList() {
 	printf("[UserList] Count: %d \n", _usercount);
-	std::list<CBilibiliUserInfo*>::iterator itor;
+	std::list<user_info*>::iterator itor;
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
 		printf("%d %s \n", (*itor)->GetFileSN(), (*itor)->GetUsername().c_str());
 	}
@@ -135,8 +140,8 @@ int  dest_user::AddUser(std::string username, std::string password) {
 		BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] " << username << " is already in the list.";
 		return -1;
 	}
-	std::shared_ptr<CBilibiliUserInfo> new_user(new CBilibiliUserInfo);
-	LOGINRET lret = new_user->Login(_usercount + 1, username, password);
+	std::shared_ptr<user_info> new_user(new user_info);
+	LOGINRET lret = _ActLogin(new_user, _usercount + 1, username, password);
 	if (lret == LOGINRET::NOFAULT) {
 		_usercount++;
 		_user_list.push_back(new_user);
@@ -169,7 +174,7 @@ int  dest_user::DeleteUser(std::string username) {
 
 int dest_user::ReloginAll() {
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
-		switch ((*itor)->Relogin()) {
+		switch (_ActRelogin(*itor)) {
 		case LOGINRET::NOFAULT:
 			printf("[UserList] Account %s Logged in. \n", (*itor)->GetUsername().c_str());
 			break;
@@ -186,7 +191,7 @@ int dest_user::ReloginAll() {
 
 int dest_user::CheckUserStatusALL() {
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
-		switch ((*itor)->CheckLogin()) {
+		switch (_ActCheckLogin(*itor)) {
 		case LOGINRET::NOFAULT:
 			printf("[UserList] Account %s Logged in. \n", (*itor)->GetUsername().c_str());
 			break;
@@ -206,7 +211,7 @@ int dest_user::GetUserInfoALL() {
 		if (!(*itor)->getLoginStatus()) {
 			continue;
 		}
-		(*itor)->FreshUserInfo();
+		_ActGetUserInfo(*itor);
 	}
 	return 0;
 }
@@ -259,10 +264,10 @@ int dest_user::HeartExp(int firsttime) {
 		if (!(*itor)->getLoginStatus())
 			continue;
 		if (_heartcount == 0) {
-			(*itor)->ActStartHeart();
+			_ActHeartFirst(*itor);
 		}
 		else {
-			(*itor)->ActHeart();
+			_ActHeartContinue(*itor);
 		}
 	}
 	return 0;
@@ -332,6 +337,189 @@ int dest_user::JoinSpecialGiftALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	return 0;
 }
 
+LOGINRET dest_user::_ActLogin(std::shared_ptr<user_info>& user, int index, std::string username, std::string password) {
+	BILIRET bret;
+	user->account = username;
+	user->password = password;
+
+	// 将账号转码
+	username = toollib::UrlEncode(user->account);
+
+	// 移动端登录
+	password = user->password;
+	bret = apibl::APIAndGetKey(user, password);
+	if (bret != BILIRET::NOFAULT) {
+		return LOGINRET::NOTLOGIN;
+	}
+	bret = apibl::APIAndv2Login(user, username, password, "");
+	if (bret == BILIRET::LOGIN_NEEDVERIFY) {
+		// 获取验证码
+		bret = apibl::APIWebGETLoginCaptcha(user);
+		if (bret != BILIRET::NOFAULT) {
+			return LOGINRET::NOTLOGIN;
+		}
+		std::string tmp_chcode;
+		printf("Enter the pic validate code: ");
+		std::cin >> tmp_chcode;
+		// 移动端使用验证码登录
+		password = user->password;
+		bret = apibl::APIAndGetKey(user, password);
+		if (bret != BILIRET::NOFAULT) {
+			return LOGINRET::NOTLOGIN;
+		}
+		bret = apibl::APIAndv2Login(user, username, password, tmp_chcode);
+	}
+	if (bret != BILIRET::NOFAULT) {
+		return LOGINRET::NOTLOGIN;
+	}
+
+	// 登录成功则获取必要的临时id
+	bret = apibl::APIWebGetCaptchaKey(user);
+	if (bret != BILIRET::NOFAULT) {
+		user->islogin = false;
+		return LOGINRET::NOTLOGIN;
+	}
+	// 生成访问ID
+	user->GetVisitID();
+	if (!user->GetToken()) {
+		user->islogin = false;
+		return LOGINRET::NOTLOGIN;
+	}
+	user->fileid = index;
+	user->islogin = true;
+
+	return LOGINRET::NOFAULT;
+}
+
+LOGINRET dest_user::_ActRelogin(std::shared_ptr<user_info>& user) {
+	int ret = 0;
+	LOGINRET lret;
+	ret = user->GetExpiredTime();
+	long long rtime;
+	rtime = ret - toollib::GetTimeStamp();
+	// 有效期小于一周或Token不存在则重新登录
+	if ((rtime < 604800) || (user->tokena.empty())) {
+		lret = _ActLogin(user, user->fileid, user->account, user->password);
+		return lret;
+	}
+	return LOGINRET::NOFAULT;
+}
+
+LOGINRET dest_user::_ActCheckLogin(std::shared_ptr<user_info>& user) {
+	BILIRET bret;
+	bret = apibl::APIWebGetUserInfo(user);
+	if (bret != BILIRET::NOFAULT) {
+		user->islogin = false;
+		return LOGINRET::NOTLOGIN;
+	}
+	bret = apibl::APIWebGetCaptchaKey(user);
+	if (bret != BILIRET::NOFAULT) {
+		user->islogin = false;
+		return LOGINRET::NOTLOGIN;
+	}
+	// 生成访问ID
+	user->GetVisitID();
+	if (!user->GetToken()) {
+		user->islogin = false;
+		return LOGINRET::NOTLOGIN;
+	}
+	user->islogin = true;
+	return LOGINRET::NOFAULT;
+}
+
+int dest_user::_ActGetUserInfo(const std::shared_ptr<user_info>& user) {
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] ";
+	apibl::APIWebv2GiftBag(user);
+	apibl::APIWebv1CapsuleCheck(user);
+	return 0;
+}
+
+// 开启经验心跳
+void dest_user::_ActHeartFirst(std::shared_ptr<user_info> &user) {
+	// 常规心跳
+	apibl::APIWebv1HeartBeat(user);
+	// 心跳计时标签
+	user->heart_deadline = 5;
+	// 双端观看奖励
+	apibl::APIWebTaskInfo(user);
+	// 银瓜子领取信息获取
+	apibl::APIAndSilverTask(user);
+	// 签到
+	apibl::APIWebSign(user);
+	// 每日礼物
+	apibl::APIWebv2GiftDaily(user);
+	// 兑换硬币
+	if (user->conf_coin == 1) {
+		apibl::APIWebv1Silver2Coin(user);
+	}
+	// 登录硬币
+	apibl::APIWebGetCoin(user);
+}
+
+// 经验心跳
+void dest_user::_ActHeartContinue(std::shared_ptr<user_info> &user) {
+	user->heart_deadline--;
+	if (user->heart_deadline == 0) {
+		user->heart_deadline = 5;
+		apibl::APIWebv1HeartBeat(user);
+		apibl::APIAndHeart(user);
+		apibl::APIWebOnlineHeart(user);
+	}
+	if (user->silver_deadline != -1) {
+		user->silver_deadline--;
+		if (user->silver_deadline == 0) {
+			apibl::APIAndSilverAward(user);
+			apibl::APIAndSilverTask(user);
+		}
+	}
+}
+
+int dest_user::_ActLottery(std::shared_ptr<user_info>& user, int rrid, long long loid) {
+	BILIRET bret;
+	int count;
+	if (user->conf_lottery == 1) {
+		// 产生访问记录
+		apibl::APIWebv1RoomEntry(user, rrid);
+		// 网页端最多尝试三次
+		count = 2;
+		bret = apibl::APIWebv3SmallTV(user, rrid, loid);
+		while ((bret != BILIRET::NOFAULT) && count) {
+			Sleep(1000);
+			bret = apibl::APIWebv3SmallTV(user, rrid, loid);
+			count--;
+		}
+	}
+	return 0;
+}
+
+int dest_user::_ActGuard(std::shared_ptr<user_info>& user, const std::string & type, const int rrid, const long long loid)  {
+	if (user->conf_guard == 1) {
+		// 产生访问记录
+		apibl::APIWebv1RoomEntry(user, rrid);
+		// 网页端API
+		apibl::APIWebv2LotteryJoin(user, type, rrid, loid);
+		return 0;
+	}
+	return 0;
+}
+
+int dest_user::_ActStorm(std::shared_ptr<user_info> &user, int rrid, long long loid) {
+	// 风暴只领取一次 不管成功与否
+	if (user->conf_storm == 1) {
+		// 产生访问记录
+		apibl::APIWebv1RoomEntry(user, rrid);
+		// 网页端API
+		apibl::APIWebv1StormJoin(user, rrid, loid, "", "");
+		return 0;
+	}
+	if (user->conf_storm == 2) {
+		// 调用客户端API领取
+		apibl::APIAndv1StormJoin(user, loid);
+		return 0;
+	}
+	return 0;
+}
+
 void dest_user::Thread_ActLottery(PTHARED_DATAEX pdata) {
 	// 等待领取
 	BOOST_LOG_SEV(g_logger::get(), trace) << "[UserList] Thread join gift: " << pdata->loid;
@@ -344,7 +532,7 @@ void dest_user::Thread_ActLottery(PTHARED_DATAEX pdata) {
 		Sleep(_GetRand(1000, 1500));
 		{
 			boost::unique_lock<boost::shared_mutex> m(rwmutex_);
-			(*itor)->ActLottery(pdata->rrid, pdata->loid);
+			_ActLottery(*itor, pdata->rrid, pdata->loid);
 		}
 	}
 	delete pdata;
@@ -362,7 +550,7 @@ void dest_user::Thread_ActGuard(PTHARED_DATAEX pdata) {
 		Sleep(_GetRand(1000, 1500));
 		{
 			boost::unique_lock<boost::shared_mutex> m(rwmutex_);
-			(*itor)->ActGuard(pdata->str, pdata->rrid, pdata->loid);
+			_ActGuard(*itor, pdata->str, pdata->rrid, pdata->loid);
 		}
 	}
 	delete pdata;
@@ -382,7 +570,7 @@ void dest_user::Thread_ActStorm(PTHARED_DATAEX pdata) {
 		Sleep(_GetRand(1000, 1500));
 		{
 			boost::unique_lock<boost::shared_mutex> m(rwmutex_);
-			(*itor)->ActStorm(pdata->rrid, pdata->loid);
+			_ActStorm(*itor, pdata->rrid, pdata->loid);
 		}
 	}
 	delete pdata;

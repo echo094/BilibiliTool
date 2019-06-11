@@ -10,11 +10,12 @@ const char DEF_CONFIGGILE_NAME[] = "/BiliConfig.json";
 
 const char APP_KEY[] = "1d8b6e7d45233436";
 const char APP_SECRET[] = "560c52ccd288fed045859ed18bffd973";
+const char PARAM_BUILD[] = "5230002";
 
 const char URL_DEFAULT_ORIGIN[] = "Origin: https://live.bilibili.com";
 const char URL_DEFAULT_REFERERBASE[] = "Referer: https://live.bilibili.com/";
 const char URL_DEFAULT_REFERER[] = "Referer: https://live.bilibili.com/3";
-const char URL_LIVEAPI_HEAD[] = "https://api.live.bilibili.com";
+const std::string URL_LIVEAPI_HEAD = "https://api.live.bilibili.com";
 
 enum class BILIRET {
 	NOFAULT = 0,

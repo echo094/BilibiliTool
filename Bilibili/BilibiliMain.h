@@ -14,9 +14,19 @@ http://www.lyyyuna.com/2016/03/14/bilibili-danmu01/
 #include "dest/dest_user.h"
 #include "BilibiliYunYing.h"
 
-#include <memory>
 using std::unique_ptr;
 using std::shared_ptr;
+
+//功能模块编号
+enum class TOOL_EVENT {
+	EXIT = 0,
+	STOP = 10,
+	ONLINE,
+	GET_SYSMSG_GIFT,
+	GET_HIDEN_GIFT,
+	DEBUG1,
+	DEBUG2,
+};
 
 class CBilibiliMain {
 public:

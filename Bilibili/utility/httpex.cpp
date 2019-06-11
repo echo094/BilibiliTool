@@ -1,109 +1,101 @@
 ﻿#include "httpex.h"
 #include <iostream>
 #include <sstream>
+#include <boost/algorithm/string.hpp>
 using namespace toollib;
 
-CHTTPPack::CHTTPPack(const char *ua) {
+CHTTPPack::CHTTPPack(const char *ua) :
+	header_num_inf(0) {
 	strcpy(useragent, ua);
-	//所有HTTP包都需要的头
-	header_num_def = 0;
 	url.empty();
 	recv_data = "";
 }
 
-void CHTTPPack::AddDefHeader(const char *str) {
-	header_num_def++;
-	send_header.push_back(str);
-}
-
-void CHTTPPack::ClearHeader() {
-	send_header.resize(header_num_def);
-}
-
-void CHTTPPack::ClearRec() {
-	recv_data = "";
+void CHTTPPack::AddHeaderInf(const char *str) {
+	send_header.insert(send_header.begin() + header_num_inf, str);
+	header_num_inf++;
 }
 
 void CHTTPPack::AddHeaderManual(const char *str) {
 	send_header.push_back(str);
 }
 
-
-int CCookiePack::ImportCookies(const std::string &str, CURL *pcurl) {
-	cookie = str;
-	if (pcurl == NULL)
-		return 0;
-	ApplyCookies(pcurl);
-
-	return 0;
+void CHTTPPack::ClearHeader() {
+	send_header.resize(header_num_inf);
 }
 
-int CCookiePack::ExportCookies(std::string &str, CURL *pcurl) {
-	if (pcurl) {
-		UpdateCookies(pcurl);
-	}
-	str = cookie;
-
-	return 0;
+void CHTTPPack::ClearRec() {
+	recv_data = "";
 }
 
-int CCookiePack::ApplyCookies(CURL *pcurl) {
-	if (pcurl == NULL)
-		return 0;
-	int pl = 0, pr = cookie.find('\n', 0);
+int toollib::HttpImportCookie(CURL * pcurl, const std::string & str) {
+	size_t pl = 0, pr = str.find('\n', 0);
 	while (pr != -1) {
-		curl_easy_setopt(pcurl, CURLOPT_COOKIELIST, cookie.c_str() + pl);
-		pl = pr + 1;
-		pr = cookie.find('\n', pl);
-	}
-
-	return 0;
-}
-
-int CCookiePack::UpdateCookies(CURL *pcurl) {
-	struct curl_slist *pcookies = NULL, *cur = NULL;
-	if (pcurl) {
-		cookie = "";
-		curl_easy_getinfo(pcurl, CURLINFO_COOKIELIST, &pcookies);
-		cur = pcookies;
-		while (cur) {
-			cookie += cur->data;
-			cookie += "\n";
-			cur = cur->next;
+		CURLcode ret = curl_easy_setopt(pcurl, CURLOPT_COOKIELIST, str.c_str() + pl);
+		if (ret != CURLE_OK) {
+			return ret;
 		}
-		curl_slist_free_all(pcookies);
-		pcookies = NULL;
+		pl = pr + 1;
+		pr = str.find('\n', pl);
 	}
-
 	return 0;
 }
 
-int CCookiePack::GetCookie(std::string &name, std::string &value) {
-	std::string str = "\t" + name + "\t";
-	int pl = cookie.find(str, 0);
-	if (pl == -1)
-		return -1;
-	pl += str.length();
-	int  pr = cookie.find('\n', pl);
-	if (pr == -1)
-		return -1;
-	value = cookie.substr(pl, pr - pl);
-
+int toollib::HttpExportCookie(CURL * pcurl, std::string & str) {
+	struct curl_slist *pcookies = NULL, *cur = NULL;
+	str = "";
+	CURLcode ret = curl_easy_getinfo(pcurl, CURLINFO_COOKIELIST, &pcookies);
+	if (ret != CURLE_OK) {
+		curl_slist_free_all(pcookies);
+		return ret;
+	}
+	cur = pcookies;
+	while (cur) {
+		str += cur->data;
+		str += "\n";
+		cur = cur->next;
+	}
+	curl_slist_free_all(pcookies);
 	return 0;
 }
 
-int CCookiePack::GetCookieTime(std::string &name, int &value) const {
-	std::string str = "\t" + name + "\t";
-	int pr = cookie.find(str, 0);
-	if (pr == -1)
-		return -1;
-	int  pl = cookie.find_last_of('\t', pr - 1);
-	if (pl == -1)
-		return -1;
-	str = cookie.substr(pl + 1, pr - pl - 1);
-	value = atoi(str.c_str());
+std::vector<std::string> toollib::HttpGetCookieData(CURL *pcurl, const char* ckname) {
+	struct curl_slist *pcookies = NULL, *cur = NULL;
+	CURLcode ret = curl_easy_getinfo(pcurl, CURLINFO_COOKIELIST, &pcookies);
+	if (ret != CURLE_OK) {
+		curl_slist_free_all(pcookies);
+		return std::vector<std::string>();
+	}
+	cur = pcookies;
+	while (cur) {
+		std::vector<std::string> vec;
+		boost::split(vec, cur->data, boost::is_any_of("\t"), boost::token_compress_off);
+		if (vec[5] == ckname) {
+			curl_slist_free_all(pcookies);
+			return vec;
+		}
+		cur = cur->next;
+	}
+	curl_slist_free_all(pcookies);
+	return std::vector<std::string>();
+}
 
-	return 0;
+int toollib::HttpGetCookieVal(CURL *pcurl, const char* ckname, std::string &val) {
+	std::vector<std::string> vec(toollib::HttpGetCookieData(pcurl, ckname));
+	if (vec.size() == 7) {
+		val = vec[6];
+		return 0;
+	}
+	return -1;
+}
+
+int toollib::HttpGetCookieTime(CURL *pcurl, const char* ckname, int &val) {
+	std::vector<std::string> vec(toollib::HttpGetCookieData(pcurl, ckname));
+	if (vec.size() == 7) {
+		val = atoi(vec[4].c_str());
+		return 0;
+	}
+	return -1;
 }
 
 static size_t write_data_callback(void *ptr, size_t size, size_t nmemb, void *stream) {
