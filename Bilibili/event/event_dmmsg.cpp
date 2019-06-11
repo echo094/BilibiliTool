@@ -254,8 +254,12 @@ int event_dmmsg::ParseSTORMMSG(rapidjson::Document &doc, const unsigned room) {
 			return -1;
 		}
 		std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
+		data->srid = room;
 		data->rrid = room;
 		data->loid = id;
+		data->time_start = toollib::GetTimeStamp();
+		data->time_end = data->time_start + 90;
+		data->type = "storm";
 		int num = 0;
 		std::string content;
 		if (doc["data"]["39"].HasMember("num") && doc["data"]["39"]["num"].IsInt()) {
@@ -347,10 +351,13 @@ int event_dmmsg::ParseGUARDLO(rapidjson::Document &doc, const unsigned room) {
 	int btype = doc["data"]["privilege_type"].GetInt();
 	if (btype != 1) {
 		std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
+		data->srid = room;
 		data->rrid = room;
 		data->loid = doc["data"]["id"].GetInt();
-		data->exinfo = btype;
+		data->time_start = toollib::GetTimeStamp();
+		// data->time_end = data->time_start;
 		data->type = doc["data"]["lottery"]["keyword"].GetString();
+		data->exinfo = btype;
 		event_base::post_guard23_msg(data);
 	}
 	return 0;

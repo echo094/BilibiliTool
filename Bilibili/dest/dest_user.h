@@ -16,14 +16,6 @@ enum class LOGINRET {
 	NOTVALID
 };
 
-// 传递给线程的数据结构体=
-typedef struct _THARED_DATAEX
-{
-	std::string str;
-	int rrid;
-	long long loid;
-}THARED_DATAEX, *PTHARED_DATAEX;
-
 class dest_user
 {
 public:
@@ -82,17 +74,17 @@ private:
 	// 持续经验心跳
 	void _ActHeartContinue(std::shared_ptr<user_info> &user);
 	// 通告礼物
-	int _ActLottery(std::shared_ptr<user_info> &user, int rrid, long long loid);
+	int _ActLottery(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 上船低保
-	int _ActGuard(std::shared_ptr<user_info> &user, const std::string &type, const int rrid, const long long loid);
+	int _ActGuard(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 节奏风暴
-	int _ActStorm(std::shared_ptr<user_info> &user, int rrid, long long loid);
+	int _ActStorm(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 抽奖线程
-	void Thread_ActLottery(PTHARED_DATAEX pdata);
+	void Thread_ActLottery(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 舰队低保领取线程
-	void Thread_ActGuard(PTHARED_DATAEX pdata);
+	void Thread_ActGuard(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 节奏领取线程
-	void Thread_ActStorm(PTHARED_DATAEX pdata);
+	void Thread_ActStorm(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 取随机数
 	int _GetRand(int start, int len);
 

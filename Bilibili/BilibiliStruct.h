@@ -51,11 +51,24 @@ typedef struct _MSG_INFO{
 
 }MSG_INFO;
 
-typedef struct _BILI_LOTTERYDATA
-{
-	time_t time = 0;
-	int srid = 0, rrid = 0;
+typedef struct _BILI_LOTTERYDATA {
+	// 房间短ID
+	int srid = 0;
+	// 房间真实ID
+	int rrid = 0;
+	// 事件编号
 	long long loid = 0;
-	int exinfo = 0;
+	// 开始时间
+	time_t time_start = 0;
+	// 失效时间
+	time_t time_end = 0;
+	// 事件类型
+	// 抽奖为礼物编号 实际使用为 Gift
+	// 亲密为 guard
+	// 风暴为 storm 实际没用
 	std::string type;
-}BILI_LOTTERYDATA, *PBILI_LOTTERYDATA;
+	// Guard等级
+	int exinfo = 0;
+	// 抽奖的名称
+	std::string title;
+}BILI_LOTTERYDATA;

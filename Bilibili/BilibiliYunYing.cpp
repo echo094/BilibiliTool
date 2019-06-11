@@ -1,15 +1,18 @@
-﻿#include "stdafx.h"
-#include "BilibiliYunYing.h"
+﻿#include "BilibiliYunYing.h"
 #include <sstream>
 #include <iostream>
 #include "logger/log.h"
+#include "utility/strconvert.h"
 
-bool sortbiliyunyingdata(const PBILI_LOTTERYDATA & item1, const PBILI_LOTTERYDATA & item2) {
+bool sortbiliyunyingdata(
+	const std::shared_ptr<BILI_LOTTERYDATA>& item1, 
+	const std::shared_ptr<BILI_LOTTERYDATA>& item2
+) {
 	return item1->loid < item2->loid;
 }
 
 event_list_base::event_list_base() :
-	m_httppack(new CHTTPPack()) {
+	m_httppack(new toollib::CHTTPPack()) {
 	m_curid = 0;
 }
 
@@ -18,11 +21,11 @@ event_list_base::~event_list_base() {
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[Lottery] Stop.";
 }
 
-int event_list_base::CheckLottery(CURL *pcurl, int room)
-{
-	int rrid;
+int event_list_base::CheckLottery(CURL *pcurl, std::shared_ptr<BILI_LOTTERYDATA> data) {
 	BILIRET ret;
-	ret = this->_CheckRoom(pcurl, room, rrid);
+	// 检测房间
+	// 旧API失效 目前无法检测
+	ret = _CheckRoom(pcurl, data);
 	// 房间无效则返回0 停止查询
 	if (ret == BILIRET::ROOM_BLOCK) {
 		return 0;
@@ -31,23 +34,20 @@ int event_list_base::CheckLottery(CURL *pcurl, int room)
 		// 查询失败返回-1
 		return -1;
 	}
-	ret = this->_GetLotteryID(pcurl, room, rrid);
+	ret = this->_GetLotteryID(pcurl, data);
 	if (ret != BILIRET::NOFAULT) {
 		return -1;
 	}
 	return 0;
 }
 
-int event_list_base::GetNextLottery(std::shared_ptr<BILI_LOTTERYDATA> data)
-{
+std::shared_ptr<BILI_LOTTERYDATA> event_list_base::GetNextLottery() {
 	if (m_lotteryactive.empty()) {
-		return -1;
+		return nullptr;
 	}
-	PBILI_LOTTERYDATA pdata = m_lotteryactive.front();
-	*data = *pdata;
-	delete pdata;
+	std::shared_ptr<BILI_LOTTERYDATA> pdata = m_lotteryactive.front();
 	m_lotteryactive.pop_front();
-	return 0;
+	return pdata;
 }
 
 void event_list_base::ShowMissingLottery() {
@@ -62,49 +62,21 @@ void event_list_base::ClearMissingLottery() {
 	m_missingid.clear();
 }
 
-BILIRET event_list_base::_CheckRoom(CURL* pcurl, int srid, int& rrid) {
-	return _CheckRoomOld(pcurl, srid, rrid);
-}
-
-BILIRET event_list_base::_CheckRoomOld(CURL *pcurl, int srid, int &rrid) {
-	int ret;
-	m_httppack->url = URL_LIVEAPI_HEAD;
-	m_httppack->url += "/room/v1/Room/room_init?id=" + std::to_string(srid);
-	m_httppack->ClearHeader();
-	m_httppack->AddHeaderManual("Accept: application/json, text/plain, */*");
-	ret = toollib::HttpGetEx(pcurl, m_httppack);
-	if (ret) {
-		BOOST_LOG_SEV(g_logger::get(), error) << "[Lottery] Get RealRoomID Failed!";
-		return BILIRET::HTTP_ERROR;
+BILIRET event_list_base::_CheckRoom(CURL* pcurl, std::shared_ptr<BILI_LOTTERYDATA> &data) {
+	if (!data->srid) {
+		data->srid = data->rrid;
 	}
-
-	rapidjson::Document doc;
-	doc.Parse(m_httppack->recv_data.c_str());
-	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
-		|| !doc.HasMember("data") || !doc["data"].IsObject()
-		|| !doc["data"].HasMember("room_id") || !doc["data"]["room_id"].IsInt()) {
-		BOOST_LOG_SEV(g_logger::get(), error) << "[Lottery] Get RealRoomID Failed!";
-		return BILIRET::JSON_ERROR;
-	}
-	if (doc["data"]["is_hidden"].GetBool() || doc["data"]["is_locked"].GetBool() || doc["data"]["encrypted"].GetBool()) {
-		BOOST_LOG_SEV(g_logger::get(), warning) << "[Lottery] Invalid Room!";
-		return BILIRET::ROOM_BLOCK;
-	}
-	rrid = doc["data"]["room_id"].GetInt();
-	BOOST_LOG_SEV(g_logger::get(), info) << "[Lottery] RealRoomID: " << rrid;
-
 	return BILIRET::NOFAULT;
 }
 
-BILIRET lottery_list::_GetLotteryID(CURL *pcurl, int srid, int rrid)
-{
-	int ret;
-	m_httppack->url = URL_LIVEAPI_HEAD;
-	m_httppack->url += "/xlive/lottery-interface/v3/smalltv/Check?roomid=" + std::to_string(rrid);
+BILIRET lottery_list::_GetLotteryID(CURL *pcurl, std::shared_ptr<BILI_LOTTERYDATA> &data) {
+	std::ostringstream oss;
+	oss << URL_LIVEAPI_HEAD << "/xlive/lottery-interface/v3/smalltv/Check?roomid=" << data->rrid;
+	m_httppack->url = oss.str();
 	m_httppack->ClearHeader();
-	ret = toollib::HttpGetEx(pcurl, m_httppack);
+	int ret = toollib::HttpGetEx(pcurl, m_httppack);
 	if (ret) {
-		BOOST_LOG_SEV(g_logger::get(), error) << "[SmallTV] HTTP GET Failed!";
+		BOOST_LOG_SEV(g_logger::get(), error) << "[Lottery] HTTP GET Failed!";
 		return BILIRET::HTTP_ERROR;
 	}
 
@@ -113,26 +85,24 @@ BILIRET lottery_list::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 	doc.Parse(m_httppack->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("list") || !doc["data"]["list"].IsArray()) {
-		BOOST_LOG_SEV(g_logger::get(), error) << "[SmallTV] ERROR:" << doc["code"].GetInt();
+		BOOST_LOG_SEV(g_logger::get(), error) << "[Lottery] ERROR:" << doc["code"].GetInt();
 		return BILIRET::JSON_ERROR;
 	}
 	// 处理并添加新的抽奖信息
-	this->_UpdateLotteryList(doc["data"]["list"], srid, rrid);
+	this->_UpdateLotteryList(doc["data"]["list"], data);
 
 	return BILIRET::NOFAULT;
 }
 
-void lottery_list::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid)
+void lottery_list::_UpdateLotteryList(rapidjson::Value &infoArray, std::shared_ptr<BILI_LOTTERYDATA> &data)
 {
-	long long curtime = GetTimeStamp();
-	unsigned int i;
+	long long curtime = toollib::GetTimeStamp();
 	std::string tid;
 	int tmpid;
-	std::list<PBILI_LOTTERYDATA> tlist;
-	PBILI_LOTTERYDATA pdata;
+	std::list<std::shared_ptr<BILI_LOTTERYDATA> > tlist;
 
 	// 将所有抽奖ID放入临时列表
-	for (i = 0; i < infoArray.Size(); i++) {
+	for (unsigned i = 0; i < infoArray.Size(); i++) {
 		if (infoArray[i]["raffleId"].IsString()) {
 			tid = infoArray[i]["raffleId"].GetString();
 			tmpid = atoi(tid.c_str());
@@ -143,27 +113,25 @@ void lottery_list::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, int
 		else {
 			continue;
 		}
-		pdata = new BILI_LOTTERYDATA;
-		pdata->srid = srid;
-		pdata->rrid = rrid;
+		std::shared_ptr<BILI_LOTTERYDATA> pdata(new BILI_LOTTERYDATA);
+		pdata->srid = data->srid;
+		pdata->rrid = data->rrid;
 		pdata->loid = tmpid;
+		pdata->time_end = curtime + infoArray[i]["time"].GetInt();
+		pdata->time_start = pdata->time_end - infoArray[i]["max_time"].GetInt();
 		pdata->type = infoArray[i]["type"].GetString();
-		pdata->time = curtime + infoArray[i]["time"].GetInt();
+		pdata->title = infoArray[i]["title"].GetString();
 		tlist.push_back(pdata);
 	}
 	// 排序
 	tlist.sort(sortbiliyunyingdata);
 	// 添加到正式列表
 	int flag = 0;
-	std::list<PBILI_LOTTERYDATA>::iterator itor;
-	for (itor = tlist.begin(); itor != tlist.end();) {
+	for (auto itor = tlist.begin(); itor != tlist.end();) {
 		if (_CheckLoid((*itor)->loid)) {
 			flag++;
 			m_lotteryactive.push_back(*itor);
 			BOOST_LOG_SEV(g_logger::get(), info) << "[Lottery] Type: " << (*itor)->type << " Id: " << (*itor)->loid;
-		}
-		else {
-			delete (*itor);
 		}
 		itor = tlist.erase(itor);
 	}
@@ -200,14 +168,12 @@ bool lottery_list::_CheckLoid(const long long id) {
 	return false;
 }
 
-BILIRET guard_list::_GetLotteryID(CURL *pcurl, int srid, int rrid)
-{
-	int ret;
+BILIRET guard_list::_GetLotteryID(CURL *pcurl, std::shared_ptr<BILI_LOTTERYDATA> &data) {
 	std::ostringstream oss;
-	oss << URL_LIVEAPI_HEAD << "/lottery/v1/Lottery/check_guard?roomid=" << rrid;
+	oss << URL_LIVEAPI_HEAD << "/lottery/v1/Lottery/check_guard?roomid=" << data->rrid;
 	m_httppack->url = oss.str();
 	m_httppack->ClearHeader();
-	ret = toollib::HttpGetEx(pcurl, m_httppack);
+	int ret = toollib::HttpGetEx(pcurl, m_httppack);
 	if (ret) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[Guard] HTTP GET Failed!";
 		return BILIRET::HTTP_ERROR;
@@ -218,26 +184,24 @@ BILIRET guard_list::_GetLotteryID(CURL *pcurl, int srid, int rrid)
 	doc.Parse(m_httppack->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
 		|| !doc.HasMember("data") || !doc["data"].IsArray()) {
-		BOOST_LOG_SEV(g_logger::get(), error) << "[SmallTV] ERROR:" << doc["code"].GetInt();
+		BOOST_LOG_SEV(g_logger::get(), error) << "[Guard] ERROR:" << doc["code"].GetInt();
 		return BILIRET::JSON_ERROR;
 	}
 	// 处理并添加新的上船信息
-	this->_UpdateLotteryList(doc["data"], srid, rrid);
+	this->_UpdateLotteryList(doc["data"], data);
 
 	return BILIRET::NOFAULT;
 }
 
-void guard_list::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid)
+void guard_list::_UpdateLotteryList(rapidjson::Value &infoArray, std::shared_ptr<BILI_LOTTERYDATA> &data)
 {
-	long long curtime = GetTimeStamp();
-	unsigned int i;
+	long long curtime = toollib::GetTimeStamp();
 	std::string tid;
 	int tloid, ttype;
-	std::list<PBILI_LOTTERYDATA> tlist;
-	PBILI_LOTTERYDATA pdata;
+	std::list<std::shared_ptr<BILI_LOTTERYDATA> > tlist;
 
 	// 将所有上船ID放入临时列表
-	for (i = 0; i < infoArray.Size(); i++) {
+	for (unsigned i = 0; i < infoArray.Size(); i++) {
 		if (infoArray[i]["id"].IsInt()) {
 			tloid = infoArray[i]["id"].GetInt();
 		}
@@ -248,12 +212,13 @@ void guard_list::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, int r
 		if (ttype != 1) {
 			continue;
 		}
-		pdata = new BILI_LOTTERYDATA;
-		pdata->srid = srid;
-		pdata->rrid = rrid;
+		std::shared_ptr<BILI_LOTTERYDATA> pdata(new BILI_LOTTERYDATA);
+		pdata->srid = data->srid;
+		pdata->rrid = data->rrid;
 		pdata->loid = tloid;
+		pdata->time_start = curtime;
+		pdata->time_end = pdata->time_start + infoArray[i]["time"].GetInt();
 		pdata->type = infoArray[i]["keyword"].GetString();
-		pdata->time = curtime + infoArray[i]["time"].GetInt();
 		pdata->exinfo = ttype;
 		tlist.push_back(pdata);
 	}
@@ -261,12 +226,8 @@ void guard_list::_UpdateLotteryList(rapidjson::Value &infoArray, int srid, int r
 	tlist.sort(sortbiliyunyingdata);
 	// 添加到正式列表
 	int flag = 0;
-	std::list<PBILI_LOTTERYDATA>::iterator itor;
-	for (itor = tlist.begin(); itor != tlist.end();) {
-		if ((*itor)->loid <= m_curid) {
-			delete (*itor);
-		}
-		else {
+	for (auto itor = tlist.begin(); itor != tlist.end();) {
+		if ((*itor)->loid > m_curid) {
 			flag++;
 			m_curid = (*itor)->loid;
 			m_lotteryactive.push_back(*itor);

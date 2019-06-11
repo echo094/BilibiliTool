@@ -1,7 +1,11 @@
 ﻿#pragma once
-#include <string>
 #include <list>
+#include <memory>
 #include <set>
+#include <string>
+#include "BilibiliStruct.h"
+#include "utility/httpex.h"
+#include "rapidjson/document.h"
 
 // 目前不支持多线程操作
 class event_list_base
@@ -12,9 +16,10 @@ public:
 
 public:
 	// 查询抽奖入口函数
-	int CheckLottery(CURL *pcurl, int room);
-	// 获取最近的一条抽奖信息
-	int GetNextLottery(std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 查询成功或房间被封禁返回0 失败返回-1
+	int CheckLottery(CURL *pcurl, std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 获取最近的一条抽奖信息 无信息返回空
+	std::shared_ptr<BILI_LOTTERYDATA> GetNextLottery();
 	// 显示漏掉的抽奖事件
 	void ShowMissingLottery();
 	// 清空漏掉的抽奖事件
@@ -22,27 +27,25 @@ public:
 
 protected:
 	// 需要在类中实例化的查询API
-	virtual BILIRET _GetLotteryID(CURL *pcurl, int srid, int rrid) = 0;
+	virtual BILIRET _GetLotteryID(CURL *pcurl, std::shared_ptr<BILI_LOTTERYDATA> &data) = 0;
 	// 检测房间号以及房间状态 待修改
-	BILIRET _CheckRoom(CURL* pcurl, int srid, int& rrid);
-	// 检测房间号以及房间状态 废除
-	BILIRET _CheckRoomOld(CURL *pcurl, int srid, int &rrid);
+	BILIRET _CheckRoom(CURL* pcurl, std::shared_ptr<BILI_LOTTERYDATA> &data);
 	// 更新待抽奖列表
-	virtual void _UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid) = 0;
+	virtual void _UpdateLotteryList(rapidjson::Value &infoArray, std::shared_ptr<BILI_LOTTERYDATA> &data) = 0;
 
 protected:
-	unique_ptr<CHTTPPack> m_httppack;
+	unique_ptr<toollib::CHTTPPack> m_httppack;
 	long long m_curid;
-	std::list<PBILI_LOTTERYDATA> m_lotteryactive;
+	std::list<std::shared_ptr<BILI_LOTTERYDATA> > m_lotteryactive;
 	std::set<long long> m_missingid;
 };
 
 class lottery_list : public event_list_base
 {
 protected:
-	BILIRET _GetLotteryID(CURL *pcurl, int srid, int rrid) override;
+	BILIRET _GetLotteryID(CURL *pcurl, std::shared_ptr<BILI_LOTTERYDATA> &data) override;
 	// 更新待抽奖列表
-	void _UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid) override;
+	void _UpdateLotteryList(rapidjson::Value &infoArray, std::shared_ptr<BILI_LOTTERYDATA> &data) override;
 
 private:
 	bool _CheckLoid(const long long id);
@@ -51,19 +54,19 @@ private:
 class guard_list : public event_list_base
 {
 protected:
-	BILIRET _GetLotteryID(CURL *pcurl, int srid, int rrid) override;
+	BILIRET _GetLotteryID(CURL *pcurl, std::shared_ptr<BILI_LOTTERYDATA> &data) override;
 	// 更新待领取列表
-	void _UpdateLotteryList(rapidjson::Value &infoArray, int srid, int rrid) override;
+	void _UpdateLotteryList(rapidjson::Value &infoArray, std::shared_ptr<BILI_LOTTERYDATA> &data) override;
 };
 
 // 其它API
 class CBilibiliLive
 {
 protected:
-	unique_ptr<CHTTPPack> _httppack;
+	unique_ptr<toollib::CHTTPPack> _httppack;
 public:
 	CBilibiliLive() :
-		_httppack(new CHTTPPack()) {
+		_httppack(new toollib::CHTTPPack()) {
 	}
 	~CBilibiliLive() {
 		_httppack = nullptr;

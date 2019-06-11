@@ -1,5 +1,4 @@
-﻿#include "stdafx.h"
-#include "BilibiliMain.h"
+﻿#include "BilibiliMain.h"
 #include "logger/log.h"
 
 int main() {

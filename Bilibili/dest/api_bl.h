@@ -38,7 +38,12 @@ namespace apibl {
 	// 进入房间历史记录
 	BILIRET APIWebv1RoomEntry(const std::shared_ptr<user_info> &user, unsigned room);
 	// 领取风暴
-	BILIRET APIWebv1StormJoin(std::shared_ptr<user_info> &user, int roomID, long long cid, std::string code, std::string token);
+	BILIRET APIWebv1StormJoin(
+		std::shared_ptr<user_info> &user, 
+		std::shared_ptr<BILI_LOTTERYDATA> data, 
+		std::string code, 
+		std::string token
+	);
 	// 查询扭蛋币数量
 	BILIRET APIWebv1CapsuleCheck(const std::shared_ptr<user_info> &user);
 
@@ -47,14 +52,20 @@ namespace apibl {
 	// 领取每日礼物
 	BILIRET APIWebv2GiftDaily(const std::shared_ptr<user_info> &user);
 	// 上船低保领取
-	BILIRET APIWebv2LotteryJoin(std::shared_ptr<user_info> &user, const std::string &type, const int rrid, const long long loid);
+	BILIRET APIWebv2LotteryJoin(
+		std::shared_ptr<user_info> &user, 
+		std::shared_ptr<BILI_LOTTERYDATA> data
+	);
 	// 查询背包道具
 	BILIRET APIWebv2GiftBag(const std::shared_ptr<user_info> &user);
 
 	/* 网页端 v3 API*/
 
 	// 通告礼物抽奖
-	BILIRET APIWebv3SmallTV(std::shared_ptr<user_info> &user, int rrid, long long loid);
+	BILIRET APIWebv3SmallTV(
+		std::shared_ptr<user_info> &user,
+		std::shared_ptr<BILI_LOTTERYDATA> data
+	);
 
 	/* 安卓端 API*/
 
@@ -72,11 +83,19 @@ namespace apibl {
 	/* 安卓端 v1 API*/
 
 	// 领取风暴
-	BILIRET APIAndv1StormJoin(std::shared_ptr<user_info> &user, long long cid);
+	BILIRET APIAndv1StormJoin(
+		std::shared_ptr<user_info> &user,
+		std::shared_ptr<BILI_LOTTERYDATA> data
+	);
 
 	/* 安卓端 v2 API*/
 
 	// 移动端登录接口
-	BILIRET APIAndv2Login(std::shared_ptr<user_info> &user, std::string username, std::string password, std::string captcha);
+	BILIRET APIAndv2Login(
+		std::shared_ptr<user_info> &user, 
+		std::string username, 
+		std::string password, 
+		std::string captcha
+	);
 
 }

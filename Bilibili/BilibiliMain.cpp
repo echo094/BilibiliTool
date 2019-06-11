@@ -1,15 +1,13 @@
-﻿#include "stdafx.h"
-#include "BilibiliMain.h"
+﻿#include "BilibiliMain.h"
 #include <fstream>
 #include <iostream>
-#include <memory>
-#include <sstream>
-#include <thread>
 #include <time.h>
 #include "logger/log.h"
 #include "event/event_dmmsg.h"
 #include "source/source_dmws.h"
 #include "source/source_dmasio.h"
+#include "utility/platform.h"
+#include "utility/strconvert.h"
 
 const int HEART_INTERVAL = 300; 
 
@@ -219,12 +217,10 @@ int CBilibiliMain::ProcessMSGAct(unsigned msg, std::shared_ptr<BILI_LOTTERYDATA>
 		break;
 	}
 	case MSG_NEWGUARD0: {
-		// 房间上船事件
 		JoinGuardGift0(data);
 		break;
 	}
 	case MSG_NEWGUARD1: {
-		// 广播上船事件
 		JoinGuardGift1(data);
 		break;
 	}
@@ -501,24 +497,31 @@ int CBilibiliMain::UpdateLiveRoom() {
 	return 0;
 }
 
+// 抽奖事件
+// 输入含有 rrid
 int CBilibiliMain::JoinLottery(std::shared_ptr<BILI_LOTTERYDATA> data)
 {
 	int ret = -1, count = 2;
-	ret = _lotterytv->CheckLottery(curl_main_, data->rrid);
+	ret = _lotterytv->CheckLottery(curl_main_, data);
 	while (ret&&count) {
 		Sleep(1000);
-		ret = _lotterytv->CheckLottery(curl_main_, data->rrid);
+		ret = _lotterytv->CheckLottery(curl_main_, data);
 		count--;
 	}
 	if (ret != 0) {
 		return -1;
 	}
-	while (_lotterytv->GetNextLottery(data) == 0) {
-		_logfile << "{time:" << GetTimeStamp()
+	while (1) {
+		data = _lotterytv->GetNextLottery();
+		if (data == nullptr) {
+			return 0;
+		}
+		_logfile << "{time:" << data->time_start
 			<< ",type:'" << data->type
 			<< "',ruid:" << data->rrid
 			<< ",loid:" << data->loid
-			<< "}," << std::endl;
+			<< ",title:'" << data->title
+			<< "'}," << std::endl;
 
 		if (isSkip()) {
 			continue;
@@ -528,20 +531,26 @@ int CBilibiliMain::JoinLottery(std::shared_ptr<BILI_LOTTERYDATA> data)
 	return 0;
 }
 
+// 广播上船事件
+// 含有 rrid
 int CBilibiliMain::JoinGuardGift1(std::shared_ptr<BILI_LOTTERYDATA> data)
 {
 	int ret = -1, count = 2;
-	ret = _lotterygu->CheckLottery(curl_main_, data->rrid);
+	ret = _lotterygu->CheckLottery(curl_main_, data);
 	while (ret&&count) {
 		Sleep(1000);
-		ret = _lotterygu->CheckLottery(curl_main_, data->rrid);
+		ret = _lotterygu->CheckLottery(curl_main_, data);
 		count--;
 	}
 	if (ret != 0) {
 		return -1;
 	}
-	while (_lotterygu->GetNextLottery(data) == 0) {
-		_logfile << "{time:" << GetTimeStamp()
+	while (1) {
+		data = _lotterytv->GetNextLottery();
+		if (data == nullptr) {
+			return 0;
+		}
+		_logfile << "{time:" << data->time_start
 			<< ",type:'" << data->type << '_' << data->exinfo
 			<< "',ruid:" << data->rrid
 			<< ",loid:" << data->loid
@@ -556,9 +565,10 @@ int CBilibiliMain::JoinGuardGift1(std::shared_ptr<BILI_LOTTERYDATA> data)
 	return 0;
 }
 
+// 房间上船事件
 int CBilibiliMain::JoinGuardGift0(std::shared_ptr<BILI_LOTTERYDATA> data)
 {
-	_logfile << "{time:" << GetTimeStamp()
+	_logfile << "{time:" << data->time_start
 		<< ",type:'" << data->type << '_' << data->exinfo
 		<< "',ruid:" << data->rrid
 		<< ",loid:" << data->loid
@@ -572,10 +582,12 @@ int CBilibiliMain::JoinGuardGift0(std::shared_ptr<BILI_LOTTERYDATA> data)
 	return 0;
 }
 
+// 节奏风暴事件
+// 含有 rrid loid
 int CBilibiliMain::JoinSpecialGift(std::shared_ptr<BILI_LOTTERYDATA> data)
 {
-	_logfile << "{time:" << GetTimeStamp()
-		<< ",type:'" << "storm"
+	_logfile << "{time:" << data->time_start
+		<< ",type:'" << data->type
 		<< "',ruid:" << data->rrid
 		<< ",loid:" << data->loid
 		<< "}," << std::endl;
@@ -608,7 +620,7 @@ bool CBilibiliMain::isSkip() {
 int CBilibiliMain::SaveLogFile() {
 	int ret = 0;
 	char name[50];
-	sprintf(name, "[BILIMAIN]%sActHis.log", GetTimeString().c_str());
+	sprintf(name, "[BILIMAIN]%sActHis.log", toollib::GetTimeString().c_str());
 	if (_logfile.is_open()) {
 		_logfile.close();
 	}

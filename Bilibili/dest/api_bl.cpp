@@ -316,14 +316,21 @@ BILIRET apibl::APIWebv1RoomEntry(const std::shared_ptr<user_info>& user, unsigne
 	return BILIRET::NOFAULT;
 }
 
-BILIRET apibl::APIWebv1StormJoin(std::shared_ptr<user_info>& user, int roomID, long long cid, std::string code, std::string token) {
+BILIRET apibl::APIWebv1StormJoin(
+	std::shared_ptr<user_info> &user,
+	std::shared_ptr<BILI_LOTTERYDATA> data,
+	std::string code,
+	std::string token
+) {
 	user->httpweb->url = URL_LIVEAPI_HEAD + "/lottery/v1/Storm/join";
 	std::ostringstream oss;
-	oss << "id=" << cid
-		<< "&color=16777215&captcha_token=" << token
+	oss << "id=" << data->loid
+		<< "&color=16777215"
+		<< "&captcha_token=" << token
 		<< "&captcha_phrase=" << code
-		<< "&roomid=" << roomID
+		<< "&roomid=" << data->rrid
 		<< "&csrf_token=" << user->tokenjct
+		<< "&csrf=" << user->tokenjct
 		<< "&visit_id=" << user->visitid;
 	user->httpweb->send_data = oss.str();
 	user->httpweb->ClearHeader();
@@ -331,7 +338,7 @@ BILIRET apibl::APIWebv1StormJoin(std::shared_ptr<user_info>& user, int roomID, l
 	user->httpweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded");
 	user->httpweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
 	std::string strreffer(URL_DEFAULT_REFERERBASE);
-	strreffer += std::to_string(roomID);
+	strreffer += std::to_string(data->srid);
 	user->httpweb->AddHeaderManual(strreffer.c_str());
 	int ret = toollib::HttpPostEx(user->curlweb, user->httpweb);
 	if (ret) {
@@ -434,13 +441,14 @@ BILIRET apibl::APIWebv2GiftDaily(const std::shared_ptr<user_info>& user) {
 	return BILIRET::NOFAULT;
 }
 
-BILIRET apibl::APIWebv2LotteryJoin(std::shared_ptr<user_info>& user, const std::string & type, const int rrid, const long long loid) {
+BILIRET apibl::APIWebv2LotteryJoin(std::shared_ptr<user_info>& user, std::shared_ptr<BILI_LOTTERYDATA> data) {
 	user->httpweb->url = URL_LIVEAPI_HEAD + "/lottery/v2/Lottery/join";
 	std::ostringstream oss;
-	oss << "roomid=" << rrid
-		<< "&id=" << loid
-		<< "&type=" << type
+	oss << "roomid=" << data->rrid
+		<< "&id=" << data->loid
+		<< "&type=" << data->type
 		<< "&csrf_token=" << user->tokenjct
+		<< "&csrf=" << user->tokenjct
 		<< "&visit_id=" << user->visitid;
 	user->httpweb->send_data = oss.str();
 	user->httpweb->ClearHeader();
@@ -448,7 +456,7 @@ BILIRET apibl::APIWebv2LotteryJoin(std::shared_ptr<user_info>& user, const std::
 	user->httpweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded");
 	user->httpweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
 	std::string strreffer(URL_DEFAULT_REFERERBASE);
-	strreffer += std::to_string(rrid);
+	strreffer += std::to_string(data->srid);
 	user->httpweb->AddHeaderManual(strreffer.c_str());
 	int ret = toollib::HttpPostEx(user->curlweb, user->httpweb);
 	if (ret) {
@@ -521,12 +529,16 @@ BILIRET apibl::APIWebv2GiftBag(const std::shared_ptr<user_info>& user) {
 	return BILIRET::NOFAULT;
 }
 
-BILIRET apibl::APIWebv3SmallTV(std::shared_ptr<user_info>& user, int rrid, long long loid) {
+BILIRET apibl::APIWebv3SmallTV(
+	std::shared_ptr<user_info> &user,
+	std::shared_ptr<BILI_LOTTERYDATA> data
+) {
 	user->httpweb->url = URL_LIVEAPI_HEAD + "/xlive/lottery-interface/v3/smalltv/Join";
 	std::ostringstream oss;
-	oss << "roomid=" << rrid
-		<< "&raffleId=" << loid
-		<< "&type=Gift&csrf_token=" << user->tokenjct
+	oss << "roomid=" << data->rrid
+		<< "&raffleId=" << data->loid
+		<< "&type=Gift"
+		<< "&csrf_token=" << user->tokenjct
 		<< "&csrf=" << user->tokenjct
 		<< "&visit_id=" << user->visitid;
 	user->httpweb->send_data = oss.str();
@@ -535,7 +547,7 @@ BILIRET apibl::APIWebv3SmallTV(std::shared_ptr<user_info>& user, int rrid, long 
 	user->httpweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded");
 	user->httpweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
 	oss.str("");
-	oss << URL_DEFAULT_REFERERBASE << rrid;
+	oss << URL_DEFAULT_REFERERBASE << data->srid;
 	user->httpweb->AddHeaderManual(oss.str().c_str());
 	int ret = toollib::HttpPostEx(user->curlweb, user->httpweb);
 	if (ret) {
@@ -727,13 +739,16 @@ BILIRET apibl::APIAndGetKey(const std::shared_ptr<user_info>& user, std::string 
 	return BILIRET::OPENSSL_ERROR;
 }
 
-BILIRET apibl::APIAndv1StormJoin(std::shared_ptr<user_info>& user, long long cid) {
+BILIRET apibl::APIAndv1StormJoin(
+	std::shared_ptr<user_info> &user,
+	std::shared_ptr<BILI_LOTTERYDATA> data
+) {
 	user->httpapp->url = URL_LIVEAPI_HEAD + "/lottery/v1/Storm/join";
 	std::ostringstream oss;
 	oss << "access_key=" << user->tokena
 		<< "&actionKey=appkey&appkey=" << APP_KEY
 		<< "&build=" << PARAM_BUILD
-		<< "&device=android&id=" << cid
+		<< "&device=android&id=" << data->rrid
 		<< "&mobi_app=android&platform=android&ts=" << GetTimeStamp();
 	std::string sign;
 	GetMD5Sign(oss.str().c_str(), sign);
