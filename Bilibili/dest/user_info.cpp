@@ -16,15 +16,17 @@ user_info::user_info() :
 	conf_guard(0),
 	conf_pk(0),
 	httpweb(new CHTTPPack()),
-	httpapp(new CHTTPPack("Mozilla/5.0 BiliDroid/5.23.2 (bbcallen@gmail.com)")) {
+	httpapp(new CHTTPPack("Mozilla/5.0 BiliDroid/5.43.0 (bbcallen@gmail.com)")) {
 	curlweb = curl_easy_init();
 	curlapp = curl_easy_init();
 	httpweb->AddHeaderInf("Accept-Language: zh-CN,zh;q=0.8");
 	httpweb->AddHeaderInf("Connection: keep-alive");
 	httpweb->AddHeaderInf("DNT: 1");
-	httpapp->AddHeaderInf("Buvid: A59813F7-2A50-42C5-A246-AF93A96374E320912infoc");
-	httpapp->AddHeaderInf("Device-ID: KRkhFHdFd0J0RXBFOUU5Cj8KPQg_Dz4OOQkxBDUA");
-	httpapp->AddHeaderInf("Display-ID: 759639-1523371597");
+	httpapp->AddHeaderInf("APP-KEY: android");
+	httpapp->AddHeaderInf("Buvid: XZ843B78BAAB10F554BBD584271300E8DE86A");
+	httpapp->AddHeaderInf("Device-ID: HCwUIUJwQndBcEVwDD4MPgw1V2EAZF0_CnYKOAo_CTgNOAo_Cz8IOAA1Vg");
+	httpapp->AddHeaderInf("Display-ID: XZ843B78BAAB10F554BBD584271300E8DE86A-1560783638");
+	httpapp->AddHeaderInf("env: prod");
 	httpapp->AddHeaderInf("Connection: keep-alive");
 }
 

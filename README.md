@@ -18,6 +18,38 @@ Bilibili直播站小工具
 
 
 
+## Attention
+
+最近B站程序员做了一些比较大的改动，看了一下至少包含以下3件。
+
+**第1件**
+
+新的活动道具`铃音`需要使用客户端挂机才能获得，看了一下使用了全新的API：
+
+头部为：`https://live-trace.bilibili.com/xlive/data-interface/v1/heartbeat/`
+
+共有3个指令：
+
+`mobileEntry`：获取`secret_key`等信息
+
+`mobileHeartBeat`：心跳包，300秒1次
+
+`mobileExit`：退出时的通知
+
+在后两个指令中存在新的`client_sign`签名，没做过安卓开发，只能等大腿搞定了。
+
+**第2件**
+
+目前抽奖API多出了一个`time_wait`的参数，比如小电视是120秒，必须等倒计时结束才能参与抽奖。抽奖结束的时间不变。
+
+客户端已实装，网页端暂时没有实装。
+
+**第3件**
+
+弹幕协议的连接数据包增加了一个`key`字段，需要通过API`/room/v1/Danmu/getConf`获取，目前`key`可以复用，不保证以后变成一次性的。
+
+
+
 ## Features  
 
 

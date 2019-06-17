@@ -447,7 +447,7 @@ void dest_user::_ActHeartFirst(std::shared_ptr<user_info> &user) {
 	// 双端观看奖励
 	apibl::APIWebTaskInfo(user);
 	// 银瓜子领取信息获取
-	apibl::APIAndSilverTask(user);
+	apibl::APIAndv1SilverTask(user);
 	// 签到
 	apibl::APIWebSign(user);
 	// 每日礼物
@@ -466,14 +466,14 @@ void dest_user::_ActHeartContinue(std::shared_ptr<user_info> &user) {
 	if (user->heart_deadline == 0) {
 		user->heart_deadline = 5;
 		apibl::APIWebv1HeartBeat(user);
-		apibl::APIAndHeart(user);
+		apibl::APIAndv1Heart(user);
 		apibl::APIWebOnlineHeart(user);
 	}
 	if (user->silver_deadline != -1) {
 		user->silver_deadline--;
 		if (user->silver_deadline == 0) {
-			apibl::APIAndSilverAward(user);
-			apibl::APIAndSilverTask(user);
+			apibl::APIAndv1SilverAward(user);
+			apibl::APIAndv1SilverTask(user);
 		}
 	}
 }
@@ -493,6 +493,14 @@ int dest_user::_ActLottery(std::shared_ptr<user_info>& user, std::shared_ptr<BIL
 			count--;
 		}
 	}
+	// 手机端需要 time_wait 倒计时结束才能抽奖
+	if (user->conf_lottery == 2) {
+		// 产生访问记录
+		apibl::APIAndv1RoomEntry(user, data->rrid);
+		// 调用客户端API领取
+		apibl::APIAndv4SmallTV(user, data);
+		return 0;
+	}
 	return 0;
 }
 
@@ -502,6 +510,13 @@ int dest_user::_ActGuard(std::shared_ptr<user_info>& user, std::shared_ptr<BILI_
 		apibl::APIWebv1RoomEntry(user, data->rrid);
 		// 网页端API
 		apibl::APIWebv2LotteryJoin(user, data);
+		return 0;
+	}
+	if (user->conf_guard == 2) {
+		// 产生访问记录
+		apibl::APIAndv1RoomEntry(user, data->rrid);
+		// 调用客户端API领取
+		apibl::APIAndv2LotteryJoin(user, data);
 		return 0;
 	}
 	return 0;
@@ -517,6 +532,8 @@ int dest_user::_ActStorm(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_
 		return 0;
 	}
 	if (user->conf_storm == 2) {
+		// 产生访问记录
+		apibl::APIAndv1RoomEntry(user, data->rrid);
 		// 调用客户端API领取
 		apibl::APIAndv1StormJoin(user, data);
 		return 0;
@@ -525,12 +542,18 @@ int dest_user::_ActStorm(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_
 }
 
 int dest_user::_ActPK(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data) {
-	// 风暴只领取一次 不管成功与否
 	if (user->conf_pk == 1) {
 		// 产生访问记录
 		apibl::APIWebv1RoomEntry(user, data->rrid);
 		// 网页端API
 		apibl::APIWebv1PKJOIN(user, data);
+		return 0;
+	}
+	if (user->conf_pk == 2) {
+		// 产生访问记录
+		apibl::APIAndv1RoomEntry(user, data->rrid);
+		// 调用客户端API领取
+		apibl::APIAndv1PKJOIN(user, data);
 		return 0;
 	}
 	return 0;

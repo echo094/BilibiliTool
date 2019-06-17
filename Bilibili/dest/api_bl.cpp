@@ -664,128 +664,6 @@ BILIRET apibl::APIWebv3SmallTV(
 	return BILIRET::NOFAULT;
 }
 
-// 客户端经验心跳
-BILIRET apibl::APIAndHeart(const std::shared_ptr<user_info> &user) {
-	user->httpapp->url = URL_LIVEAPI_HEAD + "/mobile/userOnlineHeart?";
-	std::ostringstream oss;
-	oss << "access_key=" << user->tokena
-		<< "&actionKey=appkey&appkey=" << APP_KEY
-		<< "&build=" << PARAM_BUILD
-		<< "&device=android&mobi_app=android&platform=android&ts=" << GetTimeStamp();
-	std::string sign;
-	GetMD5Sign(oss.str().c_str(), sign);
-	oss << "&sign=" << sign;
-	user->httpapp->url += oss.str();
-	user->httpapp->send_data = "{'roomid': 23058, 'scale': 'xhdpi'}";
-	user->httpapp->ClearHeader();
-	int ret = toollib::HttpPostEx(user->curlapp, user->httpapp);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	rapidjson::Document doc;
-	doc.Parse(user->httpapp->recv_data.c_str());
-	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
-		return BILIRET::JSON_ERROR;
-	}
-	ret = doc["code"].GetInt();
-	if (ret) {
-		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << user->fileid << "] "
-			<< "APIAndHeart: " << user->httpweb->recv_data;
-		return BILIRET::JSON_ERROR;
-	}
-	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
-		<< "APIAndHeart: OK";
-
-	return BILIRET::NOFAULT;
-}
-
-BILIRET apibl::APIAndSilverTask(std::shared_ptr<user_info>& user) {
-	user->httpapp->url = URL_LIVEAPI_HEAD + "/mobile/freeSilverCurrentTask";
-	std::ostringstream oss;
-	oss << "access_key=" << user->tokena
-		<< "&actionKey=appkey&appkey=" << APP_KEY
-		<< "&build=" << PARAM_BUILD
-		<< "&device=android&mobi_app=android&platform=android&ts=" << GetTimeStamp();
-	std::string sign;
-	GetMD5Sign(oss.str().c_str(), sign);
-	oss << "&sign=" << sign;
-	user->httpapp->send_data = oss.str();
-	user->httpapp->ClearHeader();
-	int ret = toollib::HttpPostEx(user->curlapp, user->httpapp);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-	// 领完为-10017
-
-	rapidjson::Document doc;
-	doc.Parse(user->httpapp->recv_data.c_str());
-	if (!doc.IsObject() || !doc.HasMember("code")) {
-		return BILIRET::JSON_ERROR;
-	}
-	ret = doc["code"].GetInt();
-	if (ret != 0) {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
-			<< "APIAndSilverTask: No new task.";
-		user->silver_deadline = -1;
-		return BILIRET::NOFAULT;
-	}
-	user->silver_minute = doc["data"]["minute"].GetInt();
-	user->silver_amount = doc["data"]["silver"].GetInt();
-	user->silver_start = doc["data"]["time_start"].GetInt();
-	user->silver_end = doc["data"]["time_end"].GetInt();
-	user->silver_deadline = user->silver_minute;
-	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
-		<< "APIAndSilverTask: Wait:" << user->silver_minute << " Amount:" << user->silver_amount;
-
-	return BILIRET::NOFAULT;
-}
-
-BILIRET apibl::APIAndSilverAward(std::shared_ptr<user_info> &user) {
-	user->httpapp->url = URL_LIVEAPI_HEAD + "/mobile/freeSilverAward";
-	std::ostringstream oss;
-	oss << "access_key=" << user->tokena
-		<< "&actionKey=appkey&appkey=" << APP_KEY
-		<< "&build=" << PARAM_BUILD
-		<< "&device=android&mobi_app=android&platform=android&time_end=" << user->silver_end
-		<< "&time_start=" << user->silver_start
-		<< "&ts=" << GetTimeStamp();
-	std::string sign;
-	GetMD5Sign(oss.str().c_str(), sign);
-	oss << "&sign=" << sign;
-	user->httpapp->send_data = oss.str();
-	user->httpapp->ClearHeader();
-	int ret = toollib::HttpPostEx(user->curlapp, user->httpapp);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	rapidjson::Document doc;
-	doc.Parse(user->httpapp->recv_data.c_str());
-	if (!doc.IsObject() || !doc.HasMember("code")) {
-		return BILIRET::JSON_ERROR;
-	}
-	ret = doc["code"].GetInt();
-	if (ret) {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
-			<< "APIAndSilverAward: Error.";
-		user->silver_deadline = 0;
-		return BILIRET::NOFAULT;
-	}
-
-	if (doc["data"]["isEnd"].GetInt()) {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
-			<< "APIAndSilverAward: Finish.";
-		user->silver_deadline = -1;
-	}
-	else {
-		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
-			<< "APIAndSilverAward: Success.";
-		user->silver_deadline = 0;
-	}
-	return BILIRET::NOFAULT;
-}
-
 BILIRET apibl::APIAndGetKey(const std::shared_ptr<user_info>& user, std::string & psd) {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User] Get APP RSA key...";
 	user->httpapp->url = "https://passport.bilibili.com/api/oauth2/getKey";
@@ -820,6 +698,166 @@ BILIRET apibl::APIAndGetKey(const std::shared_ptr<user_info>& user, std::string 
 	}
 
 	return BILIRET::OPENSSL_ERROR;
+}
+
+BILIRET apibl::APIAndv1RoomEntry(const std::shared_ptr<user_info>& user, unsigned room) {
+	user->httpapp->url = URL_LIVEAPI_HEAD + "/room/v1/Room/room_entry_action";
+	std::ostringstream oss;
+	oss << "access_key=" << user->tokena
+		<< "&actionKey=appkey"
+		<< "&appkey=" << APP_KEY
+		<< "&build=" << PARAM_BUILD
+		<< "&device=android"
+		<< "&jumpFrom=" << 28000
+		<< "&mobi_app=android"
+		<< "&platform=android"
+		<< "&room_id=" << room
+		<< "&ts=" << GetTimeStamp();
+	std::string sign;
+	GetMD5Sign(oss.str().c_str(), sign);
+	oss << "&sign=" << sign;
+	user->httpapp->send_data = oss.str();
+	user->httpapp->ClearHeader();
+	user->httpapp->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=utf-8");
+	int ret = toollib::HttpPostEx(user->curlapp, user->httpapp);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	return BILIRET::NOFAULT;
+}
+
+// 客户端经验心跳
+BILIRET apibl::APIAndv1Heart(const std::shared_ptr<user_info> &user) {
+	user->httpapp->url = URL_LIVEAPI_HEAD + "/heartbeat/v1/OnLine/mobileOnline?";
+	std::ostringstream oss;
+	oss << "access_key=" << user->tokena
+		<< "&actionKey=appkey"
+		<< "&appkey=" << APP_KEY
+		<< "&build=" << PARAM_BUILD
+		<< "&device=android"
+		<< "&mobi_app=android"
+		<< "&platform=android"
+		<< "&ts=" << GetTimeStamp();
+	std::string sign;
+	GetMD5Sign(oss.str().c_str(), sign);
+	oss << "&sign=" << sign;
+	user->httpapp->url += oss.str();
+	user->httpapp->send_data = "{'roomid': 23058, 'scale': 'xhdpi'}";
+	user->httpapp->ClearHeader();
+	int ret = toollib::HttpPostEx(user->curlapp, user->httpapp);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpapp->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
+		return BILIRET::JSON_ERROR;
+	}
+	ret = doc["code"].GetInt();
+	if (ret) {
+		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << user->fileid << "] "
+			<< "APIAndv1Heart: " << user->httpweb->recv_data;
+		return BILIRET::JSON_ERROR;
+	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+		<< "APIAndv1Heart: OK";
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIAndv1SilverTask(std::shared_ptr<user_info>& user) {
+	user->httpapp->url = URL_LIVEAPI_HEAD + "/lottery/v1/SilverBox/getCurrentTask?";
+	std::ostringstream oss;
+	oss << "access_key=" << user->tokena
+		<< "&actionKey=appkey"
+		<< "&appkey=" << APP_KEY
+		<< "&build=" << PARAM_BUILD
+		<< "&device=android"
+		<< "&mobi_app=android"
+		<< "&platform=android"
+		<< "&ts=" << GetTimeStamp();
+	std::string sign;
+	GetMD5Sign(oss.str().c_str(), sign);
+	oss << "&sign=" << sign;
+	user->httpapp->url += oss.str();
+	user->httpapp->ClearHeader();
+	int ret = toollib::HttpGetEx(user->curlapp, user->httpapp);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpapp->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("code")) {
+		return BILIRET::JSON_ERROR;
+	}
+	ret = doc["code"].GetInt();
+	if (ret != 0) {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIAndv1SilverTask: No new task.";
+		user->silver_deadline = -1;
+		return BILIRET::NOFAULT;
+	}
+	user->silver_minute = doc["data"]["minute"].GetInt();
+	user->silver_amount = doc["data"]["silver"].GetInt();
+	user->silver_start = doc["data"]["time_start"].GetInt();
+	user->silver_end = doc["data"]["time_end"].GetInt();
+	user->silver_deadline = user->silver_minute;
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+		<< "APIAndv1SilverTask: Wait:" << user->silver_minute << " Amount:" << user->silver_amount;
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIAndv1SilverAward(std::shared_ptr<user_info> &user) {
+	user->httpapp->url = URL_LIVEAPI_HEAD + "/lottery/v1/SilverBox/getAward?";
+	std::ostringstream oss;
+	oss << "access_key=" << user->tokena
+		<< "&actionKey=appkey"
+		<< "&appkey=" << APP_KEY
+		<< "&build=" << PARAM_BUILD
+		<< "&device=android"
+		<< "&mobi_app=android"
+		<< "&platform=android"
+		<< "&time_end=" << user->silver_end
+		<< "&time_start=" << user->silver_start
+		<< "&ts=" << GetTimeStamp();
+	std::string sign;
+	GetMD5Sign(oss.str().c_str(), sign);
+	oss << "&sign=" << sign;
+	user->httpapp->url += oss.str();
+	user->httpapp->ClearHeader();
+	int ret = toollib::HttpGetEx(user->curlapp, user->httpapp);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpapp->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("code")) {
+		return BILIRET::JSON_ERROR;
+	}
+	ret = doc["code"].GetInt();
+	if (ret) {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIAndv1SilverAward: Error.";
+		user->silver_deadline = 0;
+		return BILIRET::NOFAULT;
+	}
+
+	if (doc["data"]["isEnd"].GetInt()) {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIAndv1SilverAward: Finish.";
+		user->silver_deadline = -1;
+	}
+	else {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIAndv1SilverAward: Success.";
+		user->silver_deadline = 0;
+	}
+	return BILIRET::NOFAULT;
 }
 
 BILIRET apibl::APIAndv1StormJoin(
@@ -866,6 +904,114 @@ BILIRET apibl::APIAndv1StormJoin(
 	msg = doc["data"]["mobile_content"].GetString();
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
 		<< "APIAndv1StormJoin: " << msg;
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIAndv1PKJOIN(
+	std::shared_ptr<user_info>& user, 
+	std::shared_ptr<BILI_LOTTERYDATA> data
+) {
+	user->httpapp->url = URL_LIVEAPI_HEAD + "/xlive/lottery-interface/v1/pk/join";
+	std::ostringstream oss;
+	oss << "access_key=" << user->tokena
+		<< "&actionKey=appkey"
+		<< "&appkey=" << APP_KEY
+		<< "&build=" << PARAM_BUILD
+		<< "&device=android"
+		<< "&id=" << data->loid
+		<< "&mobi_app=android"
+		<< "&platform=android"
+		<< "&roomid=" << data->rrid
+		<< "&ts=" << GetTimeStamp();
+	std::string sign;
+	GetMD5Sign(oss.str().c_str(), sign);
+	oss << "&sign=" << sign;
+	user->httpapp->send_data = oss.str();
+	user->httpapp->ClearHeader();
+	user->httpapp->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=utf-8");
+	int ret = toollib::HttpPostEx(user->curlapp, user->httpapp);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpapp->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
+		return BILIRET::JSON_ERROR;
+	}
+
+	// 0成功 -400已领取 -500系统繁忙
+	int icode = doc["code"].GetInt();
+	if (icode) {
+		// 检查是否被封禁
+		if (icode == 400) {
+			user->SetBanned();
+		}
+		std::string tmpstr;
+		if (doc.HasMember("message") && doc["message"].IsString()) {
+			tmpstr = doc["message"].GetString();
+		}
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIAndv1PKJOIN: " << tmpstr;
+		return BILIRET::NOFAULT;
+	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+		<< "APIAndv1PKJOIN award: " << doc["data"]["award_text"].GetString();
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIAndv2LotteryJoin(
+	std::shared_ptr<user_info>& user,
+	std::shared_ptr<BILI_LOTTERYDATA> data
+) {
+	user->httpapp->url = URL_LIVEAPI_HEAD + "/lottery/v2/Lottery/join";
+	std::ostringstream oss;
+	oss << "access_key=" << user->tokena
+		<< "&actionKey=appkey"
+		<< "&appkey=" << APP_KEY
+		<< "&build=" << PARAM_BUILD
+		<< "&device=android"
+		<< "&id=" << data->loid
+		<< "&mobi_app=android"
+		<< "&platform=android"
+		<< "&roomid=" << data->rrid
+		<< "&ts=" << GetTimeStamp()
+		<< "&type=" << data->type;
+	std::string sign;
+	GetMD5Sign(oss.str().c_str(), sign);
+	oss << "&sign=" << sign;
+	user->httpapp->send_data = oss.str();
+	user->httpapp->ClearHeader();
+	user->httpapp->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=utf-8");
+	int ret = toollib::HttpPostEx(user->curlapp, user->httpapp);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpapp->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
+		return BILIRET::JSON_ERROR;
+	}
+
+	std::string tmpstr;
+	int icode = doc["code"].GetInt();
+	if (icode) {
+		// 检查是否被封禁
+		if (icode == 400) {
+			user->SetBanned();
+		}
+		if (doc.HasMember("message") && doc["message"].IsString()) {
+			tmpstr = doc["message"].GetString();
+		}
+	}
+	else {
+		tmpstr = doc["data"]["message"].GetString();
+	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+		<< "APIAndv2LotteryJoin: " << tmpstr;
 
 	return BILIRET::NOFAULT;
 }
@@ -922,6 +1068,61 @@ BILIRET apibl::APIAndv2Login(std::shared_ptr<user_info>& user, std::string usern
 			<< cookie_list[i]["value"].GetString() << "\n";
 	}
 	toollib::HttpImportCookie(user->curlweb, oss.str());
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIAndv4SmallTV(
+	std::shared_ptr<user_info>& user,
+	std::shared_ptr<BILI_LOTTERYDATA> data
+) {
+	user->httpapp->url = URL_LIVEAPI_HEAD + "/gift/v4/smalltv/getAward";
+	std::ostringstream oss;
+	oss << "access_key=" << user->tokena
+		<< "&actionKey=appkey"
+		<< "&appkey=" << APP_KEY
+		<< "&build=" << PARAM_BUILD
+		<< "&device=android"
+		<< "&mobi_app=android"
+		<< "&platform=android"
+		<< "&raffleId=" << data->loid
+		<< "&roomid=" << data->rrid
+		<< "&ts=" << GetTimeStamp()
+		<< "&type=" << data->type;
+	std::string sign;
+	GetMD5Sign(oss.str().c_str(), sign);
+	oss << "&sign=" << sign;
+	user->httpapp->send_data = oss.str();
+	user->httpapp->ClearHeader();
+	user->httpapp->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=utf-8");
+	int ret = toollib::HttpPostEx(user->curlapp, user->httpapp);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpapp->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
+		return BILIRET::JSON_ERROR;
+	}
+
+	// 0成功 -400已领取 -500系统繁忙
+	int icode = doc["code"].GetInt();
+	if (icode) {
+		// 检查是否被封禁
+		if (icode == 400) {
+			user->SetBanned();
+		}
+		std::string tmpstr;
+		if (doc.HasMember("message") && doc["message"].IsString()) {
+			tmpstr = doc["message"].GetString();
+		}
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIAndv4SmallTV: " << tmpstr;
+		return BILIRET::NOFAULT;
+	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+		<< "APIAndv4SmallTV award: " << doc["data"]["gift_name"].GetString();
 
 	return BILIRET::NOFAULT;
 }
