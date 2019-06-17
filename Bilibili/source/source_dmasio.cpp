@@ -52,7 +52,7 @@ int source_dmasio::add_context(const unsigned id, const ROOM_INFO & info) {
 		return -1;
 	}
 	source_base::do_info_add(id, info);
-	asioclient_.connect(id);
+	asioclient_.connect(id, info.key);
 	return 0;
 }
 
@@ -65,9 +65,9 @@ int source_dmasio::del_context(const unsigned id) {
 	return 0;
 }
 
-int source_dmasio::update_context(std::set<unsigned>& nlist, const unsigned opt) {
+int source_dmasio::clean_context(std::set<unsigned>& nlist) {
 	using namespace std;
-	BOOST_LOG_SEV(g_logger::get(), debug) << "[DMAS] Update start. ";
+	BOOST_LOG_SEV(g_logger::get(), debug) << "[DMAS] Clean start. ";
 	set<unsigned> dlist, ilist;
 	{
 		boost::shared_lock<boost::shared_mutex> m(mutex_list_);
@@ -80,25 +80,19 @@ int source_dmasio::update_context(std::set<unsigned>& nlist, const unsigned opt)
 				dlist.insert(*it);
 			}
 		}
+		// 更新传入的列表
+		nlist = ilist;
 	}
 	// 输出操作概要
 	BOOST_LOG_SEV(g_logger::get(), info) << "[DMAS] Status:"
 		<< " Current: " << con_list_.size()
-		<< " New: " << nlist.size()
 		<< " Add: " << ilist.size()
 		<< " Remove: " << dlist.size();
 	// 断开关播房间
 	for (auto it = dlist.begin(); it != dlist.end(); it++) {
 		del_context(*it);
 	}
-	// 连接新增房间
-	for (auto it = ilist.begin(); it != ilist.end(); it++) {
-		ROOM_INFO info;
-		info.id = *it;
-		info.opt = opt;
-		add_context(*it, info);
-	}
-	BOOST_LOG_SEV(g_logger::get(), debug) << "[DMAS] Update finish. ";
+	BOOST_LOG_SEV(g_logger::get(), debug) << "[DMAS] Clean finish. ";
 	return 0;
 }
 
@@ -129,8 +123,13 @@ void source_dmasio::on_error(const unsigned id, const boost::system::error_code 
 void source_dmasio::on_open(context_info * c) {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[DMAS] Open: " << c->label_;
 	source_base::do_list_add(c->label_);
-	char cmdstr[128];
-	int len = protobl::MakeFlashConnectionInfo((unsigned char *)cmdstr, 128, c->label_);
+	char cmdstr[512];
+	int len = protobl::MakeFlashConnectionInfo(
+		(unsigned char *)cmdstr, 
+		sizeof(cmdstr), 
+		c->label_, 
+		c->key_.c_str()
+	);
 	asioclient_.post_write(c, cmdstr, len);
 }
 

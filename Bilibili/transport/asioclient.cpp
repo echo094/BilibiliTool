@@ -51,7 +51,7 @@ void asioclient::deinit()
 	}
 }
 
-void asioclient::connect(const unsigned id)
+void asioclient::connect(const unsigned id, const std::string &key)
 {
 	bool exist = false;
 	context_info *pitem;
@@ -61,7 +61,7 @@ void asioclient::connect(const unsigned id)
 			exist = true;
 		}
 		else {
-			pitem = new context_info(io_context_, id);
+			pitem = new context_info(io_context_, id, key);
 			socket_list_[id] = pitem;
 		}
 	}

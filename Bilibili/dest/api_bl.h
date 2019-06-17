@@ -29,6 +29,13 @@ namespace apibl {
 
 	/* 网页端 v1 API*/
 
+	// 直播服务器信息获取
+	BILIRET APIWebv1DanmuConf(
+		CURL *pcurl,
+		unsigned room,
+		const std::string player,
+		std::string &key
+	);
 	// 直播经验心跳日志1
 	BILIRET APIWebv1HeartBeat(const std::shared_ptr<user_info> &user);
 	// 领取双端观看奖励

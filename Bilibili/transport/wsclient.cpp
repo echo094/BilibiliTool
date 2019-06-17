@@ -108,9 +108,9 @@ context_ptr websocket_endpoint::on_tls_init(websocketpp::connection_hdl) {
 }
 #endif
 
-int websocket_endpoint::connect(int label, std::string const & uri) {
+int websocket_endpoint::connect(int id, std::string const & uri, const std::string key) {
 	// 如果该编号已存在则尝试断开连接。
-	close(label, websocketpp::close::status::normal, "");
+	close(id, websocketpp::close::status::normal, "");
 
 	websocketpp::lib::error_code ec;
 	// 创建连接资源 connection_ptr
@@ -121,9 +121,9 @@ int websocket_endpoint::connect(int label, std::string const & uri) {
 	}
 	// 创建连接的复合信息类 connection_metadata
 	connection_metadata::ptr metadata_ptr = websocketpp::lib::make_shared<connection_metadata>(
-		this, label, con->get_handle(), uri);
+		this, id, con->get_handle(), uri, key);
 	// 添加到map中
-	m_connection_list[label] = metadata_ptr;
+	m_connection_list[id] = metadata_ptr;
 	// 绑定各种回调函数
 	con->set_open_handler(websocketpp::lib::bind(
 		&connection_metadata::on_open, 

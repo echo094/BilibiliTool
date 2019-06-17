@@ -19,8 +19,8 @@ public:
 	int add_context(const unsigned id, const ROOM_INFO& info) override;
 	// 断开特定房间
 	int del_context(const unsigned id) override;
-	// 更新房间
-	int update_context(std::set<unsigned> &nlist, const unsigned opt) override;
+	// 清理房间
+	int clean_context(std::set<unsigned> &nlist) override;
 	// 显示当前连接数
 	void show_stat() override;
 

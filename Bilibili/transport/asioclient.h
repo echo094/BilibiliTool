@@ -40,13 +40,19 @@ struct context_info {
 	char buff_header_[ioconst::MAX_HEADER_BUFF];
 	char buff_payload_[ioconst::MAX_PAYLOAD_BUFF];
 	tcp::socket socket_;
+	std::string key_;
 
-	context_info(boost::asio::io_context &io_context, const int id):
+	context_info(
+		boost::asio::io_context &io_context, 
+		const int id,
+		const std::string &key
+	):
 		stat_(0),
 		label_(id),
 		opt_(0),
 		len_send_(0),
-		socket_(io_context) {
+		socket_(io_context),
+		key_(key) {
 		buff_send_[0] = 0;
 		buff_header_[0] = 0;
 		buff_payload_[0] = 0;
@@ -80,7 +86,7 @@ public:
 public:
 	void init(const std::string& host, const std::string& service, const std::size_t interval);
 	void deinit();
-	void connect(const unsigned rid);
+	void connect(const unsigned rid, const std::string &key);
 	int disconnect(const unsigned id);
 	void post_write(context_info* context, const char *msg, const size_t len);
 	void post_read(context_info* context);

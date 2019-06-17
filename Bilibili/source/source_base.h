@@ -13,6 +13,8 @@ typedef struct _ROOM_INFO {
 	unsigned opt;
 	// 需要关闭（下播时）
 	bool needclose;
+	// 连接时的key
+	std::string key;
 
 	_ROOM_INFO() :
 		id(0),
@@ -39,7 +41,10 @@ public:
 	virtual int stop();
 	virtual int add_context(const unsigned id, const ROOM_INFO& info) = 0;
 	virtual int del_context(const unsigned id) = 0;
-	virtual int update_context(std::set<unsigned> &nlist, const unsigned opt) = 0;
+	// 清理房间
+	// 导入新列表 在列表中清除已连接的房间
+	// 关闭停播的房间
+	virtual int clean_context(std::set<unsigned> &nlist) = 0;
 	virtual void show_stat();
 
 public:

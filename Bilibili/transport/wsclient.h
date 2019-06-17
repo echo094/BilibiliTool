@@ -30,13 +30,19 @@ class connection_metadata {
 public:
 	typedef websocketpp::lib::shared_ptr<connection_metadata> ptr;
 
-	connection_metadata(websocket_endpoint *ep, int id, websocketpp::connection_hdl hdl, std::string uri)
-		: m_endpoint(ep)
+	connection_metadata(
+		websocket_endpoint *ep, 
+		int id,
+		websocketpp::connection_hdl hdl, 
+		std::string uri,
+		std::string key
+	): m_endpoint(ep)
 		, m_id(id)
 		, m_hdl(hdl)
 		, m_status("Connecting")
 		, m_uri(uri)
-		, m_server("N/A") {
+		, m_server("N/A")
+		, m_key(key) {
 		// std::cout << "> Init metadata " << m_id << std::endl;
 	}
 
@@ -61,6 +67,10 @@ public:
 		return m_status;
 	}
 
+	const std::string &get_key() const {
+		return m_key;
+	}
+
 	std::string get_error_reason() const {
 		return m_error_reason;
 	}
@@ -79,6 +89,8 @@ private:
 	std::string m_uri;
 	// 服务器名称
 	std::string m_server;
+	// 连接房间时的key
+	std::string m_key;
 	// 连接关闭的原因
 	std::string m_error_reason;
 	// 接收数据缓存
@@ -99,7 +111,7 @@ protected:
 #endif
 
 public:
-	int connect(int label, std::string const & uri);
+	int connect(int id, std::string const & uri, const std::string key);
 	void close(int id, websocketpp::close::status::value code, std::string reason);
 	void closeall();
 	void send(int id, unsigned char *message, int len);

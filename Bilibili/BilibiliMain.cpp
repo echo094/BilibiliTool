@@ -3,6 +3,7 @@
 #include <iostream>
 #include <time.h>
 #include "logger/log.h"
+#include "dest/api_bl.h"
 #include "event/event_dmmsg.h"
 #include "source/source_dmws.h"
 #include "source/source_dmasio.h"
@@ -398,6 +399,12 @@ int CBilibiliMain::StartMonitorPubEvent() {
 	// 清空错过抽奖列表
 	_lotterytv->ClearMissingLottery();
 
+	// 获取key
+	std::string key;
+	if (apibl::APIWebv1DanmuConf(curl_main_, 23058, "web", key) != BILIRET::NOFAULT) {
+		printf("Start failed! \n");
+		return -1;
+	}
 	// 获取需要连接的房间
 	unsigned num = 0;
 	if (_apilive->GetAreaNum(curl_main_, num) != BILIRET::NOFAULT) {
@@ -410,6 +417,7 @@ int CBilibiliMain::StartMonitorPubEvent() {
 			ROOM_INFO info;
 			info.id = roomid;
 			info.opt = i | DM_PUBEVENT;
+			info.key = key;
 			_dmsource->add_context(roomid, info);
 		}
 	}
@@ -473,13 +481,16 @@ int CBilibiliMain::UpdateAreaRoom(const unsigned rid, const unsigned area, const
 		}
 		_dmsource->del_context(rid);
 		unsigned nrid;
-		if (_apilive->PickOneRoom(curl_main_, nrid, rid, area) == BILIRET::NOFAULT) {
-			ROOM_INFO info;
-			info.id = rid;
-			info.opt = area | DM_PUBEVENT;
-			_dmsource->add_context(nrid, info);
-			return 0;
+		if (_apilive->PickOneRoom(curl_main_, nrid, rid, area) != BILIRET::NOFAULT) {
+			return -1;
 		}
+		ROOM_INFO info;
+		info.id = rid;
+		info.opt = area | DM_PUBEVENT;
+		if (apibl::APIWebv1DanmuConf(curl_main_, rid, "web", info.key) != BILIRET::NOFAULT) {
+			return -1;
+		}
+		_dmsource->add_context(nrid, info);
 		return 0;
 	}
 	if (curmode == TOOL_EVENT::GET_HIDEN_GIFT) {
@@ -494,9 +505,24 @@ int CBilibiliMain::UpdateLiveRoom() {
 	if (curmode != TOOL_EVENT::GET_HIDEN_GIFT) {
 		return 0;
 	}
+	// 获取新列表
 	std::set<unsigned> nlist;
 	_apilive->GetLiveList(curl_heart_, nlist, 400);
-	_dmsource->update_context(nlist, DM_HIDDENEVENT);
+	// 清理现有房间
+	_dmsource->clean_context(nlist);
+	// 获取key
+	std::string key;
+	if (apibl::APIWebv1DanmuConf(curl_main_, 23058, "flash", key) != BILIRET::NOFAULT) {
+		return -1;
+	}
+	// 连接新增房间
+	for (auto it = nlist.begin(); it != nlist.end(); it++) {
+		ROOM_INFO info;
+		info.id = *it;
+		info.opt = DM_HIDDENEVENT;
+		info.key = key;
+		_dmsource->add_context(*it, info);
+	}
 
 	return 0;
 }

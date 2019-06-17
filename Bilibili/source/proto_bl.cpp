@@ -6,9 +6,9 @@
 #include <boost/shared_array.hpp>
 
 const int DM_FLASH_PROTO = 2;
-const char DM_FLASH_VER[] = "2.3.6-bf36680b";
-const int DM_WEB_PROTO = 1;
-const char DM_WEB_VER[] = "1.5.10";
+const char DM_FLASH_VER[] = "2.4.6-9e02b4f1";
+const int DM_WEB_PROTO = 2;
+const char DM_WEB_VER[] = "1.7.4";
 
 long long GetRUID() {
 	srand(unsigned(time(0)));
@@ -35,11 +35,12 @@ int protobl::CheckMessage(const unsigned char *str) {
 	return str[11];
 }
 
-int protobl::MakeFlashConnectionInfo(unsigned char* str, int len, int room) {
+int protobl::MakeFlashConnectionInfo(unsigned char* str, int len, unsigned room, const char *key) {
 	memset(str, 0, len);
 	int buflen;
-	buflen = sprintf((char*)str + 16, "{\"uid\":%lld,\"clientver\":\"%s\",\"roomid\":%d,\"protover\":%d,\"platform\":\"%s\"}",
-		GetRUID(), DM_FLASH_VER, room, DM_FLASH_PROTO, "flash");
+	buflen = sprintf((char*)str + 16, "{\"roomid\":%d,\"platform\":\"%s\",\
+\"key\":\"%s\",\"clientver\":\"%s\",\"uid\":%lld,\"protover\":%d}",
+room, "flash", key, DM_FLASH_VER, GetRUID(), DM_FLASH_PROTO);
 	if (buflen == -1) {
 		return -1;
 	}
@@ -62,12 +63,14 @@ int protobl::MakeFlashHeartInfo(unsigned char* str, int len, int room) {
 	return 16;
 }
 
-int protobl::MakeWebConnectionInfo(unsigned char* str, int len, int room) {
+int protobl::MakeWebConnectionInfo(unsigned char* str, int len, unsigned room, const char *key) {
 	memset(str, 0, len);
 	int buflen;
 	//构造发送的字符串
-	buflen = sprintf((char*)str + 16, "{\"uid\":0,\"roomid\":%d,\"protover\":%d,\"platform\":\"%s\",\"clientver\":\"%s\"}",
-		room, DM_WEB_PROTO, "web", DM_WEB_VER);
+	buflen = sprintf((char*)str + 16, "{\"uid\":0,\"roomid\":%d,\
+\"protover\":%d,\"platform\":\"%s\",\"clientver\":\"%s\",\
+\"type\":%d,\"key\":\"%s\"}",
+room, DM_WEB_PROTO, "web", DM_WEB_VER, 2, key);
 	if (buflen == -1) {
 		return -1;
 	}

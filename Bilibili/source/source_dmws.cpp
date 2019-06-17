@@ -2,6 +2,7 @@
 #include <ctime>
 #include <iostream>
 #include <list>
+#include <zlib.h>
 #include "logger/log.h"
 #include "proto_bl.h"
 
@@ -95,21 +96,113 @@ void source_dmws::on_message(connection_metadata *it, std::string &msg, int len)
 			msg.clear();
 			return;
 		}
-		MSG_INFO info;
-		info.id = label;
-		info.opt = get_info(label).opt;
-		info.type = type;
-		info.ver = msg[pos + 7];
-		info.len = ireclen - 16;
-		if (ireclen > 16) {
-			info.buff.reset(new char[info.len + 1]);
-			memcpy(info.buff.get(), msg.c_str() + pos + 16, info.len);
-			info.buff.get()[info.len] = 0;
-		}
-		handler_msg(&info);
+		process_data(
+			msg.c_str() + pos,
+			ireclen,
+			label,
+			get_info(label).opt,
+			type
+		);
 		pos += ireclen;
 	}
 	msg.clear();
+}
+
+void source_dmws::process_data(const char *buff,
+	const unsigned ilen,
+	const unsigned id,
+	const unsigned opt,
+	const unsigned type
+) {
+	if (buff[7] != 2) {
+		// 数据包未压缩
+		MSG_INFO info;
+		info.id = id;
+		info.opt = opt;
+		info.type = type;
+		info.ver = buff[7];
+		info.len = ilen - 16;
+		if (ilen > 16) {
+			info.buff.reset(new char[info.len + 1]);
+			memcpy(info.buff.get(), buff + 16, info.len);
+			info.buff.get()[info.len] = 0;
+		}
+		handler_msg(&info);
+		return;
+	}
+
+	// 需要解压数据包
+	// 初始化zlib
+	z_stream strm;
+	strm.zalloc = Z_NULL;
+	strm.zfree = Z_NULL;
+	strm.opaque = Z_NULL;
+	strm.avail_in = 0;
+	strm.next_in = Z_NULL;
+	if (inflateInit(&strm) != Z_OK) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[DMAS] Recv: " << id
+			<< " Zlib init failed! ";
+		return;
+	}
+	strm.avail_in = ilen - 16;
+	strm.next_in = (unsigned char *)buff + 16;
+	int ret = 0;
+	bool success = true;
+	do {
+		// 解压header
+		unsigned char head[17] = {};
+		strm.avail_out = 16;
+		strm.next_out = head;
+		ret = inflate(&strm, Z_NO_FLUSH);
+		if (ret != Z_OK && ret != Z_STREAM_END) {
+			// 解压出错
+			success = false;
+			break;
+		}
+		if (strm.avail_out) {
+			// header未完整获取
+			success = false;
+			break;
+		}
+		// 获取header信息
+		MSG_INFO info;
+		info.id = id;
+		info.opt = opt;
+		info.type = protobl::CheckMessage(head);
+		info.ver = head[7];
+		info.len = head[0] << 24 | head[1] << 16 | head[2] << 8 | head[3];
+		info.len -= 16;
+		info.buff.reset(new char[info.len + 1]);
+		if (info.type == -1) {
+			success = false;
+			break;
+		}
+		// 解压payload
+		strm.avail_out = info.len;
+		strm.next_out = (unsigned char *)info.buff.get();
+		ret = inflate(&strm, Z_NO_FLUSH);
+		if (ret != Z_OK && ret != Z_STREAM_END) {
+			// 解压出错
+			success = false;
+			break;
+		}
+		if (strm.avail_out) {
+			// payload未完整获取
+			success = false;
+			break;
+		}
+		info.buff.get()[info.len] = 0;
+		handler_msg(&info);
+	} while (ret == Z_OK);
+
+	if (!success) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[DMAS] Recv: " << id
+			<< " compress bytes: " << char2hexstring((unsigned char*)buff, ilen);
+	}
+
+	// clean up and return
+	(void)inflateEnd(&strm);
+	return;
 }
 
 int source_dmws::start() {
@@ -139,7 +232,7 @@ int source_dmws::stop() {
 int source_dmws::add_context(const unsigned id, const ROOM_INFO& info) {
 	int ret;
 	std::string url = DM_WSSSERVER;
-	ret = this->connect(id, url);
+	ret = this->connect(id, url, info.key);
 	if (ret) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[DMWS] Connect to " << id << " failed!";
 		return -1;
@@ -161,7 +254,7 @@ int source_dmws::del_context(const unsigned id) {
 	return 0;
 }
 
-int source_dmws::update_context(std::set<unsigned> &nlist, const unsigned opt) {
+int source_dmws::clean_context(std::set<unsigned> &nlist) {
 	return 0;
 }
 
@@ -171,8 +264,13 @@ void source_dmws::show_stat() {
 }
 
 int source_dmws::SendConnectionInfo(connection_metadata *it) {
-	unsigned char cmdstr[128];
-	int len = protobl::MakeWebConnectionInfo(cmdstr, 128, it->get_id());
+	unsigned char cmdstr[512];
+	int len = protobl::MakeWebConnectionInfo(
+		cmdstr, 
+		sizeof(cmdstr), 
+		it->get_id(), 
+		it->get_key().c_str()
+	);
 	websocketpp::lib::error_code ec;
 	m_client.send(it->get_hdl(), cmdstr, len, websocketpp::frame::opcode::binary, ec);
 	if (ec) {

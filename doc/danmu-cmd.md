@@ -55,15 +55,19 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 ### 认证包结构
 
+认证包中的key为API`/room/v1/Danmu/getConf`返回数据中的`data.token`值。
+
 * websocket
 
 ```json
 {
   "uid": 0表示未登录，否则为用户ID,
   "roomid": 房间ID,
-  "protover": 1,
+  "protover": 2,
   "platform": "web",
-  "clientver": "1.5.10"
+  "clientver": "1.7.4",
+  "type": 2,
+  "key": "通过API获取"
 }
 ```
 
@@ -73,11 +77,12 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 ```json
 {
-  "uid": 随机数,
   "roomid": 房间ID,
-  "protover": 2,
   "platform": "flash",
-  "clientver": "2.3.6-bf36680b"
+  "key": "通过API获取",
+  "clientver": "2.4.6-9e02b4f1",
+  "uid": 随机数,
+  "protover": 2
 }
 ```
 

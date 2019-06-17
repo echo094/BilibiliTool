@@ -205,6 +205,38 @@ BILIRET apibl::APIWebGetUserInfo(const std::shared_ptr<user_info>& user) {
 	return BILIRET::NOFAULT;
 }
 
+BILIRET apibl::APIWebv1DanmuConf(
+	CURL * pcurl,
+	unsigned room,
+	const std::string player, 
+	std::string & key
+) {
+	std::unique_ptr<toollib::CHTTPPack> httpdata(new toollib::CHTTPPack());
+	std::ostringstream oss;
+	oss << URL_LIVEAPI_HEAD << "/room/v1/Danmu/getConf"
+		<< "?room_id=" << room
+		<< "&platform=pc"
+		<< "&player=" << player;
+	httpdata->url = oss.str();
+	httpdata->AddHeaderManual("Accept: application/json, text/plain, */*");
+	int ret = toollib::HttpGetEx(pcurl, httpdata);
+	if (ret) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[APIbl] APIWebv1DanmuConf HTTP error: " << ret;
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(httpdata->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
+		|| !doc.HasMember("data") || !doc["data"].IsObject()) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[APIbl] APIWebv1DanmuConf JSON error!";
+		return BILIRET::JSON_ERROR;
+	}
+	key = doc["data"]["token"].GetString();
+
+	return BILIRET::NOFAULT;
+}
+
 // 直播经验心跳日志
 BILIRET apibl::APIWebv1HeartBeat(const std::shared_ptr<user_info> &user) {
 	int ret;
