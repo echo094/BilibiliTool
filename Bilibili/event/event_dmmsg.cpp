@@ -5,6 +5,7 @@
 
 enum {
 	DM_NONE = 0,
+	DM_ACTIVITY_MATCH_GIFT,
 	DM_CHANGE_ROOM_INFO,
 	DM_COMBO_SEND,
 	DM_CUT_OFF,
@@ -24,6 +25,15 @@ enum {
 	DM_PK_SETTLE,
 	DM_PK_AGAIN,
 	DM_PK_MIC_END,
+	DM_PK_BATTLE_PRE,
+	DM_PK_BATTLE_START,
+	DM_PK_BATTLE_PROCESS,
+	DM_PK_BATTLE_PRO_TYPE,
+	// DM_PK_BATTLE_GIFT,
+	// DM_PK_BATTLE_VOTES_ADD,
+	DM_PK_BATTLE_END,
+	DM_PK_BATTLE_SETTLE_USER,
+	DM_PK_LOTTERY_START,
 	DM_PREPARING,
 	DM_RAFFLE_START,
 	DM_RAFFLE_END,
@@ -50,7 +60,7 @@ enum {
 	DM_ROOM_RANK,
 	DM_HOUR_RANK_AWARDS,
 	DM_LOL_ACTIVITY,
-	DM_ACTIVITY_MATCH_GIFT,
+	DM_ROOM_REAL_TIME_MESSAGE_UPDATE,
 
 	DM_ROOM_SHIELD,
 	DM_ROOM_ADMINS,
@@ -61,10 +71,14 @@ enum {
 	DM_PK_INVITE_SWITCH_CLOSE,
 	DM_PK_INVITE_REFUSE,
 	DM_PK_CLICK_AGAIN,
+	DM_PK_BATTLE_ENTRANCE,
+	DM_PK_BATTLE_MATCH_TIMEOUT,
+	DM_PK_BATTLE_RANK_CHANGE,
+	DM_PK_BATTLE_SETTLE,
 
 	DM_USER_TOAST_MSG,
 	DM_room_admin_entrance,
-	DM_ROOM_REAL_TIME_MESSAGE_UPDATE,
+	DM_new_anchor_reward,
 	DM_DANMU_MSG_402220,
 
 	DM_ACTIVITY_EVENT,
@@ -88,6 +102,7 @@ struct tagDANMUMSGSYS
 };
 
 void event_dmmsg::InitCMD() {
+	// 14 4
 	m_cmdid["CHANGE_ROOM_INFO"] = DM_CHANGE_ROOM_INFO;
 	m_cmdid["CUT_OFF"] = DM_CUT_OFF;
 	m_cmdid["LIVE"] = DM_LIVE;
@@ -99,9 +114,10 @@ void event_dmmsg::InitCMD() {
 	m_cmdid["ROOM_RANK"] = DM_ROOM_RANK;
 	m_cmdid["ROOM_SILENT_ON"] = DM_ROOM_SILENT_ON;
 	m_cmdid["ROOM_SILENT_OFF"] = DM_ROOM_SILENT_OFF;
+	m_cmdid["ROOM_REAL_TIME_MESSAGE_UPDATE"] = DM_ROOM_REAL_TIME_MESSAGE_UPDATE;
 	m_cmdid["ROOM_SHIELD"] = DM_ROOM_SHIELD;
 	m_cmdid["ROOM_ADMINS"] = DM_ROOM_ADMINS;
-
+	// 8 3
 	m_cmdid["COMBO_SEND"] = DM_COMBO_SEND;
 	m_cmdid["DANMU_MSG"] = DM_DANMU_MSG;
 	m_cmdid["GUARD_BUY"] = DM_GUARD_BUY;
@@ -110,7 +126,7 @@ void event_dmmsg::InitCMD() {
 	m_cmdid["WELCOME"] = DM_WELCOME;
 	m_cmdid["WELCOME_GUARD"] = DM_WELCOME_GUARD;
 	m_cmdid["ENTRY_EFFECT"] = DM_ENTRY_EFFECT;
-
+	// 15
 	m_cmdid["PK_INVITE_INIT"] = DM_PK_INVITE_INIT;
 	m_cmdid["PK_INVITE_FAIL"] = DM_PK_INVITE_FAIL;
 	m_cmdid["PK_INVITE_CANCEL"] = DM_PK_INVITE_CANCEL;
@@ -126,7 +142,19 @@ void event_dmmsg::InitCMD() {
 	m_cmdid["PK_AGAIN"] = DM_PK_AGAIN;
 	m_cmdid["PK_MIC_END"] = DM_PK_MIC_END;
 	m_cmdid["PK_CLICK_AGAIN"] = DM_PK_CLICK_AGAIN;
-
+	// 11 2
+	m_cmdid["PK_BATTLE_ENTRANCE"] = DM_PK_BATTLE_ENTRANCE;
+	m_cmdid["PK_BATTLE_MATCH_TIMEOUT"] = DM_PK_BATTLE_MATCH_TIMEOUT;
+	m_cmdid["PK_BATTLE_PRE"] = DM_PK_BATTLE_PRE;
+	m_cmdid["PK_BATTLE_START"] = DM_PK_BATTLE_START;
+	m_cmdid["PK_BATTLE_PROCESS"] = DM_PK_BATTLE_PROCESS;
+	m_cmdid["PK_BATTLE_PRO_TYPE"] = DM_PK_BATTLE_PRO_TYPE;
+	m_cmdid["PK_BATTLE_END"] = DM_PK_BATTLE_END;
+	m_cmdid["PK_BATTLE_RANK_CHANGE"] = DM_PK_BATTLE_RANK_CHANGE;
+	m_cmdid["PK_BATTLE_SETTLE_USER"] = DM_PK_BATTLE_SETTLE_USER;
+	m_cmdid["PK_BATTLE_SETTLE"] = DM_PK_BATTLE_SETTLE;
+	m_cmdid["PK_LOTTERY_START"] = DM_PK_LOTTERY_START;
+	// 12
 	m_cmdid["GUARD_LOTTERY_START"] = DM_GUARD_LOTTERY_START;
 	m_cmdid["RAFFLE_START"] = DM_RAFFLE_START;
 	m_cmdid["RAFFLE_END"] = DM_RAFFLE_END;
@@ -139,12 +167,12 @@ void event_dmmsg::InitCMD() {
 	m_cmdid["LOL_ACTIVITY"] = DM_LOL_ACTIVITY;
 	m_cmdid["HOUR_RANK_AWARDS"] = DM_HOUR_RANK_AWARDS;
 	m_cmdid["ACTIVITY_MATCH_GIFT"] = DM_ACTIVITY_MATCH_GIFT;
-
+	// 4
 	m_cmdid["USER_TOAST_MSG"] = DM_USER_TOAST_MSG;
 	m_cmdid["room_admin_entrance"] = DM_room_admin_entrance;
-	m_cmdid["ROOM_REAL_TIME_MESSAGE_UPDATE"] = DM_ROOM_REAL_TIME_MESSAGE_UPDATE;
+	m_cmdid["new_anchor_reward"] = DM_new_anchor_reward;
 	m_cmdid["DANMU_MSG:4:0:2:2:2:0"] = DM_DANMU_MSG_402220;
-
+	// 7
 	m_cmdid["ACTIVITY_EVENT"] = DM_ACTIVITY_EVENT;
 	m_cmdid["COMBO_END"] = DM_COMBO_END;
 	m_cmdid["GUARD_MSG"] = DM_GUARD_MSG;
@@ -215,6 +243,12 @@ int event_dmmsg::ParseJSON(MSG_INFO *data) {
 	case DM_GUARD_LOTTERY_START: {
 		if (data->opt & DM_HIDDENEVENT) {
 			return this->ParseGUARDLO(doc, data->id);
+		}
+		return 0;
+	}
+	case DM_PK_LOTTERY_START: {
+		if (data->opt & DM_HIDDENEVENT) {
+			return this->ParsePKLOTTERY(doc, data->id);
 		}
 		return 0;
 	}
@@ -360,5 +394,17 @@ int event_dmmsg::ParseGUARDLO(rapidjson::Document &doc, const unsigned room) {
 		data->exinfo = btype;
 		event_base::post_guard23_msg(data);
 	}
+	return 0;
+}
+
+int event_dmmsg::ParsePKLOTTERY(rapidjson::Document & doc, const unsigned room) {
+	std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
+	data->srid = doc["data"]["room_id"].GetInt();
+	data->rrid = room;
+	data->loid = doc["data"]["pk_id"].GetInt();
+	data->time_start = toollib::GetTimeStamp();
+	data->time_end = data->time_start + doc["data"]["time"].GetInt();
+	data->type = "pk";
+	event_base::post_pk_msg(data);
 	return 0;
 }

@@ -8,9 +8,9 @@
 
 [弹幕服务器信息获取](https://api.live.bilibili.com/room/v1/Danmu/getConf?room_id=23058&platform=pc&player=web)
 
-[协议数据处理(包含客户端版本信息)](https://s1.hdslb.com/bfs/static/blive/live-assets/player/decorator.min.js)
+[协议数据处理(包含客户端版本信息)](https://s1.hdslb.com/bfs/static/player/live/loader/player-loader-1.7.4.min.js)
 
-[JSON数据处理](https://s1.hdslb.com/bfs/static/blive/blfe-live-room/static/js/2.ee1ab9cc87803b2373bf.js)
+[JSON数据处理](https://s1.hdslb.com/bfs/static/blive/blfe-live-room/static/js/3.cd532a1d3ccf709a6d64.js)
 
 处理函数：
 
@@ -83,11 +83,11 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-## 有效指令
+## 有效指令(73)
 
 
 
-### 房间配置相关(17)
+### 房间配置相关(18)
 
 #### CHANGE_ROOM_INFO
 
@@ -248,6 +248,22 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
+#### ROOM_REAL_TIME_MESSAGE_UPDATE
+
+粉丝数更新。
+
+```json
+{
+	"cmd": "ROOM_REAL_TIME_MESSAGE_UPDATE",
+	"data": {
+		"roomid": 10175194,
+		"fans": 19606
+	}
+}
+```
+
+
+
 #### ROOM_SHIELD(无处理)
 
 无需响应，设置屏蔽词汇以及用户。
@@ -277,7 +293,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-### 消息相关(9)
+### 消息相关(11)
 
 #### COMBO_SEND
 
@@ -326,6 +342,14 @@ flash通过调用 window._playerEventMap 对象处理事件。
 	}
 }
 ```
+
+
+
+#### LUCK_GIFT_AWARD_USER
+
+
+
+#### MESSAGEBOX_USER_GAIN_MEDAL
 
 
 
@@ -1072,6 +1096,277 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
+### 大乱斗(13)
+
+2019/06/17新增的模式：[大乱斗教程](https://live.bilibili.com/blackboard/activity-DLD.html)
+
+#### PK_BATTLE_ENTRANCE(无处理)
+
+```json
+{
+	"cmd": "PK_BATTLE_ENTRANCE",
+	"timestamp": 1560510240,
+	"data": {
+		"is_open": true
+	}
+}
+```
+
+
+
+#### PK_BATTLE_MATCH_TIMEOUT(无处理)
+
+超时
+
+```json
+{
+	"cmd": "PK_BATTLE_MATCH_TIMEOUT",
+	"data": []
+}
+```
+
+
+
+#### PK_BATTLE_PRE
+
+准备阶段
+
+```json
+{
+	"cmd": "PK_BATTLE_PRE",
+	"pk_status": 101,
+	"pk_id": 332920,
+	"timestamp": 1560704671,
+	"data": {
+		"uname": "糖酥小青菜",
+		"face": "http://i0.hdslb.com/bfs/face/fc966f9b2c9ce667931c94cc16eca3477f988274.jpg",
+		"uid": 57584675,
+		"room_id": 12097384,
+		"pre_timer": 10,
+		"pk_votes_name": "魔法值"
+	}
+}
+```
+
+
+
+#### PK_BATTLE_START
+
+大乱斗开始
+
+```json
+{
+	"cmd": "PK_BATTLE_START",
+	"pk_id": 332920,
+	"pk_status": 201,
+	"timestamp": 1560704681,
+	"data": {
+		"final_hit_votes": 10000,
+		"pk_start_time": 1560704681,
+		"pk_frozen_time": 1560705161,
+		"pk_end_time": 1560705171,
+		"pk_votes_type": 0,
+		"pk_votes_add": 0,
+		"pk_votes_name": "魔法值"
+	}
+}
+```
+
+
+
+#### PK_BATTLE_PROCESS
+
+更新数据
+
+```json
+{
+	"cmd": "PK_BATTLE_PROCESS",
+	"pk_id": 332920,
+	"pk_status": 301,
+	"timestamp": 1560704685,
+	"data": {
+		"init_info": {
+			"room_id": 12097384,
+			"votes": 0,
+			"best_uname": ""
+		},
+		"match_info": {
+			"room_id": 982077,
+			"votes": 120000,
+			"best_uname": "SDNYNG"
+		}
+	}
+}
+```
+
+
+
+#### PK_BATTLE_PRO_TYPE
+
+更改形式
+
+```json
+{
+	"cmd": "PK_BATTLE_PRO_TYPE",
+	"pk_id": 332920,
+	"pk_status": 301,
+	"timestamp": 1560704685,
+	"data": {
+		"timer": 60,
+		"final_hit_room_id": 982077,
+		"be_final_hit_room_id": 12097384
+	}
+}
+```
+
+
+
+#### PK_BATTLE_GIFT
+
+
+
+#### PK_BATTLE_VOTES_ADD
+
+
+
+#### PK_BATTLE_END
+
+大乱斗结束
+
+```json
+{
+	"cmd": "PK_BATTLE_END",
+	"pk_id": "332920",
+	"pk_status": 501,
+	"timestamp": 1560704745,
+	"data": {
+		"timer": 10,
+		"init_info": {
+			"room_id": 12097384,
+			"votes": 400,
+			"winner_type": -1,
+			"best_uname": "离久不成悲"
+		},
+		"match_info": {
+			"room_id": 982077,
+			"votes": 121440,
+			"winner_type": 3,
+			"best_uname": "SDNYNG"
+		}
+	}
+}
+```
+
+
+
+#### PK_BATTLE_RANK_CHANGE(无处理)
+
+等级变更
+
+```json
+{
+	"cmd": "PK_BATTLE_RANK_CHANGE",
+	"timestamp": 1560704745,
+	"data": {
+		"first_rank_img_url": "http://i0.hdslb.com/bfs/live/dfd84488f4cc342ca51819a9adcb61ba8bbccc07.png",
+		"rank_name": "初阶守护者x1"
+	}
+}
+```
+
+
+
+#### PK_BATTLE_SETTLE_USER
+
+设置结果？
+
+```json
+{
+	"cmd": "PK_BATTLE_SETTLE_USER",
+	"pk_id": 332920,
+	"pk_status": 501,
+	"settle_status": 1,
+	"timestamp": 1560704745,
+	"data": {
+		"settle_status": 1,
+		"result_type": 3,
+		"winner": {
+			"uid": 16692120,
+			"uname": "绘梨衣是个小怪兽呐",
+			"face": "http://i1.hdslb.com/bfs/face/5da5a7beb9cf4c9cfa3d519f2ef161aeb9dd8422.jpg",
+			"face_frame": "https://i0.hdslb.com/bfs/vc/922eb74a4c5353812450718c93a4cdb624f1dba6.png",
+			"exp": {
+				"color": 10512625,
+				"user_level": 39,
+				"master_level": {
+					"color": 16746162,
+					"level": 31
+				}
+			},
+			"best_user": {
+				"uid": 11249043,
+				"uname": "SDNYNG",
+				"face": "http://i2.hdslb.com/bfs/face/7a579666caf946a553cf3f83b33bfe0e6371398e.jpg",
+				"pk_votes": 121440,
+				"pk_votes_name": "魔法值",
+				"exp": {
+					"color": 6406234,
+					"level": 1
+				},
+				"face_frame": "http://i0.hdslb.com/bfs/live/9b3cfee134611c61b71e38776c58ad67b253c40a.png",
+				"badge": "",
+				"award_info": null
+			}
+		}
+	}
+}
+```
+
+
+
+#### PK_BATTLE_SETTLE(无处理)
+
+结果类型？
+
+```json
+{
+	"cmd": "PK_BATTLE_SETTLE",
+	"pk_id": 332920,
+	"pk_status": 501,
+	"settle_status": 1,
+	"timestamp": 1560704745,
+	"data": {
+		"result_type": 3
+	}
+}
+```
+
+
+
+#### PK_LOTTERY_START
+
+房间内公告抽奖开始
+
+```json
+{
+	"cmd": "PK_LOTTERY_START",
+	"data": {
+		"asset_animation_pic": "https://i0.hdslb.com/bfs/live/e1ab9f88b4af63fbf15197acea2dbb60bfc4434b.gif",
+		"asset_icon": "https://i0.hdslb.com/bfs/vc/44c367b09a8271afa22853785849e65797e085a1.png",
+		"id": 332920,
+		"max_time": 120,
+		"pk_id": 332920,
+		"room_id": 982077,
+		"time": 120,
+		"title": "恭喜主播大乱斗胜利"
+	}
+}
+```
+
+
+
+
+
 ### 活动相关(12)
 
 #### GUARD_LOTTERY_START
@@ -1431,17 +1726,14 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-#### ROOM_REAL_TIME_MESSAGE_UPDATE
-
-粉丝数更新。
+#### new_anchor_reward
 
 ```json
 {
-	"cmd": "ROOM_REAL_TIME_MESSAGE_UPDATE",
-	"data": {
-		"roomid": 10175194,
-		"fans": 19606
-	}
+	"cmd": "new_anchor_reward",
+	"reward_id": 1,
+	"roomid": 10633444,
+	"uid": 111977978
 }
 ```
 
@@ -1455,7 +1747,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-## 失效指令
+## 失效指令(7)
 
 在以上JS文件中找不到的指令。
 

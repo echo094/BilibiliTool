@@ -8,6 +8,7 @@ conf_coin    硬币兑换
 conf_lottery 各种抽奖
 conf_storm   风暴
 conf_guard   亲密度
+conf_pk      大乱斗抽奖
 */
 #pragma once
 #include <memory>
@@ -26,6 +27,7 @@ public:
 	unsigned conf_lottery;
 	unsigned conf_storm;
 	unsigned conf_guard;
+	unsigned conf_pk;
 	std::string account;
 	std::string password;
 	std::string tokena, tokenr;

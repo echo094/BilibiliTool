@@ -14,6 +14,7 @@ user_info::user_info() :
 	conf_lottery(0),
 	conf_storm(0),
 	conf_guard(0),
+	conf_pk(0),
 	httpweb(new CHTTPPack()),
 	httpapp(new CHTTPPack("Mozilla/5.0 BiliDroid/5.23.2 (bbcallen@gmail.com)")) {
 	curlweb = curl_easy_init();
@@ -51,10 +52,21 @@ void user_info::ReadFileAccount(const std::string &key, const rapidjson::Value& 
 	if (!data.HasMember("Conf") || !data["Conf"].IsObject()) {
 		throw "Key Conf error";
 	}
-	conf_coin = data["Conf"]["CoinExchange"].GetUint();
-	conf_lottery = data["Conf"]["Lottery"].GetUint();
-	conf_storm = data["Conf"]["Storm"].GetUint();
-	conf_guard = data["Conf"]["Guard"].GetUint();
+	if (data["Conf"].HasMember("CoinExchange")) {
+		conf_coin = data["Conf"]["CoinExchange"].GetUint();
+	}
+	if (data["Conf"].HasMember("Lottery")) {
+		conf_lottery = data["Conf"]["Lottery"].GetUint();
+	}
+	if (data["Conf"].HasMember("Storm")) {
+		conf_storm = data["Conf"]["Storm"].GetUint();
+	}
+	if (data["Conf"].HasMember("Guard")) {
+		conf_guard = data["Conf"]["Guard"].GetUint();
+	}
+	if (data["Conf"].HasMember("PK")) {
+		conf_pk = data["Conf"]["PK"].GetUint();
+	}
 	// 账号
 	if (!data.HasMember("Username") || !data["Username"].IsString()) {
 		throw "Key Username error";
@@ -106,6 +118,7 @@ void user_info::WriteFileAccount(const std::string key, rapidjson::Document& doc
 	conf.AddMember("Lottery", conf_lottery, allocator);
 	conf.AddMember("Storm", conf_storm, allocator);
 	conf.AddMember("Guard", conf_guard, allocator);
+	conf.AddMember("PK", conf_pk, allocator);
 	data.AddMember("Conf", conf.Move(), allocator);
 	// 账号
 	data.AddMember(

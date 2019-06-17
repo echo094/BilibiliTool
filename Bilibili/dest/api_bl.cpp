@@ -373,6 +373,57 @@ BILIRET apibl::APIWebv1StormJoin(
 	return BILIRET::NOFAULT;
 }
 
+BILIRET apibl::APIWebv1PKJOIN(
+	std::shared_ptr<user_info> &user,
+	std::shared_ptr<BILI_LOTTERYDATA> data
+) {
+	user->httpweb->url = URL_LIVEAPI_HEAD + "/xlive/lottery-interface/v1/pk/join";
+	std::ostringstream oss;
+	oss << "roomid=" << data->rrid
+		<< "&id=" << data->loid
+		<< "&csrf_token=" << user->tokenjct
+		<< "&csrf=" << user->tokenjct
+		<< "&visit_id=" << user->visitid;
+	user->httpweb->send_data = oss.str();
+	user->httpweb->ClearHeader();
+	user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	user->httpweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded");
+	user->httpweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
+	oss.str("");
+	oss << URL_DEFAULT_REFERERBASE << data->srid;
+	user->httpweb->AddHeaderManual(oss.str().c_str());
+	int ret = toollib::HttpPostEx(user->curlweb, user->httpweb);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpweb->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
+		return BILIRET::JSON_ERROR;
+	}
+
+	// 0成功 -400已领取 -500系统繁忙
+	int icode = doc["code"].GetInt();
+	if (icode) {
+		// 检查是否被封禁
+		if (icode == 400) {
+			user->SetBanned();
+		}
+		std::string tmpstr;
+		if (doc.HasMember("message") && doc["message"].IsString()) {
+			tmpstr = doc["message"].GetString();
+		}
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIWebv1PKJOIN: " << tmpstr;
+		return BILIRET::NOFAULT;
+	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+		<< "APIWebv1PKJOIN award: " << doc["data"]["award_text"].GetString();
+
+	return BILIRET::NOFAULT;
+}
+
 BILIRET apibl::APIWebv1CapsuleCheck(const std::shared_ptr<user_info>& user) {
 	user->httpweb->url = URL_LIVEAPI_HEAD + "/xlive/web-ucenter/v1/capsule/get_detail?from=room";
 	user->httpweb->ClearHeader();

@@ -8,6 +8,7 @@ enum {
 	MSG_NEWSPECIALGIFT,
 	MSG_NEWGUARD1,
 	MSG_NEWGUARD0,
+	MSG_NEWPK,
 	MSG_CHANGEROOM1,
 	MSG_CHANGEROOM2,
 	MSG_CLOSEROOM
@@ -37,6 +38,7 @@ protected:
 	void post_storm_msg(std::shared_ptr<BILI_LOTTERYDATA> data);
 	void post_guard1_msg(unsigned rrid);
 	void post_guard23_msg(std::shared_ptr<BILI_LOTTERYDATA> data);
+	void post_pk_msg(std::shared_ptr<BILI_LOTTERYDATA> data);
 	void post_close_event(unsigned rrid, unsigned opt);
 	void post_close_msg(unsigned rrid, unsigned opt);
 	void post_open_msg(unsigned rrid, unsigned opt);

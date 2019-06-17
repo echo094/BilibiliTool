@@ -228,6 +228,10 @@ int CBilibiliMain::ProcessMSGAct(unsigned msg, std::shared_ptr<BILI_LOTTERYDATA>
 		JoinSpecialGift(data);
 		break;
 	}
+	case MSG_NEWPK: {
+		JoinPKLottery(data);
+		break;
+	}
 	}
 	return 0;
 }
@@ -596,6 +600,22 @@ int CBilibiliMain::JoinSpecialGift(std::shared_ptr<BILI_LOTTERYDATA> data)
 		return 0;
 	}
 	_userlist->JoinSpecialGiftALL(data);
+
+	return 0;
+}
+
+int CBilibiliMain::JoinPKLottery(std::shared_ptr<BILI_LOTTERYDATA> data)
+{
+	_logfile << "{time:" << data->time_start
+		<< ",type:'" << data->type
+		<< "',ruid:" << data->rrid
+		<< ",loid:" << data->loid
+		<< "}," << std::endl;
+	
+	if (isSkip()) {
+		return 0;
+	}
+	_userlist->JoinPKLotteryALL(data);
 
 	return 0;
 }

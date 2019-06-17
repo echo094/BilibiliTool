@@ -59,6 +59,8 @@ public:
 	int JoinGuardALL(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 参与风暴
 	int JoinSpecialGiftALL(std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 参与大乱斗抽奖
+	int JoinPKLotteryALL(std::shared_ptr<BILI_LOTTERYDATA> data);
 
 private:
 	// 新用户登录
@@ -79,12 +81,16 @@ private:
 	int _ActGuard(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 节奏风暴
 	int _ActStorm(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 大乱斗
+	int _ActPK(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 抽奖线程
 	void Thread_ActLottery(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 舰队低保领取线程
 	void Thread_ActGuard(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 节奏领取线程
 	void Thread_ActStorm(std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 大乱斗领取线程
+	void Thread_ActPK(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 取随机数
 	int _GetRand(int start, int len);
 

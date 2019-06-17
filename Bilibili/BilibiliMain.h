@@ -80,6 +80,8 @@ private:
 	int JoinGuardGift0(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 节奏风暴
 	int JoinSpecialGift(std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 大乱斗抽奖
+	int JoinPKLottery (std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 用户心跳
 	int HeartExp(unsigned type);
 

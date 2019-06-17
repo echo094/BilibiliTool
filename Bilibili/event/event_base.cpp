@@ -47,6 +47,14 @@ void event_base::post_guard23_msg(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	}
 }
 
+void event_base::post_pk_msg(std::shared_ptr<BILI_LOTTERYDATA> data) {
+	BOOST_LOG_SEV(g_logger::get(), info) << "[EVENT] pk room: " << data->srid
+		<< " real room: " << data->rrid << " pk id: " << data->loid;
+	if (event_act_) {
+		event_act_(MSG_NEWPK, data);
+	}
+}
+
 void event_base::post_close_event(unsigned rrid, unsigned opt) {
 	BOOST_LOG_SEV(g_logger::get(), trace) << "[EVENT] abnormal close room: " << rrid;
 	if (event_room_) {

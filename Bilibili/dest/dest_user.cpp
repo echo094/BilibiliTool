@@ -279,7 +279,6 @@ int dest_user::JoinLotteryALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	if (!_usercount)
 		return 0;
 
-	// 配置节奏ID并创建领取线程
 	_threadcount++;
 	auto task = std::thread(std::bind(
 		&dest_user::Thread_ActLottery,
@@ -297,7 +296,6 @@ int dest_user::JoinGuardALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	if (!_usercount)
 		return 0;
 
-	// 配置节奏ID并创建领取线程
 	_threadcount++;
 	auto task = std::thread(std::bind(
 		&dest_user::Thread_ActGuard,
@@ -315,7 +313,6 @@ int dest_user::JoinSpecialGiftALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	if (!_usercount)
 		return 0;
 
-	// 配置节奏ID并创建领取线程
 	_threadcount++;
 	auto task = std::thread(std::bind(
 		&dest_user::Thread_ActStorm,
@@ -324,6 +321,23 @@ int dest_user::JoinSpecialGiftALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	);
 	task.detach();
 
+	return 0;
+}
+
+int dest_user::JoinPKLotteryALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
+	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] PK Lottery Room: " << data->rrid;
+	// 当前没有用户则不领取
+	if (!_usercount)
+		return 0;
+	
+	_threadcount++;
+	auto task = std::thread(std::bind(
+		&dest_user::Thread_ActPK,
+		this,
+		data)
+	);
+	task.detach();
+	
 	return 0;
 }
 
@@ -510,6 +524,18 @@ int dest_user::_ActStorm(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_
 	return 0;
 }
 
+int dest_user::_ActPK(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data) {
+	// 风暴只领取一次 不管成功与否
+	if (user->conf_pk == 1) {
+		// 产生访问记录
+		apibl::APIWebv1RoomEntry(user, data->rrid);
+		// 网页端API
+		apibl::APIWebv1PKJOIN(user, data);
+		return 0;
+	}
+	return 0;
+}
+
 void dest_user::Thread_ActLottery(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	// 等待领取
 	BOOST_LOG_SEV(g_logger::get(), trace) << "[UserList] Thread join gift: " << data->loid;
@@ -548,7 +574,7 @@ void dest_user::Thread_ActGuard(std::shared_ptr<BILI_LOTTERYDATA> data) {
 
 void dest_user::Thread_ActStorm(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	// 等待领取
-	BOOST_LOG_SEV(g_logger::get(), trace) << "[UserList] Thread join guard: " << data->loid;
+	BOOST_LOG_SEV(g_logger::get(), trace) << "[UserList] Thread join storm: " << data->loid;
 	// Sleep(_GetRand(8000, 4000));
 	// 领取为防止冲突 同一时间只能有一个用户在领取
 	// 在同一抽奖的两次抽奖之间增加间隔
@@ -559,6 +585,25 @@ void dest_user::Thread_ActStorm(std::shared_ptr<BILI_LOTTERYDATA> data) {
 		{
 			boost::unique_lock<boost::shared_mutex> m(rwmutex_);
 			_ActStorm(*itor, data);
+		}
+	}
+	// 退出线程
+	_threadcount--;
+}
+
+void dest_user::Thread_ActPK(std::shared_ptr<BILI_LOTTERYDATA> data) {
+	// 等待领取
+	BOOST_LOG_SEV(g_logger::get(), trace) << "[UserList] Thread join pk: " << data->loid;
+	Sleep(_GetRand(5000, 5000));
+	// 领取为防止冲突 同一时间只能有一个用户在领取
+	// 在同一抽奖的两次抽奖之间增加间隔
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
+		if (!(*itor)->getLoginStatus())
+			continue;
+		Sleep(_GetRand(1000, 1500));
+		{
+			boost::unique_lock<boost::shared_mutex> m(rwmutex_);
+			_ActPK(*itor, data);
 		}
 	}
 	// 退出线程

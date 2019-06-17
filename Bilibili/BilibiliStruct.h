@@ -66,6 +66,7 @@ typedef struct _BILI_LOTTERYDATA {
 	// 抽奖为礼物编号 实际使用为 Gift
 	// 亲密为 guard
 	// 风暴为 storm 实际没用
+	// 大乱斗为 pk 实际没用
 	std::string type;
 	// Guard等级
 	int exinfo = 0;

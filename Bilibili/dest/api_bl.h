@@ -44,6 +44,11 @@ namespace apibl {
 		std::string code, 
 		std::string token
 	);
+	// 大乱斗抽奖
+	BILIRET APIWebv1PKJOIN(
+		std::shared_ptr<user_info> &user,
+		std::shared_ptr<BILI_LOTTERYDATA> data
+	);
 	// 查询扭蛋币数量
 	BILIRET APIWebv1CapsuleCheck(const std::shared_ptr<user_info> &user);
 
