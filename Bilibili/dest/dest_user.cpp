@@ -1,4 +1,5 @@
 ﻿#include "dest_user.h"
+#include <deque>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -341,6 +342,109 @@ int dest_user::JoinPKLotteryALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	return 0;
 }
 
+void dest_user::ShowTask() {
+	using namespace std;
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
+		cout << "User " << (*itor)->GetUsername() << endl;
+		_ActShowTask(*itor);
+	}
+}
+
+void dest_user::ShowCP() {
+	using namespace std;
+	std::string token = "";
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
+		cout << "User " << (*itor)->GetUsername() << endl;
+		if (apibl::APIShowCPInfo(*itor) != BILIRET::NOFAULT) {
+			continue;
+		}
+		if ((*itor)->ten_cp_id != 0) {
+			// 有CP跳过
+			continue;
+		}
+		if (token != "") {
+			// 与上一个用户组CP
+			if (apibl::APIShowCPAgree(*itor, token) != BILIRET::NOFAULT) {
+				continue;
+			}
+			token = "";
+			continue;
+		}
+		token = (*itor)->ten_cp_token;
+	}
+}
+
+void dest_user::ShowList(const char * filename) {
+	using namespace std;
+	std::ofstream outfile(filename);
+	if (!outfile.is_open()) {
+		return;
+	}
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
+		for (unsigned i = 1; i <= 5; i++) {
+			BILIRET ret = apibl::APIShowTaskList(*itor, i);
+			if (ret == BILIRET::NORESULT) {
+				break;
+			}
+			if (ret != BILIRET::NOFAULT) {
+				continue;
+			}
+		}
+		outfile << (*itor)->GetUsername() << endl;
+		for (auto it = (*itor)->ten_task_list.begin(); it != (*itor)->ten_task_list.end(); it++) {
+			outfile << *it << endl;
+		}
+		outfile << endl;
+	}
+}
+
+void dest_user::ShowLike(const char*filename) {
+	using namespace std;
+	std::ifstream infile(filename);
+	if (!infile.is_open()) {
+		return;
+	}
+	std::deque<unsigned> tasklist;
+	unsigned taskid = 0;
+	while (infile >> taskid) {
+		tasklist.push_back(taskid);
+	}
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
+		cout << "User " << (*itor)->GetUsername() << endl;
+		while (1) {
+			if (tasklist.empty()) {
+				// 没任务了
+				return;
+			}
+			unsigned id = tasklist.front();
+			tasklist.pop_front();
+			BILIRET ret = apibl::APIShowLike(*itor, id);
+			if (ret == BILIRET::NORESULT) {
+				// 点满了
+				continue;
+			}
+			if (ret == BILIRET::JOINEVENT_FAILED) {
+				// 账号不能点了
+				tasklist.push_back(id);
+				break;
+			}
+			// 将任务放到队尾
+			tasklist.push_back(id);
+		}
+	}
+}
+
+void dest_user::ShowJoinWitness(long long id) {
+	using namespace std;
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
+		cout << "User " << (*itor)->GetUsername() << endl;
+		BILIRET ret = apibl::APIShowWitJoin(*itor, id);
+		if (ret == BILIRET::NORESULT) {
+			return;
+		}
+	}
+}
+
 LOGINRET dest_user::_ActLogin(std::shared_ptr<user_info>& user, int index, std::string username, std::string password) {
 	BILIRET bret;
 	user->account = username;
@@ -556,6 +660,99 @@ int dest_user::_ActPK(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOT
 		apibl::APIAndv1PKJOIN(user, data);
 		return 0;
 	}
+	return 0;
+}
+
+int dest_user::_ActShowTask(std::shared_ptr<user_info>& user) {
+	// 签到
+	if (apibl::APIShowSignStatus(user) != BILIRET::NOFAULT) {
+		return -1;
+	}
+	if (user->ten_sign_status == false) {
+		if (apibl::APIShowSignDo(user) != BILIRET::NOFAULT) {
+			return -1;
+		}
+	}
+	if (apibl::APIShowShareStatus(user) != BILIRET::NOFAULT) {
+		return -1;
+	}
+	// 找彩蛋
+	if (user->ten_egg_status == 2) {
+		if (apibl::APIShowCallback(
+			user,
+			"act626-egg",
+			6261002,
+			"egg_one"
+		) != BILIRET::NOFAULT) {
+			return -1;
+		}
+		if (apibl::APIShowShareStatus(user) != BILIRET::NOFAULT) {
+			return -1;
+		}
+	}
+	if (user->ten_egg_status != 1) {
+		if (apibl::APIShowCallback(
+			user, 
+			user->ten_egg_taskid,
+			6261002,
+			"egg_one"
+		) != BILIRET::NOFAULT) {
+			return -1;
+		}
+		if (apibl::APIShowCallback(
+			user, 
+			user->ten_egg_taskid,
+			6261002,
+			"egg_two"
+		) != BILIRET::NOFAULT) {
+			return -1;
+		}
+		if (apibl::APIShowCallback(
+			user, 
+			user->ten_egg_taskid,
+			6261002,
+			"egg_three"
+		) != BILIRET::NOFAULT) {
+			return -1;
+		}
+		if (apibl::APIShowReward(
+			user,
+			user->ten_egg_assocId,
+			user->ten_egg_taskid,
+			user->ten_egg_type
+		) != BILIRET::NOFAULT) {
+			return -1;
+		}
+	}
+	// 发动态
+	if (user->ten_pub_status == 2) {
+		if (apibl::APIShowCallback(
+			user,
+			"act626-pub",
+			6261001,
+			"publish"
+		) != BILIRET::NOFAULT) {
+			return -1;
+		}
+		if (apibl::APIShowShareStatus(user) != BILIRET::NOFAULT) {
+			return -1;
+		}
+	}
+	if (user->ten_pub_status != 1) {
+		if (apibl::APIShowReward(
+			user,
+			user->ten_pub_assocId,
+			user->ten_pub_taskid,
+			user->ten_pub_type
+		) != BILIRET::NOFAULT) {
+			return -1;
+		}
+	}
+	// 领返利
+	if (apibl::APIShowWitList(user) != BILIRET::NOFAULT) {
+		return -1;
+	}
+
 	return 0;
 }
 

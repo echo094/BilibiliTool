@@ -22,6 +22,477 @@ int GetMD5Sign(const char *in, std::string &sign) {
 	return 0;
 }
 
+BILIRET apibl::APIShowCPInfo(const std::shared_ptr<user_info>& user) {
+	std::ostringstream oss;
+	oss << "https://show.bilibili.com/api/activity/index/cp/info?&_="
+		<< GetTimeStamp() << "479";
+	user->httpweb->url = oss.str();
+	user->httpweb->ClearHeader();
+	user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	int ret = toollib::HttpGetEx(user->curlweb, user->httpweb);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpweb->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("errno") || !doc["errno"].IsInt() || doc["errno"].GetInt()) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[User" << user->fileid << "] "
+			<< "APIShowCPInfo: " << user->httpweb->recv_data;
+		return BILIRET::JSON_ERROR;
+	}
+	user->ten_cp_id = doc["data"]["cpId"].GetUint64();
+	user->ten_cp_token = doc["data"]["token"].GetString();
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+		<< "APIShowCPInfo cpid: " << user->ten_cp_id;
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIShowCPAgree(const std::shared_ptr<user_info>& user, std::string token) {
+	user->httpweb->url = "https://show.bilibili.com/api/activity/index/cp/agree";
+	std::ostringstream oss;
+	oss << "{\"token\":\"" << token << "\"}";
+	user->httpweb->send_data = oss.str();
+	user->httpweb->ClearHeader();
+	user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	user->httpweb->AddHeaderManual("Content-Type: application/json;charset=UTF-8");
+	int ret = toollib::HttpPostEx(user->curlweb, user->httpweb);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpweb->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("errno") || !doc["errno"].IsInt()) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[User" << user->fileid << "] "
+			<< "APIShowCPAgree: " << user->httpweb->recv_data;
+		return BILIRET::JSON_ERROR;
+	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+		<< "APIShowCPAgree: " << doc["msg"].GetString();
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIShowWitList(const std::shared_ptr<user_info>& user) {
+	std::ostringstream oss;
+	oss << "https://show.bilibili.com/api/activity/index/witness/detail?_="
+		<< GetTimeStamp() << "479";
+	user->httpweb->url = oss.str();
+	user->httpweb->ClearHeader();
+	user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	int ret = toollib::HttpGetEx(user->curlweb, user->httpweb);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpweb->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("errno") || !doc["errno"].IsInt() || doc["errno"].GetInt()) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[User" << user->fileid << "] "
+			<< "APIShowWitList: " << user->httpweb->recv_data;
+		return BILIRET::JSON_ERROR;
+	}
+	rapidjson::Value &witlist = doc["data"]["witnessList"];
+	for (unsigned i = 0; i < witlist.Size(); i++) {
+		if (witlist[i]["isLocked"].IsTrue()) {
+			// 未开启
+			continue;
+		}
+		if (witlist[i]["rebate"].HasMember("num")) {
+			// 领取提成
+			apibl::APIShowReward(
+				user,
+				witlist[i]["rebate"]["assocId"].GetString(),
+				witlist[i]["rebate"]["taskId"].GetString(),
+				witlist[i]["rebate"]["type"].GetUint()
+			);
+		}
+	}
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIShowWitJoin(const std::shared_ptr<user_info>& user, long long teamId) {
+	user->httpweb->url = "https://show.bilibili.com/api/activity/index/witness/join";
+	std::ostringstream oss;
+	oss << "{\"teamId\":\"" << teamId << "\"}";
+	user->httpweb->send_data = oss.str();
+	user->httpweb->ClearHeader();
+	user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	user->httpweb->AddHeaderManual("Content-Type: application/json;charset=UTF-8");
+	int ret = toollib::HttpPostEx(user->curlweb, user->httpweb);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpweb->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("errno") || !doc["errno"].IsInt()) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[User" << user->fileid << "] "
+			<< "APIShowWitJoin: " << user->httpweb->recv_data;
+		return BILIRET::JSON_ERROR;
+	}
+	// 600015 活动期间只能参加一个见证团
+	// 600020 见证团已经满员
+	ret = doc["errno"].GetInt();
+	if (ret == 600020) {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIShowWitJoin: " << doc["msg"].GetString();
+		return BILIRET::NORESULT;
+	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+		<< "APIShowWitJoin: " << doc["msg"].GetString();
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIShowSignStatus(const std::shared_ptr<user_info> &user) {
+	std::ostringstream oss;
+	oss << "https://show.bilibili.com/api/activity/index/sign/detail?taskId=act626-sign&_="
+		<< GetTimeStamp() << "479";
+	user->httpweb->url = oss.str();
+	user->httpweb->ClearHeader();
+	user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	int ret = toollib::HttpGetEx(user->curlweb, user->httpweb);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpweb->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("errno") || !doc["errno"].IsInt() || doc["errno"].GetInt()) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[User" << user->fileid << "] "
+			<< "APIShowSignStatus: " << user->httpweb->recv_data;
+		return BILIRET::JSON_ERROR;
+	}
+	user->ten_sign_status = doc["data"]["isSigned"].GetBool();
+	if (user->ten_sign_status) {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIShowSignStatus " << "Signed";
+	}
+	else {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIShowSignStatus " << "Unsigned";
+	}
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIShowSignDo(const std::shared_ptr<user_info> &user) {
+	user->httpweb->url = "https://show.bilibili.com/api/activity/index/sign/do";
+	user->httpweb->send_data = "{\"taskId\":\"act626-sign\"}";
+	user->httpweb->ClearHeader();
+	user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	user->httpweb->AddHeaderManual("Content-Type: application/json;charset=UTF-8");
+	int ret = toollib::HttpPostEx(user->curlweb, user->httpweb);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpweb->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("errno") || !doc["errno"].IsInt() || doc["errno"].GetInt()) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[User" << user->fileid << "] "
+			<< "APIShowSignDo: " << user->httpweb->recv_data;
+		return BILIRET::JSON_ERROR;
+	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+		<< "APIShowSignDo: OK";
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIShowShareStatus(const std::shared_ptr<user_info> &user) {
+	std::ostringstream oss;
+	oss << "https://show.bilibili.com/api/activity/index/share/sharetaskstatus?_="
+		<< GetTimeStamp() << "479";
+	user->httpweb->url = oss.str();
+	user->httpweb->ClearHeader();
+	user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	int ret = toollib::HttpGetEx(user->curlweb, user->httpweb);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpweb->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("errno") || !doc["errno"].IsInt() || doc["errno"].GetInt()) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[User" << user->fileid << "] "
+			<< "APIShowShareStatus: " << user->httpweb->recv_data;
+		return BILIRET::JSON_ERROR;
+	}
+	if (!doc["data"]["egg"].IsNull()) {
+		user->ten_egg_status = doc["data"]["egg"]["status"].GetInt();
+		user->ten_egg_taskid = doc["data"]["egg"]["taskId"].GetString();
+		user->ten_egg_assocId = doc["data"]["egg"]["assocId"].GetUint();
+		user->ten_egg_type = doc["data"]["egg"]["type"].GetUint();
+	}
+	else {
+		user->ten_egg_status = 2;
+	}
+	if (!doc["data"]["publish"].IsNull()) {
+		user->ten_pub_status = doc["data"]["publish"]["status"].GetInt();
+		user->ten_pub_taskid = doc["data"]["publish"]["taskId"].GetString();
+		user->ten_pub_assocId = doc["data"]["publish"]["assocId"].GetUint();
+		user->ten_pub_type = doc["data"]["publish"]["type"].GetUint();
+	}
+	else {
+		user->ten_pub_status = 2;
+	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+		<< "APIShowShareStatus" 
+		<< " egg status: " << user->ten_egg_status
+		<< " publish status: " << user->ten_pub_status;
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIShowReward(
+	const std::shared_ptr<user_info> &user,
+	unsigned assocId,
+	std::string taskId,
+	unsigned type
+) {
+	return apibl::APIShowReward(
+		user, 
+		std::to_string(assocId),
+		taskId,
+		type
+	);
+}
+
+BILIRET apibl::APIShowReward(const std::shared_ptr<user_info>& user, std::string assocId, std::string taskId, unsigned type) {
+	user->httpweb->url = "https://show.bilibili.com/api/activity/index/reward/receive";
+	std::ostringstream oss;
+	oss << "{\"taskId\":\"" << taskId
+		<< "\",\"type\":" << type
+		<< ",\"assocId\":\"" << assocId
+		<< "\"}";
+	user->httpweb->send_data = oss.str();
+	user->httpweb->ClearHeader();
+	user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	user->httpweb->AddHeaderManual("Content-Type: application/json;charset=UTF-8");
+	int ret = toollib::HttpPostEx(user->curlweb, user->httpweb);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpweb->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("errno") || !doc["errno"].IsInt()) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[User" << user->fileid << "] "
+			<< "APIShowReward: " << taskId << " " << user->httpweb->recv_data;
+		return BILIRET::JSON_ERROR;
+	}
+	ret = doc["errno"].GetInt();
+	if (ret) {
+		// 其它错误
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIShowReward: " << taskId << " " << doc["msg"].GetString();
+		return BILIRET::JOINEVENT_FAILED;
+	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+		<< "APIShowReward: " << taskId << " " << doc["data"]["num"].GetInt();
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIShowCallback(
+	const std::shared_ptr<user_info> &user,
+	std::string taskId,
+	unsigned targetId,
+	std::string eventId
+) {
+	user->httpweb->url = "https://show.bilibili.com/api/activity/index/share/callbackshare";
+	std::ostringstream oss;
+	oss << "{\"taskId\":\"" << taskId
+		<< "\",\"targetId\":\"" << targetId
+		<< "\",\"eventId\":\"" << eventId
+		<< "\",\"eventPage\":\"" << "self_task"
+		<< "\"}";
+	user->httpweb->send_data = oss.str();
+	user->httpweb->ClearHeader();
+	user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	user->httpweb->AddHeaderManual("Content-Type: application/json;charset=UTF-8");
+	int ret = toollib::HttpPostEx(user->curlweb, user->httpweb);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpweb->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("errno") || !doc["errno"].IsInt()) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[User" << user->fileid << "] "
+			<< "APIShowCallback: " << taskId << " " << user->httpweb->recv_data;
+		return BILIRET::JSON_ERROR;
+	}
+	ret = doc["errno"].GetInt();
+	if (ret == 6000036) {
+		// 点过了
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIShowCallback: " << taskId << " " << doc["msg"].GetString();
+		return BILIRET::NOFAULT;
+	}
+	if (ret == 6000031) {
+		// 分享过了
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIShowCallback: " << taskId << " " << doc["msg"].GetString();
+		return BILIRET::NOFAULT;
+	}
+	if (ret) {
+		// 其它错误
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIShowCallback: " << taskId << " " << doc["msg"].GetString();
+		return BILIRET::JOINEVENT_FAILED;
+	}
+	if (!doc.HasMember("data") || !doc["data"].IsBool() || !doc["data"].IsTrue()) {
+		// 未知错误
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIShowCallback: " << taskId << " " << doc["msg"].GetString();
+		return BILIRET::JOINEVENT_FAILED;
+	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+		<< "APIShowCallback: " << taskId << " " << "OK";
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIShowTaskList(const std::shared_ptr<user_info>& user, unsigned id) {
+	std::ostringstream oss;
+	oss << "https://show.bilibili.com/api/activity/index/chelp/list?taskId=act626-help-"
+		<< id << "&_="
+		<< GetTimeStamp() << "479";
+	user->httpweb->url = oss.str();
+	user->httpweb->ClearHeader();
+	user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	int ret = toollib::HttpGetEx(user->curlweb, user->httpweb);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpweb->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("errno") || !doc["errno"].IsInt() || doc["errno"].GetInt()) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[User" << user->fileid << "] "
+			<< "APIShowTaskList: " << user->httpweb->recv_data;
+		return BILIRET::JSON_ERROR;
+	}
+	if (doc["data"]["isOnGoing"].IsFalse()) {
+		// 活动未开始
+		return BILIRET::NORESULT;
+	}
+	rapidjson::Value &tasklist = doc["data"]["list"];
+	for (unsigned i = 0; i < tasklist.Size(); i++) {
+		unsigned assocId = tasklist[i]["assocId"].GetUint();
+		if (assocId) {
+			// 已生成
+			unsigned num = tasklist[i]["num"].GetUint();
+			if (num != 3) {
+				user->ten_task_list.push_back(assocId);
+				BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+					<< "APIShowTaskList assocId: " << assocId;
+			}
+			else {
+				unsigned status = tasklist[i]["status"].GetUint();
+				if (status == 0) {
+					// 领取碎片
+					apibl::APIShowReward(
+						user,
+						assocId,
+						tasklist[i]["taskId"].GetString(),
+						tasklist[i]["type"].GetUint()
+					);
+				}
+			}
+		}
+		else {
+			// 未生成
+			unsigned configId = tasklist[i]["configId"].GetUint();
+			apibl::APIShowTaskCreate(user, configId);
+		}
+	}
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIShowTaskCreate(const std::shared_ptr<user_info>& user, unsigned configId) {
+	user->httpweb->url = "https://show.bilibili.com/api/activity/index/chelp/create";
+	std::ostringstream oss;
+	oss << "{\"id\":" << configId << "}";
+	user->httpweb->send_data = oss.str();
+	user->httpweb->ClearHeader();
+	user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	user->httpweb->AddHeaderManual("Content-Type: application/json;charset=UTF-8");
+	int ret = toollib::HttpPostEx(user->curlweb, user->httpweb);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpweb->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("errno") || !doc["errno"].IsInt() || doc["errno"].GetInt()) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[User" << user->fileid << "] "
+			<< "APIShowTaskCreate: " << user->httpweb->recv_data;
+		return BILIRET::JSON_ERROR;
+	}
+	unsigned assocId = doc["data"].GetUint();
+	user->ten_task_list.push_back(assocId);
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+		<< "APIShowTaskCreate assocId: " << assocId;
+
+	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIShowLike(const std::shared_ptr<user_info> &user, unsigned id) {
+	user->httpweb->url = "https://show.bilibili.com/api/activity/index/chelp/like";
+	std::ostringstream oss;
+	oss << "{\"id\":\"" << id << "\"}";
+	user->httpweb->send_data = oss.str();
+	user->httpweb->ClearHeader();
+	user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+	user->httpweb->AddHeaderManual("Content-Type: application/json;charset=UTF-8");
+	int ret = toollib::HttpPostEx(user->curlweb, user->httpweb);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpweb->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("errno") || !doc["errno"].IsInt()) {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[User" << user->fileid << "] "
+			<< "APIShowLike: " << user->httpweb->recv_data;
+		return BILIRET::JSON_ERROR;
+	}
+	ret = doc["errno"].GetInt();
+	if (ret == 3) {
+		std::string msg = doc["msg"].GetString();
+		if (msg.find(u8"超过上限") != -1) {
+			BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+				<< "APIShowLike: " << msg;
+			return BILIRET::JOINEVENT_FAILED;
+		}
+		if (msg.find(u8"已经点过") != -1) {
+			BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+				<< "APIShowLike: " << msg;
+			return BILIRET::JOINEVENT_FAILED;
+		}
+		if (msg.find(u8"给自己") != -1) {
+			BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+				<< "APIShowLike: " << msg;
+			return BILIRET::JOINEVENT_FAILED;
+		}
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIShowLike: " << msg;
+		return BILIRET::NORESULT;
+	}
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+		<< "APIShowLike: OK";
+
+	return BILIRET::NOFAULT;
+}
+
 BILIRET apibl::APIWebGetCoin(const std::shared_ptr<user_info>& user) {
 	user->httpweb->url = "https://account.bilibili.com/site/getCoin";
 	user->httpweb->ClearHeader();

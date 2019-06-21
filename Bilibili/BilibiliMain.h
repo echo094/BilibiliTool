@@ -68,6 +68,8 @@ private:
 	// 调试函数
 	int Debugfun(int index);
 
+	// 批量导入账号密码
+	int LoadAccount(const char*file);
 	// 广播模式下更新监控的房间
 	int UpdateAreaRoom(const unsigned rid, const unsigned area, const bool opt);
 	// 非广播模式下更新监控的房间

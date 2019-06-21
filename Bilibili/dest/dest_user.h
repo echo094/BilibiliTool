@@ -62,6 +62,18 @@ public:
 	// 参与大乱斗抽奖
 	int JoinPKLotteryALL(std::shared_ptr<BILI_LOTTERYDATA> data);
 
+public:
+	// 日常
+	void ShowTask();
+	// 组CP
+	void ShowCP();
+	// 更新点赞任务
+	void ShowList(const char*filename);
+	// 批量点赞
+	void ShowLike(const char*filename);
+	// 添加见证者
+	void ShowJoinWitness(long long id);
+
 private:
 	// 新用户登录
 	LOGINRET _ActLogin(std::shared_ptr<user_info> &user, int index, std::string username, std::string password);
@@ -83,6 +95,8 @@ private:
 	int _ActStorm(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 大乱斗
 	int _ActPK(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 10周年签到
+	int _ActShowTask(std::shared_ptr<user_info> &user);
 	// 抽奖线程
 	void Thread_ActLottery(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 舰队低保领取线程

@@ -7,6 +7,50 @@ namespace apibl {
 
 	/* 网页端 API*/
 
+	/* 网页端 10周年 API*/
+
+	// 查询CP状态
+	BILIRET APIShowCPInfo(const std::shared_ptr<user_info> &user);
+	// 组CP
+	BILIRET APIShowCPAgree(const std::shared_ptr<user_info> &user, std::string token);
+	// 见证者列表
+	BILIRET APIShowWitList(const std::shared_ptr<user_info> &user);
+	// 加入见证
+	BILIRET APIShowWitJoin(const std::shared_ptr<user_info> &user, long long teamId);
+	// 签到状态
+	BILIRET APIShowSignStatus(const std::shared_ptr<user_info> &user);
+	// 签到
+	BILIRET APIShowSignDo(const std::shared_ptr<user_info> &user);
+	// 彩蛋分享状态
+	BILIRET APIShowShareStatus(const std::shared_ptr<user_info> &user);
+	// 领取任务奖励
+	BILIRET APIShowReward(
+		const std::shared_ptr<user_info> &user,
+		unsigned assocId,
+		std::string taskId,
+		unsigned type
+	);
+	// 领取任务奖励
+	BILIRET APIShowReward(
+		const std::shared_ptr<user_info> &user,
+		std::string assocId,
+		std::string taskId,
+		unsigned type
+	);
+	// 完成任务
+	BILIRET APIShowCallback(
+		const std::shared_ptr<user_info> &user, 
+		std::string taskId,
+		unsigned targetId,
+		std::string eventId
+	);
+	// 点赞任务列表
+	BILIRET APIShowTaskList(const std::shared_ptr<user_info> &user, unsigned id);
+	// 生成点赞任务
+	BILIRET APIShowTaskCreate(const std::shared_ptr<user_info> &user, unsigned configId);
+	// 进行点赞
+	BILIRET APIShowLike(const std::shared_ptr<user_info> &user, unsigned id);
+
 	/* 网页端 非直播站 API*/
 
 	// 获取登录硬币

@@ -44,6 +44,23 @@ public:
 	long long int silver_start;
 	long long int silver_end;
 
+// 10周年
+public:
+	long long ten_cp_id = 0;
+	std::string ten_cp_token;
+	bool ten_sign_status = false;
+	// 1表示已完成
+	int ten_egg_status = 0;
+	std::string ten_egg_taskid;
+	unsigned ten_egg_assocId = 0;
+	unsigned ten_egg_type = 0;
+	// 1表示已完成 2未分享
+	int ten_pub_status = 0;
+	std::string ten_pub_taskid;
+	unsigned ten_pub_assocId = 0;
+	unsigned ten_pub_type = 0;
+	std::vector<unsigned> ten_task_list;
+
 public:
 	// 两个连接 一个用于网页端 一个用于手机端
 	CURL *curlweb, *curlapp;
