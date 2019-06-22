@@ -7,8 +7,10 @@
 
 namespace toollib {
 
-	//获取当前时间
+	// 获取当前时间
 	long long GetTimeStamp();
+	// 生成毫秒时间
+	long long GetTimeStampM();
 	std::string GetTimeString();
 
 	std::string UrlEncode(const std::string& str);

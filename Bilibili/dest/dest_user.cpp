@@ -1,5 +1,4 @@
 ﻿#include "dest_user.h"
-#include <deque>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -131,7 +130,7 @@ int dest_user::ShowUserList() {
 	printf("[UserList] Count: %d \n", _usercount);
 	std::list<user_info*>::iterator itor;
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
-		printf("%d %s \n", (*itor)->GetFileSN(), (*itor)->GetUsername().c_str());
+		printf("%d %s \n", (*itor)->fileid, (*itor)->account.c_str());
 	}
 	return 0;
 }
@@ -161,7 +160,7 @@ int  dest_user::AddUser(std::string username, std::string password) {
 
 int  dest_user::DeleteUser(std::string username) {
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
-		if ((*itor)->GetUsername() != username) {
+		if ((*itor)->account != username) {
 			continue;
 		}
 		// 删除该用户
@@ -177,13 +176,13 @@ int dest_user::ReloginAll() {
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
 		switch (_ActRelogin(*itor)) {
 		case LOGINRET::NOFAULT:
-			printf("[UserList] Account %s Logged in. \n", (*itor)->GetUsername().c_str());
+			printf("[UserList] Account %s Logged in. \n", (*itor)->account.c_str());
 			break;
 		case LOGINRET::NOTVALID:
-			printf("[UserList] Account %s Not valid. \n", (*itor)->GetUsername().c_str());
+			printf("[UserList] Account %s Not valid. \n", (*itor)->account.c_str());
 			break;
 		default:
-			printf("[UserList] Account %s Login failed. \n", (*itor)->GetUsername().c_str());
+			printf("[UserList] Account %s Login failed. \n", (*itor)->account.c_str());
 			break;
 		}
 	}
@@ -194,13 +193,13 @@ int dest_user::CheckUserStatusALL() {
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
 		switch (_ActCheckLogin(*itor)) {
 		case LOGINRET::NOFAULT:
-			printf("[UserList] Account %s Logged in. \n", (*itor)->GetUsername().c_str());
+			printf("[UserList] Account %s Logged in. \n", (*itor)->account.c_str());
 			break;
 		case LOGINRET::NOTVALID:
-			printf("[UserList] Account %s Not valid. \n", (*itor)->GetUsername().c_str());
+			printf("[UserList] Account %s Not valid. \n", (*itor)->account.c_str());
 			break;
 		default:
-			printf("[UserList] Account %s Logged out. \n", (*itor)->GetUsername().c_str());
+			printf("[UserList] Account %s Logged out. \n", (*itor)->account.c_str());
 			break;
 		}
 	}
@@ -209,7 +208,7 @@ int dest_user::CheckUserStatusALL() {
 
 int dest_user::GetUserInfoALL() {
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
-		if (!(*itor)->getLoginStatus()) {
+		if (!(*itor)->islogin) {
 			continue;
 		}
 		_ActGetUserInfo(*itor);
@@ -223,7 +222,7 @@ void dest_user::_ClearUserList() {
 
 bool dest_user::_IsExistUser(std::string username) {
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
-		if ((*itor)->GetUsername() == username) {
+		if ((*itor)->account == username) {
 			return true;
 		}
 	}
@@ -262,7 +261,7 @@ int dest_user::HeartExp(int firsttime) {
 	}
 
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
-		if (!(*itor)->getLoginStatus())
+		if (!(*itor)->islogin)
 			continue;
 		if (_heartcount == 0) {
 			_ActHeartFirst(*itor);
@@ -342,11 +341,13 @@ int dest_user::JoinPKLotteryALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	return 0;
 }
 
-void dest_user::ShowTask() {
+void dest_user::ShowDailyTask(unsigned max_deep) {
 	using namespace std;
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
-		cout << "User " << (*itor)->GetUsername() << endl;
-		_ActShowTask(*itor);
+		cout << "User " << (*itor)->account << endl;
+		if ((*itor)->ten_self_level <= max_deep) {
+			_ActShowTask(*itor);
+		}
 	}
 }
 
@@ -354,7 +355,8 @@ void dest_user::ShowCP() {
 	using namespace std;
 	std::string token = "";
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
-		cout << "User " << (*itor)->GetUsername() << endl;
+		cout << "User " << (*itor)->account << endl;
+		// 获取CP状态 获取见证者列表
 		if (apibl::APIShowCPInfo(*itor) != BILIRET::NOFAULT) {
 			continue;
 		}
@@ -374,28 +376,31 @@ void dest_user::ShowCP() {
 	}
 }
 
-void dest_user::ShowList(const char * filename) {
+void dest_user::ShowList(const char * filename, unsigned max_deep) {
 	using namespace std;
 	std::ofstream outfile(filename);
 	if (!outfile.is_open()) {
 		return;
 	}
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
+		if ((*itor)->ten_self_level > max_deep) {
+			continue;
+		}
 		for (unsigned i = 1; i <= 5; i++) {
 			BILIRET ret = apibl::APIShowTaskList(*itor, i);
-			if (ret == BILIRET::NORESULT) {
+			if (ret == BILIRET::TEN_TASK_NOTOPEN) {
 				break;
 			}
 			if (ret != BILIRET::NOFAULT) {
 				continue;
 			}
 		}
-		outfile << (*itor)->GetUsername() << endl;
+		outfile << '#' << (*itor)->account << endl;
 		for (auto it = (*itor)->ten_task_list.begin(); it != (*itor)->ten_task_list.end(); it++) {
 			outfile << *it << endl;
 		}
-		outfile << endl;
 	}
+	outfile << '#' << endl;
 }
 
 void dest_user::ShowLike(const char*filename) {
@@ -404,32 +409,37 @@ void dest_user::ShowLike(const char*filename) {
 	if (!infile.is_open()) {
 		return;
 	}
-	std::deque<unsigned> tasklist;
-	unsigned taskid = 0;
+	std::deque<std::string> tasklist;
+	std::string taskid;
 	while (infile >> taskid) {
+		if (taskid[0] == '#') {
+			// 每个账号的任务分开来做
+			_ActShowLike(tasklist);
+			continue;
+		}
 		tasklist.push_back(taskid);
+		printf("Add taskid: %s\n", taskid.c_str());
+		if (tasklist.size() > 10) {
+			// 积累了10个任务就点一次
+			_ActShowLike(tasklist);
+		}
 	}
+}
+
+void dest_user::ShowJoinWitness(std::shared_ptr<user_info>& user) {
+	using namespace std;
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
-		cout << "User " << (*itor)->GetUsername() << endl;
-		while (1) {
-			if (tasklist.empty()) {
-				// 没任务了
-				return;
-			}
-			unsigned id = tasklist.front();
-			tasklist.pop_front();
-			BILIRET ret = apibl::APIShowLike(*itor, id);
-			if (ret == BILIRET::NORESULT) {
-				// 点满了
-				continue;
-			}
-			if (ret == BILIRET::JOINEVENT_FAILED) {
-				// 账号不能点了
-				tasklist.push_back(id);
-				break;
-			}
-			// 将任务放到队尾
-			tasklist.push_back(id);
+		if ((*itor)->ten_team_hasjoin) {
+			// 跳过已加入的账号
+			continue;
+		}
+		cout << "User " << (*itor)->account << endl;
+		BILIRET ret = apibl::APIShowWitJoin(*itor, user->ten_team_id);
+		if (ret == BILIRET::TEN_TEAM_FULL) {
+			return;
+		}
+		if (ret == BILIRET::NOFAULT) {
+			user->ten_team_list.push_back((*itor)->uid);
 		}
 	}
 }
@@ -437,10 +447,84 @@ void dest_user::ShowLike(const char*filename) {
 void dest_user::ShowJoinWitness(long long id) {
 	using namespace std;
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
-		cout << "User " << (*itor)->GetUsername() << endl;
+		if ((*itor)->ten_team_hasjoin) {
+			// 跳过已加入的账号
+			continue;
+		}
+		cout << "User " << (*itor)->account << endl;
 		BILIRET ret = apibl::APIShowWitJoin(*itor, id);
-		if (ret == BILIRET::NORESULT) {
+		if (ret == BILIRET::TEN_TEAM_FULL) {
 			return;
+		}
+	}
+}
+
+void dest_user::ShowAuto() {
+	// 生成下线列表
+	// 用户存储映射
+	std::map<unsigned, unsigned> memmap;
+	for (size_t i = 0; i < _user_list.size(); i++) {
+		memmap[_user_list[i]->uid] = i;
+		// 重置账户级别
+		_user_list[i]->ten_self_level = TEN_DEFAULT_LEVEL;
+	}
+	// 下线列表
+	std::vector<std::vector<unsigned> > member;
+	// 将前2个账号当作主账号 等级为1级
+	member.push_back(std::vector<unsigned>());
+	_user_list[0]->ten_self_level = 1;
+	member[0].push_back(_user_list[0]->uid);
+	_user_list[1]->ten_self_level = 1;
+	member[0].push_back(_user_list[1]->uid);
+	// 遍历
+	for (size_t deep = 0; deep < member.size(); deep++) {
+		for (size_t i = 0; i < member[deep].size(); i++) {
+			unsigned uid = member[deep][i];
+			unsigned idx1 = memmap[uid];
+			for (auto it = _user_list[idx1]->ten_team_list.begin();
+				it != _user_list[idx1]->ten_team_list.end(); 
+				it++) {
+				if (!memmap.count(*it)) {
+					// 见证者非自己的账号
+					continue;
+				}
+				unsigned idx2 = memmap[*it];
+				if (_user_list[idx2]->ten_self_level != TEN_DEFAULT_LEVEL) {
+					// 见证者为该账号的上级 跳过
+					continue;
+				}
+				// 更新级别
+				_user_list[idx2]->ten_self_level = deep + 2;
+				if (member.size() <= deep + 1) {
+					member.push_back(std::vector<unsigned>());
+				}
+				member[deep + 1].push_back(*it);
+			}
+		}
+	}
+	// 下线等级2以内的用户领取任务
+	ShowList("tmp", 2);
+	// 点赞
+	ShowLike("tmp");
+	// 下线等级2以内的用户领取点赞奖励
+	ShowList("tmp", 2);
+	// 所有下属做日常 更新见证者坑位
+	// 更新后不会刷新缓存数据
+	ShowDailyTask(TEN_DEFAULT_LEVEL);
+	// 添加见证者 最高下线为2级
+	size_t max_deep = member.size();
+	if (max_deep > 2) {
+		max_deep = 2;
+	}
+	for (size_t deep = 0; deep < max_deep; deep++) {
+		for (size_t i = 0; i < member[deep].size(); i++) {
+			unsigned uid = member[deep][i];
+			unsigned idx1 = memmap[uid];
+			if (!_user_list[idx1]->ten_team_empty_num) {
+				continue;
+			}
+			// 有剩余坑位 添加见证者
+			ShowJoinWitness(_user_list[idx1]);
 		}
 	}
 }
@@ -673,11 +757,12 @@ int dest_user::_ActShowTask(std::shared_ptr<user_info>& user) {
 			return -1;
 		}
 	}
+	// 查询任务状态
 	if (apibl::APIShowShareStatus(user) != BILIRET::NOFAULT) {
 		return -1;
 	}
 	// 找彩蛋
-	if (user->ten_egg_status == 2) {
+	if (user->ten_egg_status != 1) {
 		if (apibl::APIShowCallback(
 			user,
 			"act626-egg",
@@ -686,46 +771,37 @@ int dest_user::_ActShowTask(std::shared_ptr<user_info>& user) {
 		) != BILIRET::NOFAULT) {
 			return -1;
 		}
-		if (apibl::APIShowShareStatus(user) != BILIRET::NOFAULT) {
-			return -1;
-		}
-	}
-	if (user->ten_egg_status != 1) {
 		if (apibl::APIShowCallback(
-			user, 
-			user->ten_egg_taskid,
-			6261002,
-			"egg_one"
-		) != BILIRET::NOFAULT) {
-			return -1;
-		}
-		if (apibl::APIShowCallback(
-			user, 
-			user->ten_egg_taskid,
+			user,
+			"act626-egg",
 			6261002,
 			"egg_two"
 		) != BILIRET::NOFAULT) {
 			return -1;
 		}
 		if (apibl::APIShowCallback(
-			user, 
-			user->ten_egg_taskid,
+			user,
+			"act626-egg",
 			6261002,
 			"egg_three"
 		) != BILIRET::NOFAULT) {
+			return -1;
+		}
+		if (apibl::APIShowShareStatus(user) != BILIRET::NOFAULT) {
 			return -1;
 		}
 		if (apibl::APIShowReward(
 			user,
 			user->ten_egg_assocId,
 			user->ten_egg_taskid,
-			user->ten_egg_type
+			user->ten_egg_type,
+			apibl::TEN_REFERER_MAIN
 		) != BILIRET::NOFAULT) {
 			return -1;
 		}
 	}
 	// 发动态
-	if (user->ten_pub_status == 2) {
+	if (user->ten_pub_status != 1) {
 		if (apibl::APIShowCallback(
 			user,
 			"act626-pub",
@@ -737,23 +813,60 @@ int dest_user::_ActShowTask(std::shared_ptr<user_info>& user) {
 		if (apibl::APIShowShareStatus(user) != BILIRET::NOFAULT) {
 			return -1;
 		}
-	}
-	if (user->ten_pub_status != 1) {
 		if (apibl::APIShowReward(
 			user,
 			user->ten_pub_assocId,
 			user->ten_pub_taskid,
-			user->ten_pub_type
+			user->ten_pub_type,
+			apibl::TEN_REFERER_MAIN
 		) != BILIRET::NOFAULT) {
 			return -1;
 		}
 	}
-	// 领返利
-	if (apibl::APIShowWitList(user) != BILIRET::NOFAULT) {
+	// 领碎片加成 获取队伍ID以及剩余坑位
+	if (apibl::APIShowWitDeital(user) != BILIRET::NOFAULT) {
 		return -1;
 	}
 
 	return 0;
+}
+
+void dest_user::_ActShowLike(std::deque<std::string>& tasklist) {
+	using namespace std;
+	if (tasklist.empty()) {
+		return;
+	}
+	cout << "Task size: " << tasklist.size() << endl;
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
+		while (1) {
+			if (tasklist.empty()) {
+				// 没任务了
+				return;
+			}
+			if ((*itor)->ten_task_full) {
+				// 这个账号3次满了
+				break;
+			}
+			std::string id = tasklist.front();
+			if ((*itor)->ten_task_list.count(atoi(id.c_str()))) {
+				// 是自己的任务
+				break;
+			}
+			tasklist.pop_front();
+			BILIRET ret = apibl::APIShowLike(*itor, id);
+			if (ret == BILIRET::TEN_TASK_FINISH) {
+				// 点满了
+				continue;
+			}
+			if (ret == BILIRET::TEN_LIKE_FAILED) {
+				// 账号不能点了 或者任务是自己的
+				tasklist.push_back(id);
+				break;
+			}
+			// 将任务放到队尾
+			tasklist.push_back(id);
+		}
+	}
 }
 
 void dest_user::Thread_ActLottery(std::shared_ptr<BILI_LOTTERYDATA> data) {
@@ -763,7 +876,7 @@ void dest_user::Thread_ActLottery(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	// 领取为防止冲突 同一时间只能有一个用户在领取
 	// 在同一抽奖的两次抽奖之间增加间隔
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
-		if (!(*itor)->getLoginStatus())
+		if (!(*itor)->islogin)
 			continue;
 		Sleep(_GetRand(1000, 1500));
 		{
@@ -780,7 +893,7 @@ void dest_user::Thread_ActGuard(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	BOOST_LOG_SEV(g_logger::get(), trace) << "[UserList] Thread join guard: " << data->loid;
 	Sleep(_GetRand(5000, 5000));
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
-		if (!(*itor)->getLoginStatus())
+		if (!(*itor)->islogin)
 			continue;
 		Sleep(_GetRand(1000, 1500));
 		{
@@ -799,7 +912,7 @@ void dest_user::Thread_ActStorm(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	// 领取为防止冲突 同一时间只能有一个用户在领取
 	// 在同一抽奖的两次抽奖之间增加间隔
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
-		if (!(*itor)->getLoginStatus())
+		if (!(*itor)->islogin)
 			continue;
 		Sleep(_GetRand(1000, 1500));
 		{
@@ -818,7 +931,7 @@ void dest_user::Thread_ActPK(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	// 领取为防止冲突 同一时间只能有一个用户在领取
 	// 在同一抽奖的两次抽奖之间增加间隔
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
-		if (!(*itor)->getLoginStatus())
+		if (!(*itor)->islogin)
 			continue;
 		Sleep(_GetRand(1000, 1500));
 		{

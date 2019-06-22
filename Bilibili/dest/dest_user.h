@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <atomic>
+#include <deque>
 #include <memory>
 #include <vector>
 #include <boost/thread/thread.hpp>
@@ -64,15 +65,19 @@ public:
 
 public:
 	// 日常
-	void ShowTask();
+	void ShowDailyTask(unsigned max_deep);
 	// 组CP
 	void ShowCP();
 	// 更新点赞任务
-	void ShowList(const char*filename);
+	void ShowList(const char*filename, unsigned max_deep);
 	// 批量点赞
 	void ShowLike(const char*filename);
+	// 添加见证者到特定用户 并更新列表
+	void ShowJoinWitness(std::shared_ptr<user_info> &user);
 	// 添加见证者
 	void ShowJoinWitness(long long id);
+	// 自动完成1轮 组CP 见证 任务 点赞
+	void ShowAuto();
 
 private:
 	// 新用户登录
@@ -97,6 +102,8 @@ private:
 	int _ActPK(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 10周年签到
 	int _ActShowTask(std::shared_ptr<user_info> &user);
+	// 10周年点赞
+	void _ActShowLike(std::deque<std::string> &tasklist);
 	// 抽奖线程
 	void Thread_ActLottery(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 舰队低保领取线程

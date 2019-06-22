@@ -1,4 +1,5 @@
 ﻿#include "strconvert.h"
+#include <cstdlib>
 #include <ctime>
 #include "rapidjson/encodings.h"
 #include "rapidjson/stringbuffer.h"
@@ -14,6 +15,10 @@ namespace toollib {
 		time_t time;
 		std::time(&time);
 		return time;
+	}
+
+	long long GetTimeStampM() {
+		return GetTimeStamp() * 1000 + rand() % 1000;
 	}
 
 	std::string GetTimeString() {

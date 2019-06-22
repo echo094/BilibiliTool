@@ -65,9 +65,10 @@ void CBilibiliMain::PrintHelp() {
   >31 批量导入账号 \n\
   >32 批量签到|彩蛋|分享|加成 \n\
   >33 批量组CP \n\
-  >34 批量更新点赞任务 \n\
+  >34 批量领取点赞任务 \n\
   >35 批量点赞 \n\
   >36 批量添加见证者 \n\
+  >37 自动化完成1轮任务 \n\
   >   help        \t 目录                \n\
   >   exit        \t 退出                \n");
 }
@@ -323,8 +324,8 @@ int CBilibiliMain::ProcessCommand(std::string str) {
 		LoadAccount(filename.c_str());
 	}
 	else if (!str.compare("32")) {
-		printf("Show task sign \n");
-		_userlist->ShowTask();
+		printf("Show do daily task \n");
+		_userlist->ShowDailyTask(TEN_DEFAULT_LEVEL);
 	}
 	else if (!str.compare("33")) {
 		printf("Show agree cp \n");
@@ -335,7 +336,7 @@ int CBilibiliMain::ProcessCommand(std::string str) {
 		std::string filename;
 		printf("[Export] task data file name:");
 		std::cin >> filename;
-		_userlist->ShowList(filename.c_str());
+		_userlist->ShowList(filename.c_str(), TEN_DEFAULT_LEVEL);
 	}
 	else if (!str.compare("35")) {
 		printf("Show task like \n");
@@ -350,6 +351,10 @@ int CBilibiliMain::ProcessCommand(std::string str) {
 		printf("Enter the teamid:");
 		std::cin >> id;
 		_userlist->ShowJoinWitness(id);
+	}
+	else if (!str.compare("37")) {
+		printf("Show auto \n");
+		_userlist->ShowAuto();
 	}
 	else if (!str.compare("90")) {
 		Debugfun(1);
