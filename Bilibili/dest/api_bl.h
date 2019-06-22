@@ -17,7 +17,7 @@ namespace apibl {
 	BILIRET APIShowCPInfo(const std::shared_ptr<user_info> &user);
 	// 组CP
 	BILIRET APIShowCPAgree(const std::shared_ptr<user_info> &user, std::string token);
-	// 获取见证者列表 队伍ID 以及空余位置数量
+	// 获取见证者列表 队伍ID 队员 以及空余位置数量
 	// 自动领取碎片加成
 	BILIRET APIShowWitDeital(const std::shared_ptr<user_info> &user);
 	// 加入见证 团队满时返回 TEN_TEAM_FULL 账户已加入别的见证团返回 TEN_TEAM_HASJOIN

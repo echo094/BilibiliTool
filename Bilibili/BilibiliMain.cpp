@@ -343,7 +343,8 @@ int CBilibiliMain::ProcessCommand(std::string str) {
 		std::string filename;
 		printf("[Import] task list file name:");
 		std::cin >> filename;
-		_userlist->ShowLike(filename.c_str());
+		bool val = false;
+		_userlist->ShowLike(filename.c_str(), val);
 	}
 	else if (!str.compare("36")) {
 		printf("Show join witness \n");

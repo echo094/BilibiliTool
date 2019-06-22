@@ -6,6 +6,7 @@
 
 #include "logger/log.h"
 #include "utility/md5.h"
+#include "utility/platform.h"
 #include "utility/sslex.h"
 #include "utility/strconvert.h"
 using namespace apibl;
@@ -72,6 +73,9 @@ BILIRET apibl::APIShowCPAgree(const std::shared_ptr<user_info>& user, std::strin
 	user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
 	user->httpweb->AddHeaderManual("Content-Type: application/json;charset=UTF-8");
 	user->httpweb->AddHeaderManual("Origin: https://mall.bilibili.com");
+	oss.str("");
+	oss << "Referer: https://mall.bilibili.com/activities/invitation.html?token=" << token;
+	user->httpweb->AddHeaderManual(oss.str().c_str());
 	int ret = toollib::HttpPostEx(user->curlweb, user->httpweb);
 	if (ret) {
 		return BILIRET::HTTP_ERROR;
@@ -113,6 +117,7 @@ BILIRET apibl::APIShowWitDeital(const std::shared_ptr<user_info>& user) {
 	}
 	user->ten_team_id = doc["data"]["teamId"].GetUint64();
 	user->ten_team_empty_num = 0;
+	user->ten_team_list.clear();
 	rapidjson::Value &witlist = doc["data"]["witnessList"];
 	for (unsigned i = 0; i < witlist.Size(); i++) {
 		if (witlist[i]["isLocked"].IsTrue()) {
@@ -129,7 +134,11 @@ BILIRET apibl::APIShowWitDeital(const std::shared_ptr<user_info>& user) {
 				TEN_REFERER_FRIEND
 			);
 		}
-		if (!witlist[i]["member"].HasMember("id")) {
+		if (witlist[i]["member"].HasMember("id")) {
+			// 添加到列表
+			user->ten_team_list.push_back(witlist[i]["member"]["id"].GetUint());
+		}
+		else {
 			// 有空余坑位
 			user->ten_team_empty_num++;
 		}
@@ -149,6 +158,9 @@ BILIRET apibl::APIShowWitJoin(const std::shared_ptr<user_info>& user, long long 
 	user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
 	user->httpweb->AddHeaderManual("Content-Type: application/json;charset=UTF-8");
 	user->httpweb->AddHeaderManual("Origin: https://mall.bilibili.com");
+	oss.str("");
+	oss << "Referer: https://mall.bilibili.com/activities/cp.html?teamId=" << teamId;
+	user->httpweb->AddHeaderManual(oss.str().c_str());
 	int ret = toollib::HttpPostEx(user->curlweb, user->httpweb);
 	if (ret) {
 		return BILIRET::HTTP_ERROR;
@@ -163,6 +175,7 @@ BILIRET apibl::APIShowWitJoin(const std::shared_ptr<user_info>& user, long long 
 	}
 	// 600015 活动期间只能参加一个见证团
 	// 600020 见证团已经满员
+	//        自己的见证团就不用加入啦
 	ret = doc["errno"].GetInt();
 	if (ret == 600015) {
 		user->ten_team_hasjoin = true;
@@ -174,6 +187,11 @@ BILIRET apibl::APIShowWitJoin(const std::shared_ptr<user_info>& user, long long 
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
 			<< "APIShowWitJoin: " << doc["msg"].GetString();
 		return BILIRET::TEN_TEAM_FULL;
+	}
+	if (ret) {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIShowWitJoin: " << doc["msg"].GetString();
+		return BILIRET::TEN_TEAM_HASJOIN;
 	}
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
 		<< "APIShowWitJoin: " << doc["msg"].GetString();
@@ -350,14 +368,14 @@ BILIRET apibl::APIShowReward(
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
 			<< "APIShowReward: " << taskId << " " << doc["msg"].GetString();
 		if (msg.find(u8"慢一点") != -1) {
-			Sleep(10000);
+			Sleep(20000);
 		}
 		return BILIRET::TEN_RECV_FAILED;
 	}
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
 		<< "APIShowReward: " << taskId << " " << doc["data"]["num"].GetInt();
 	// 领取成功需要延时
-	Sleep(5000);
+	Sleep(10000);
 
 	return BILIRET::NOFAULT;
 }

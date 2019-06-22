@@ -71,7 +71,7 @@ public:
 	// 更新点赞任务
 	void ShowList(const char*filename, unsigned max_deep);
 	// 批量点赞
-	void ShowLike(const char*filename);
+	void ShowLike(const char*filename, bool &haschange);
 	// 添加见证者到特定用户 并更新列表
 	void ShowJoinWitness(std::shared_ptr<user_info> &user);
 	// 添加见证者
@@ -103,7 +103,7 @@ private:
 	// 10周年签到
 	int _ActShowTask(std::shared_ptr<user_info> &user);
 	// 10周年点赞
-	void _ActShowLike(std::deque<std::string> &tasklist);
+	void _ActShowLike(std::deque<std::string> &tasklist, bool &haschange);
 	// 抽奖线程
 	void Thread_ActLottery(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 舰队低保领取线程

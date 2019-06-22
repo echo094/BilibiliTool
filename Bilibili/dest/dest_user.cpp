@@ -343,7 +343,8 @@ int dest_user::JoinPKLotteryALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
 
 void dest_user::ShowDailyTask(unsigned max_deep) {
 	using namespace std;
-	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
+	// 从后往前领取
+	for (auto itor = _user_list.rbegin(); itor != _user_list.rend(); itor++) {
 		cout << "User " << (*itor)->account << endl;
 		if ((*itor)->ten_self_level <= max_deep) {
 			_ActShowTask(*itor);
@@ -403,8 +404,9 @@ void dest_user::ShowList(const char * filename, unsigned max_deep) {
 	outfile << '#' << endl;
 }
 
-void dest_user::ShowLike(const char*filename) {
+void dest_user::ShowLike(const char*filename, bool &haschange) {
 	using namespace std;
+	haschange = false;
 	std::ifstream infile(filename);
 	if (!infile.is_open()) {
 		return;
@@ -414,14 +416,14 @@ void dest_user::ShowLike(const char*filename) {
 	while (infile >> taskid) {
 		if (taskid[0] == '#') {
 			// 每个账号的任务分开来做
-			_ActShowLike(tasklist);
+			_ActShowLike(tasklist, haschange);
 			continue;
 		}
 		tasklist.push_back(taskid);
 		printf("Add taskid: %s\n", taskid.c_str());
 		if (tasklist.size() > 10) {
 			// 积累了10个任务就点一次
-			_ActShowLike(tasklist);
+			_ActShowLike(tasklist, haschange);
 		}
 	}
 }
@@ -461,26 +463,34 @@ void dest_user::ShowJoinWitness(long long id) {
 
 void dest_user::ShowAuto() {
 	// 生成下线列表
+	unsigned active_like_mem = 0;
 	// 用户存储映射
 	std::map<unsigned, unsigned> memmap;
 	for (size_t i = 0; i < _user_list.size(); i++) {
 		memmap[_user_list[i]->uid] = i;
 		// 重置账户级别
 		_user_list[i]->ten_self_level = TEN_DEFAULT_LEVEL;
+		if (!_user_list[i]->ten_task_full) {
+			active_like_mem++;
+		}
 	}
 	// 下线列表
-	std::vector<std::vector<unsigned> > member;
+	std::vector<std::vector<unsigned> > member(3, std::vector<unsigned>());
 	// 将前2个账号当作主账号 等级为1级
-	member.push_back(std::vector<unsigned>());
 	_user_list[0]->ten_self_level = 1;
 	member[0].push_back(_user_list[0]->uid);
 	_user_list[1]->ten_self_level = 1;
 	member[0].push_back(_user_list[1]->uid);
-	// 遍历
-	for (size_t deep = 0; deep < member.size(); deep++) {
+	// 将需要做任务涨积分的账号添加到树中
+	// 仅前两代对主账号起作用
+	for (size_t deep = 0; deep < 2; deep++) {
 		for (size_t i = 0; i < member[deep].size(); i++) {
 			unsigned uid = member[deep][i];
 			unsigned idx1 = memmap[uid];
+			if (_user_list[idx1]->ten_team_list.size() >= 10 && deep == 1) {
+				// 子代见证者满员后 孙子代就不需要做任务帮子代升级了
+				continue;
+			}
 			for (auto it = _user_list[idx1]->ten_team_list.begin();
 				it != _user_list[idx1]->ten_team_list.end(); 
 				it++) {
@@ -502,15 +512,21 @@ void dest_user::ShowAuto() {
 			}
 		}
 	}
-	// 下线等级2以内的用户领取任务
-	ShowList("tmp", 2);
-	// 点赞
-	ShowLike("tmp");
-	// 下线等级2以内的用户领取点赞奖励
-	ShowList("tmp", 2);
+	// 有可用点赞账号
+	if (active_like_mem) {
+		// 下线等级2以内的用户领取任务
+		ShowList("tmp", 2);
+		// 点赞
+		bool haschange = false;
+		ShowLike("tmp", haschange);
+		// 下线等级2以内的用户领取点赞奖励
+		if (haschange) {
+			ShowList("tmp", 2);
+		}
+	}
 	// 所有下属做日常 更新见证者坑位
 	// 更新后不会刷新缓存数据
-	ShowDailyTask(TEN_DEFAULT_LEVEL);
+	ShowDailyTask(TEN_DEFAULT_LEVEL - 1);
 	// 添加见证者 最高下线为2级
 	size_t max_deep = member.size();
 	if (max_deep > 2) {
@@ -527,6 +543,8 @@ void dest_user::ShowAuto() {
 			ShowJoinWitness(_user_list[idx1]);
 		}
 	}
+	// 导出账号信息
+	ExportUserList();
 }
 
 LOGINRET dest_user::_ActLogin(std::shared_ptr<user_info>& user, int index, std::string username, std::string password) {
@@ -831,7 +849,7 @@ int dest_user::_ActShowTask(std::shared_ptr<user_info>& user) {
 	return 0;
 }
 
-void dest_user::_ActShowLike(std::deque<std::string>& tasklist) {
+void dest_user::_ActShowLike(std::deque<std::string>& tasklist, bool &haschange) {
 	using namespace std;
 	if (tasklist.empty()) {
 		return;
@@ -856,6 +874,7 @@ void dest_user::_ActShowLike(std::deque<std::string>& tasklist) {
 			BILIRET ret = apibl::APIShowLike(*itor, id);
 			if (ret == BILIRET::TEN_TASK_FINISH) {
 				// 点满了
+				haschange = true;
 				continue;
 			}
 			if (ret == BILIRET::TEN_LIKE_FAILED) {
