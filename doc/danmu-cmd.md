@@ -1,5 +1,7 @@
 ﻿# 弹幕协议说明
 
+弹幕协议可以参考这个代码：[bilive/bilive_server: bilibili直播房间弹幕监听](https://github.com/bilive/bilive_server)
+
 
 
 ## 总体说明
@@ -88,7 +90,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-## 有效指令(73)
+## 有效指令(78)
 
 
 
@@ -697,6 +699,49 @@ flash通过调用 window._playerEventMap 对象处理事件。
 }
 ```
 
+9 大乱斗晋级广播
+
+```json
+{
+	"cmd": "NOTICE_MSG",
+	"full": {
+		"head_icon": "https://i0.hdslb.com/bfs/vc/a3b46a9ce8ae4142e14fcf39400cef5ea52cd2cb.png",
+		"tail_icon": "",
+		"head_icon_fa": "http://i0.hdslb.com/bfs/vc/9642e509f441f9c324649b71ee31304cfcb87345.png",
+		"tail_icon_fa": "http://i0.hdslb.com/bfs/live/38cb2a9f1209b16c0f15162b0b553e3b28d9f16f.png",
+		"head_icon_fan": 1,
+		"tail_icon_fan": 4,
+		"background": "#5423A8",
+		"color": "#FFFFFF",
+		"highlight": "#FDFF2F",
+		"time": 10
+	},
+	"half": {
+		"head_icon": "https://i0.hdslb.com/bfs/vc/20f8b8bc87a5e897f7e8ecbb7a9079d684cb1cb4.png",
+		"tail_icon": "",
+		"background": "#5423A8",
+		"color": "#FFFFFF",
+		"highlight": "#FDFF2F",
+		"time": 8
+	},
+	"side": {
+		"head_icon": "http://i0.hdslb.com/bfs/vc/7d8267591763bdb330b6e4d0d60e428db4aceff6.png",
+		"background": "#F6F1FF",
+		"color": "#D48FFF",
+		"highlight": "#9D00FF",
+		"border": "#E3B6FF",
+		"time": 8
+	},
+	"roomid": 10729306,
+	"real_roomid": 10729306,
+	"msg_common": "恭喜主播 <%会飞的芽子%> 大乱斗 神圣大天使1星 达成～快去看看吧",
+	"msg_self": "恭喜主播 <%会飞的芽子%> 大乱斗 神圣大天使1星 达成～",
+	"link_url": "https://live.bilibili.com/10729306?from=28003&extra_jump_from=28003",
+	"msg_type": 9,
+	"shield_uid": 0
+}
+```
+
 
 
 #### SEND_GIFT
@@ -1228,9 +1273,39 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 #### PK_BATTLE_GIFT
 
+房间内消息，使用大乱斗道具。
+
+```json
+{
+	"cmd": "PK_BATTLE_GIFT",
+	"timestamp": 1560831881,
+	"pk_id": 336604,
+	"pk_status": 201,
+	"data": {
+		"room_id": 1355059,
+		"gift_id": 30240,
+		"gift_msg": "以太坊爱好...赠送了一个时光沙漏"
+	}
+}
+```
+
 
 
 #### PK_BATTLE_VOTES_ADD
+
+房间内消息，大乱斗魔法值增加。
+
+```json
+{
+	"cmd": "PK_BATTLE_VOTES_ADD",
+	"timestamp": 1560859201,
+	"data": {
+		"type": 1,
+		"pk_votes_add": 0.05,
+		"pk_votes_name": "魔法值"
+	}
+}
+```
 
 
 
@@ -1696,7 +1771,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-### 其它无处理函数的消息(4)
+### 其它无处理函数的消息(9)
 
 #### USER_TOAST_MSG
 
@@ -1749,6 +1824,102 @@ flash通过调用 window._playerEventMap 对象处理事件。
 特殊时期客户端丢弃弹幕消息的作用。
 
 见公告：[弹幕系统技术升级通知](https://t.bilibili.com/258961230595770167)
+
+
+
+#### BOX_ACTIVITY_START
+
+添加日期：2019/06/19
+
+房间内消息，实物抽奖开始。
+
+```json
+{
+	"cmd": "BOX_ACTIVITY_START",
+	"aid": 373
+}
+```
+
+
+
+#### ROOM_CHANGE
+
+添加日期：2019/06/20
+
+房间内消息，在更改名字或分区后推送。
+
+```json
+{
+	"cmd": "ROOM_CHANGE",
+	"data": {
+		"title": "小仙菇的日常肝书|自习室|北大|轻音乐",
+		"area_id": 259,
+		"parent_area_id": 7,
+		"area_name": "考生加油站",
+		"parent_area_name": "哔考"
+	}
+}
+```
+
+
+
+#### ACTIVITY_BANNER_UPDATE
+
+添加日期：2019/06/20
+
+房间内消息，大乱斗活动条更新。
+
+```json
+{
+	"cmd": "ACTIVITY_BANNER_UPDATE",
+	"data": {
+		"id": 299,
+		"title": "初阶守护者x2星",
+		"cover": "http://i0.hdslb.com/bfs/live/dfd84488f4cc342ca51819a9adcb61ba8bbccc07.png",
+		"background": "http://i0.hdslb.com/bfs/live/4807ff55e5b93980b4811ed6c0da69d8fc757a0c.png",
+		"jump_url": "https://live.bilibili.com/p/html/live-app-battle/u-anchor.html?is_live_half_webview=1&hybrid_biz=live-app-battle-u-anchor&hybrid_half_ui=1,5,272,320,0,0,30,0,8;2,5,272,320,0,0,30,0,8;3,5,272,320,0,0,30,0,8;4,5,272,320,0,0,30,0,8;5,5,272,320,0,0,30,0,8;6,5,272,320,0,0,30,0,8;7,5,272,320,0,0,30,0,8;8,5,272,320,0,0,30,0,8&battleAnchorId=421470960",
+		"title_color": "#ffffff",
+		"closeable": 0,
+		"banner_type": 1,
+		"weight": 10,
+		"web_text": "",
+		"web_cover": ""
+	}
+}
+```
+
+
+
+#### ACTIVITY_BANNER_RED_NOTICE_CLOSE
+
+添加日期：2019/06/25
+
+房间内消息，大乱斗活动条关闭。
+
+```json
+{
+	"cmd": "ACTIVITY_BANNER_RED_NOTICE_CLOSE",
+	"data": {
+		"id": 297,
+		"type": "revenue_banner"
+	}
+}
+```
+
+
+
+#### DAILY_QUEST_NEWDAY
+
+添加日期：2019/06/26
+
+房间内消息，作用不明。
+
+```json
+{
+	"cmd": "DAILY_QUEST_NEWDAY",
+	"data": {}
+}
+```
 
 
 

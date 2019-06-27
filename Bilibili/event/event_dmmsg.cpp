@@ -29,8 +29,8 @@ enum {
 	DM_PK_BATTLE_START,
 	DM_PK_BATTLE_PROCESS,
 	DM_PK_BATTLE_PRO_TYPE,
-	// DM_PK_BATTLE_GIFT,
-	// DM_PK_BATTLE_VOTES_ADD,
+	DM_PK_BATTLE_GIFT,
+	DM_PK_BATTLE_VOTES_ADD,
 	DM_PK_BATTLE_END,
 	DM_PK_BATTLE_SETTLE_USER,
 	DM_PK_LOTTERY_START,
@@ -80,6 +80,11 @@ enum {
 	DM_room_admin_entrance,
 	DM_new_anchor_reward,
 	DM_DANMU_MSG_402220,
+	DM_BOX_ACTIVITY_START,
+	DM_ROOM_CHANGE,
+	DM_ACTIVITY_BANNER_UPDATE,
+	DM_ACTIVITY_BANNER_RED_NOTICE_CLOSE,
+	DM_DAILY_QUEST_NEWDAY,
 
 	DM_ACTIVITY_EVENT,
 	DM_COMBO_END,
@@ -142,13 +147,15 @@ void event_dmmsg::InitCMD() {
 	m_cmdid["PK_AGAIN"] = DM_PK_AGAIN;
 	m_cmdid["PK_MIC_END"] = DM_PK_MIC_END;
 	m_cmdid["PK_CLICK_AGAIN"] = DM_PK_CLICK_AGAIN;
-	// 11 2
+	// 13
 	m_cmdid["PK_BATTLE_ENTRANCE"] = DM_PK_BATTLE_ENTRANCE;
 	m_cmdid["PK_BATTLE_MATCH_TIMEOUT"] = DM_PK_BATTLE_MATCH_TIMEOUT;
 	m_cmdid["PK_BATTLE_PRE"] = DM_PK_BATTLE_PRE;
 	m_cmdid["PK_BATTLE_START"] = DM_PK_BATTLE_START;
 	m_cmdid["PK_BATTLE_PROCESS"] = DM_PK_BATTLE_PROCESS;
 	m_cmdid["PK_BATTLE_PRO_TYPE"] = DM_PK_BATTLE_PRO_TYPE;
+	m_cmdid["PK_BATTLE_GIFT"] = DM_PK_BATTLE_GIFT;
+	m_cmdid["PK_BATTLE_VOTES_ADD"] = DM_PK_BATTLE_VOTES_ADD;
 	m_cmdid["PK_BATTLE_END"] = DM_PK_BATTLE_END;
 	m_cmdid["PK_BATTLE_RANK_CHANGE"] = DM_PK_BATTLE_RANK_CHANGE;
 	m_cmdid["PK_BATTLE_SETTLE_USER"] = DM_PK_BATTLE_SETTLE_USER;
@@ -167,11 +174,16 @@ void event_dmmsg::InitCMD() {
 	m_cmdid["LOL_ACTIVITY"] = DM_LOL_ACTIVITY;
 	m_cmdid["HOUR_RANK_AWARDS"] = DM_HOUR_RANK_AWARDS;
 	m_cmdid["ACTIVITY_MATCH_GIFT"] = DM_ACTIVITY_MATCH_GIFT;
-	// 4
+	// 9
 	m_cmdid["USER_TOAST_MSG"] = DM_USER_TOAST_MSG;
 	m_cmdid["room_admin_entrance"] = DM_room_admin_entrance;
 	m_cmdid["new_anchor_reward"] = DM_new_anchor_reward;
 	m_cmdid["DANMU_MSG:4:0:2:2:2:0"] = DM_DANMU_MSG_402220;
+	m_cmdid["BOX_ACTIVITY_START"] = DM_BOX_ACTIVITY_START;
+	m_cmdid["ROOM_CHANGE"] = DM_ROOM_CHANGE;
+	m_cmdid["ACTIVITY_BANNER_UPDATE"] = DM_ACTIVITY_BANNER_UPDATE;
+	m_cmdid["ACTIVITY_BANNER_RED_NOTICE_CLOSE"] = DM_ACTIVITY_BANNER_RED_NOTICE_CLOSE;
+	m_cmdid["DAILY_QUEST_NEWDAY"] = DM_DAILY_QUEST_NEWDAY;
 	// 7
 	m_cmdid["ACTIVITY_EVENT"] = DM_ACTIVITY_EVENT;
 	m_cmdid["COMBO_END"] = DM_COMBO_END;
@@ -261,6 +273,12 @@ int event_dmmsg::ParseJSON(MSG_INFO *data) {
 		event_base::post_open_msg(data->id, data->opt);
 		return 0;
 	}
+	case DM_ROOM_CHANGE: {
+		if (data->opt & DM_PUBEVENT) {
+			return ParseROOMMSG(doc, data->id, data->opt);
+		}
+		return 0;
+	}
 	}
 
 	return 0;
@@ -330,7 +348,8 @@ int event_dmmsg::ParseNOTICEMSG(rapidjson::Document &doc, const unsigned room, c
 	case 1:
 	case 4:
 	case 5:
-	case 6: {
+	case 6:
+	case 9: {
 		return 0;
 	}
 	}
@@ -406,5 +425,17 @@ int event_dmmsg::ParsePKLOTTERY(rapidjson::Document & doc, const unsigned room) 
 	data->time_end = data->time_start + doc["data"]["time"].GetInt();
 	data->type = "pk";
 	event_base::post_pk_msg(data);
+	return 0;
+}
+
+int event_dmmsg::ParseROOMMSG(rapidjson::Document & doc, const unsigned room, const unsigned opt) {
+	unsigned area_cur = DM_ROOM_AREA(opt);
+	unsigned area_new = doc["data"]["parent_area_id"].GetUint();
+	if (area_cur != area_new) {
+		// 主分区发生更改
+		BOOST_LOG_SEV(g_logger::get(), trace) << "[DMMSG] room area change " << room
+			<< " from:" << area_cur << " to:" << area_new;
+		event_base::post_close_msg(room, opt);
+	}
 	return 0;
 }

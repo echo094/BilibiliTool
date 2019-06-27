@@ -31,6 +31,7 @@ private:
 	int ParseGUARDMSG(rapidjson::Document &doc, const unsigned room, const unsigned area);
 	int ParseGUARDLO(rapidjson::Document &doc, const unsigned room);
 	int ParsePKLOTTERY(rapidjson::Document &doc, const unsigned room);
+	int ParseROOMMSG(rapidjson::Document &doc, const unsigned room, const unsigned opt);
 
 private:
 	std::map<std::string, int> m_cmdid;
