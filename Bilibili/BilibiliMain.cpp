@@ -61,14 +61,6 @@ void CBilibiliMain::PrintHelp() {
   >12 startlp     \t 开启广播类事件监控   \n\
   >13 startlh     \t 开启非广播类事件监控 \n\
   >21 savelog     \t 更新日志文件         \n\
-  >  10周年活动 \n\
-  >31 批量导入账号 \n\
-  >32 批量签到|彩蛋|分享|加成 \n\
-  >33 批量组CP \n\
-  >34 批量领取点赞任务 \n\
-  >35 批量点赞 \n\
-  >36 批量添加见证者 \n\
-  >37 自动化完成1轮任务 \n\
   >   help        \t 目录                \n\
   >   exit        \t 退出                \n");
 }
@@ -316,47 +308,6 @@ int CBilibiliMain::ProcessCommand(std::string str) {
 		printf("Saving lottery history... \n");
 		SaveLogFile();
 	}
-	else if (!str.compare("31")) {
-		printf("Show load account \n");
-		std::string filename;
-		printf("[Import] Account file name:");
-		std::cin >> filename;
-		LoadAccount(filename.c_str());
-	}
-	else if (!str.compare("32")) {
-		printf("Show do daily task \n");
-		_userlist->ShowDailyTask(TEN_DEFAULT_LEVEL);
-	}
-	else if (!str.compare("33")) {
-		printf("Show agree cp \n");
-		_userlist->ShowCP();
-	}
-	else if (!str.compare("34")) {
-		printf("Show task list \n");
-		std::string filename;
-		printf("[Export] task data file name:");
-		std::cin >> filename;
-		_userlist->ShowList(filename.c_str(), TEN_DEFAULT_LEVEL);
-	}
-	else if (!str.compare("35")) {
-		printf("Show task like \n");
-		std::string filename;
-		printf("[Import] task list file name:");
-		std::cin >> filename;
-		bool val = false;
-		_userlist->ShowLike(filename.c_str(), val);
-	}
-	else if (!str.compare("36")) {
-		printf("Show join witness \n");
-		long long id;
-		printf("Enter the teamid:");
-		std::cin >> id;
-		_userlist->ShowJoinWitness(id);
-	}
-	else if (!str.compare("37")) {
-		printf("Show auto \n");
-		_userlist->ShowAuto();
-	}
 	else if (!str.compare("90")) {
 		Debugfun(1);
 	}
@@ -521,20 +472,6 @@ int CBilibiliMain::Debugfun(int index) {
 			UpdateLiveRoom();
 		}
 	}
-	return 0;
-}
-
-int CBilibiliMain::LoadAccount(const char*file) {
-	std::ifstream infile(file);
-	if (!infile.is_open()) {
-		return -1;
-	}
-	std::string name, psd;
-	while (infile >> name) {
-		infile >> psd;
-		_userlist->AddUser(name, psd);
-	}
-
 	return 0;
 }
 

@@ -104,14 +104,6 @@ void user_info::ReadFileAccount(const std::string &key, const rapidjson::Value& 
 		throw "Key RefreshToken error";
 	}
 	tokenr = data["RefreshToken"].GetString();
-	// 十周年
-	if (data.HasMember("Ten")) {
-		ten_cp_id = data["Ten"]["cp_id"].GetUint64();
-		ten_cp_token = data["Ten"]["cp_token"].GetString();
-		for (unsigned i = 0; i < data["Ten"]["team_list"].Size(); i++) {
-			ten_team_list.push_back(data["Ten"]["team_list"][i].GetUint());
-		}
-	}
 }
 
 // 将账户信息导出到文件
@@ -168,20 +160,6 @@ void user_info::WriteFileAccount(const std::string key, rapidjson::Document& doc
 		Value(tokenr.c_str(), doc.GetAllocator()).Move(),
 		allocator
 	);
-	// 十周年
-	Value ten(kObjectType);
-	ten.AddMember("cp_id", ten_cp_id, allocator);
-	ten.AddMember(
-		"cp_token",
-		Value(ten_cp_token.c_str(), doc.GetAllocator()).Move(),
-		allocator
-	);
-	Value team_list(kArrayType);
-	for (unsigned i = 0; i < ten_team_list.size(); i++) {
-		team_list.PushBack(ten_team_list[i], allocator);
-	}
-	ten.AddMember("team_list", team_list.Move(), allocator);
-	data.AddMember("Ten", ten.Move(), allocator);
 	// 添加到 doc
 	doc.PushBack(data.Move(), allocator);
 }

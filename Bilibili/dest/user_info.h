@@ -12,12 +12,9 @@ conf_pk      大乱斗抽奖
 */
 #pragma once
 #include <memory>
-#include <set>
 #include <string>
 #include "rapidjson/document.h"
 #include "utility/httpex.h"
-
-const unsigned TEN_DEFAULT_LEVEL = 9;
 
 class user_info {
 public:
@@ -46,39 +43,6 @@ public:
 	int silver_amount;
 	long long int silver_start;
 	long long int silver_end;
-
-// 10周年
-public:
-	// CP ID
-	long long ten_cp_id = 0;
-	// CP Token
-	std::string ten_cp_token;
-	// 签到状态
-	bool ten_sign_status = false;
-	// 菜单状态 1表示已完成
-	int ten_egg_status = 0;
-	std::string ten_egg_taskid;
-	unsigned ten_egg_assocId = 0;
-	unsigned ten_egg_type = 0;
-	// 分享状态 1表示已完成 2未分享
-	int ten_pub_status = 0;
-	std::string ten_pub_taskid;
-	unsigned ten_pub_assocId = 0;
-	unsigned ten_pub_type = 0;
-	// 点赞任务列表
-	std::set<unsigned> ten_task_list;
-	// 3次点赞已用完
-	bool ten_task_full = false;
-	// 见证者队伍ID
-	long long ten_team_id = 0;
-	// 见证者剩余坑位
-	unsigned ten_team_empty_num = 0;
-	// 见证者列表
-	std::vector<unsigned> ten_team_list;
-	// 是否加入见证团
-	bool ten_team_hasjoin = false;
-	// 该账号的下线等级 1为最高级 9为未成为见证者
-	unsigned ten_self_level = TEN_DEFAULT_LEVEL;
 
 public:
 	// 两个连接 一个用于网页端 一个用于手机端
