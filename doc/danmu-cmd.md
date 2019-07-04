@@ -4,23 +4,37 @@
 
 
 
-## 总体说明
+## 代码分析
 
-内容来源：
+**服务器信息获取**
 
-[弹幕服务器信息获取](https://api.live.bilibili.com/room/v1/Danmu/getConf?room_id=23058&platform=pc&player=web)
+调用API获取弹幕服务器信息以及key：
 
-[协议数据处理(包含客户端版本信息)](https://s1.hdslb.com/bfs/static/player/live/loader/player-loader-1.7.4.min.js)
+`/room/v1/Danmu/getConf?room_id=23058&platform=pc&player=web`
 
-[JSON数据处理](https://s1.hdslb.com/bfs/static/blive/blfe-live-room/static/js/3.cd532a1d3ccf709a6d64.js)
+**WebSocket连接**
 
-处理函数：
+对于`WebSocket`方式，使用下述JS收发数据（更新不频繁）：
 
-flash通过调用 window._playerEventMap 对象处理事件。
+`s1.hdslb.com/bfs/static/player/live/loader/player-loader-1.7.4.min.js`
 
+在脚本中通过`onMessageReply`调用消息处理函数，在该脚本中有一部分命令的处理函数，对于其它命令，调用下述文件中的方法处理（更新频繁）：
 
+`s1.hdslb.com/bfs/static/blive/blfe-live-room/static/js/3.da13c016aef9a1403436.js`
 
-所有以二进制形式表示数据，都是高位在前。
+该方法处理消息后再将消息通过`onSocket`方法以`postMessage`的形式转发给`_oppositeWindow`的`_createCurrentWindowMessageHandler`，在下述文件中：
+
+`s1.hdslb.com/bfs/static/blive/blfe-live-room/static/js/vendors.946b7afb5bf78ae2d1da.js`
+
+该方法将消息分发给各注册的子模块。
+
+**Flash连接**
+
+对于`flash`方式，通过调用 window._playerEventMap 对象处理事件（可能方法已修改）。
+
+**弹幕数据包**
+
+所有以二进制形式表示的数据，都是高位在前。
 
 由于出现了100连礼物，一个未压缩的封包最大能够达到100k字节（平均一个礼物占用1k字节）。但考虑到该消息为房间内消息，不会影响正常的事件监控，因此目前直接丢弃这类过长的封包。
 
@@ -90,7 +104,7 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-## 有效指令(78)
+## 有效指令(84)
 
 
 
@@ -1771,7 +1785,202 @@ flash通过调用 window._playerEventMap 对象处理事件。
 
 
 
-### 其它无处理函数的消息(9)
+### 活动音之守护者(3)
+
+模块脚本：
+
+`s1.hdslb.com/bfs/static/blive/live-web-mng/static/js/app.97529bd4014acbf08d66.js`
+
+#### ACTIVITY_BANNER_UPDATE
+
+添加日期：2019/06/20
+
+房间内消息，大乱斗活动条更新。
+
+```json
+{
+	"cmd": "ACTIVITY_BANNER_UPDATE",
+	"data": {
+		"id": 299,
+		"title": "初阶守护者x2星",
+		"cover": "http://i0.hdslb.com/bfs/live/dfd84488f4cc342ca51819a9adcb61ba8bbccc07.png",
+		"background": "http://i0.hdslb.com/bfs/live/4807ff55e5b93980b4811ed6c0da69d8fc757a0c.png",
+		"jump_url": "https://live.bilibili.com/p/html/live-app-battle/u-anchor.html?is_live_half_webview=1&hybrid_biz=live-app-battle-u-anchor&hybrid_half_ui=1,5,272,320,0,0,30,0,8;2,5,272,320,0,0,30,0,8;3,5,272,320,0,0,30,0,8;4,5,272,320,0,0,30,0,8;5,5,272,320,0,0,30,0,8;6,5,272,320,0,0,30,0,8;7,5,272,320,0,0,30,0,8;8,5,272,320,0,0,30,0,8&battleAnchorId=421470960",
+		"title_color": "#ffffff",
+		"closeable": 0,
+		"banner_type": 1,
+		"weight": 10,
+		"web_text": "",
+		"web_cover": ""
+	}
+}
+```
+
+
+
+#### ACTIVITY_BANNER_RED_NOTICE_CLOSE
+
+添加日期：2019/06/25
+
+房间内消息，大乱斗活动条关闭。
+
+```json
+{
+	"cmd": "ACTIVITY_BANNER_RED_NOTICE_CLOSE",
+	"data": {
+		"id": 297,
+		"type": "revenue_banner"
+	}
+}
+```
+
+
+
+#### ACTIVITY_BANNER_CLOSE
+
+添加日期：2019/07/03
+
+房间内消息，大乱斗活动条关闭。
+
+```json
+{
+	"cmd": "ACTIVITY_BANNER_CLOSE",
+	"data": {
+		"id": 297,
+		"banner_type": 2
+	}
+}
+```
+
+
+
+### 活动机甲大作战(5)
+
+
+
+#### ANIMATION
+
+添加日期：2019/07/03
+
+房间内消息，播放BOSS入场动画。
+
+```json
+{
+	"cmd": "ANIMATION",
+	"data": {
+		"animation": "https://i0.hdslb.com/bfs/live/6826d0dfa20cccedfbe6a70d6acaabaa816774a3.svga",
+		"type": "BOSS",
+		"weights": 100,
+		"uid": 2352558
+	}
+}
+```
+
+
+
+#### BOSS_INFO
+
+添加日期：2019/07/03
+
+房间内消息，BOSS信息。
+
+```json
+{
+	"cmd": "BOSS_INFO",
+	"data": {
+		"boss_status": 1,
+		"time": 60,
+		"energy_level": 2,
+		"base_level": 1,
+		"boss_id": 1,
+		"boss_type": "low_level",
+		"uid": 2352558,
+		"play_status": 1,
+		"energy_charging": {
+			"level": 0,
+			"valve": 0,
+			"current": 0,
+			"energy_level": 2
+		},
+		"battle": {
+			"total_blood_volume": 30000,
+			"residual_blood_volume": 30000,
+			"energy_value": 2,
+			"boss_id": 1,
+			"boss_status": 1,
+			"ts": 60,
+			"boss_name": "混沌机甲 μSv型 "
+		}
+	}
+}
+```
+
+
+
+#### BOSS_INJURY
+
+添加日期：2019/07/03
+
+房间内消息，BOSS血量更新。
+
+```json
+{
+	"cmd": "BOSS_INJURY",
+	"data": {
+		"total_blood_volume": 30000,
+		"residual_blood_volume": 30000,
+		"energy_value": 260000,
+		"boss_id": 6709096266220967233,
+		"is_query": 0
+	}
+}
+```
+
+
+
+#### BOSS_BATTLE
+
+添加日期：2019/07/03
+
+房间内消息，送礼信息。
+
+```json
+{
+	"cmd": "BOSS_BATTLE",
+	"data": {
+		"uname": "撸爆君",
+		"gift_id": 30250,
+		"number": 1,
+		"injury": 521,
+		"uid": 383943229,
+		"room_id": 5441,
+		"integral": 105
+	}
+}
+```
+
+
+
+#### BOSS_ENERGY
+
+添加日期：2019/07/03
+
+房间内消息，能量值更新。
+
+```json
+{
+	"cmd": "BOSS_ENERGY",
+	"data": {
+		"level": 1,
+		"valve": 100000,
+		"current": 1400
+	}
+}
+```
+
+
+
+### 其它无处理函数的消息(7)
 
 #### USER_TOAST_MSG
 
@@ -1857,51 +2066,6 @@ flash通过调用 window._playerEventMap 对象处理事件。
 		"parent_area_id": 7,
 		"area_name": "考生加油站",
 		"parent_area_name": "哔考"
-	}
-}
-```
-
-
-
-#### ACTIVITY_BANNER_UPDATE
-
-添加日期：2019/06/20
-
-房间内消息，大乱斗活动条更新。
-
-```json
-{
-	"cmd": "ACTIVITY_BANNER_UPDATE",
-	"data": {
-		"id": 299,
-		"title": "初阶守护者x2星",
-		"cover": "http://i0.hdslb.com/bfs/live/dfd84488f4cc342ca51819a9adcb61ba8bbccc07.png",
-		"background": "http://i0.hdslb.com/bfs/live/4807ff55e5b93980b4811ed6c0da69d8fc757a0c.png",
-		"jump_url": "https://live.bilibili.com/p/html/live-app-battle/u-anchor.html?is_live_half_webview=1&hybrid_biz=live-app-battle-u-anchor&hybrid_half_ui=1,5,272,320,0,0,30,0,8;2,5,272,320,0,0,30,0,8;3,5,272,320,0,0,30,0,8;4,5,272,320,0,0,30,0,8;5,5,272,320,0,0,30,0,8;6,5,272,320,0,0,30,0,8;7,5,272,320,0,0,30,0,8;8,5,272,320,0,0,30,0,8&battleAnchorId=421470960",
-		"title_color": "#ffffff",
-		"closeable": 0,
-		"banner_type": 1,
-		"weight": 10,
-		"web_text": "",
-		"web_cover": ""
-	}
-}
-```
-
-
-
-#### ACTIVITY_BANNER_RED_NOTICE_CLOSE
-
-添加日期：2019/06/25
-
-房间内消息，大乱斗活动条关闭。
-
-```json
-{
-	"cmd": "ACTIVITY_BANNER_RED_NOTICE_CLOSE",
-	"data": {
-		"id": 297,
-		"type": "revenue_banner"
 	}
 }
 ```
