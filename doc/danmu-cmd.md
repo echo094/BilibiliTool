@@ -104,7 +104,7 @@
 
 
 
-## 有效指令(84)
+## 有效指令(85)
 
 
 
@@ -314,7 +314,7 @@
 
 
 
-### 消息相关(11)
+### 消息相关(12)
 
 #### COMBO_SEND
 
@@ -753,6 +753,72 @@
 	"link_url": "https://live.bilibili.com/10729306?from=28003&extra_jump_from=28003",
 	"msg_type": 9,
 	"shield_uid": 0
+}
+```
+
+10 分区内机甲大作战广播
+
+```json
+{
+	"cmd": "NOTICE_MSG",
+	"full": {
+		"head_icon": "https://i0.hdslb.com/bfs/live/826db00da7a712f08a3afe7237cb4f30bbf20564.png",
+		"tail_icon": "http://i0.hdslb.com/bfs/live/822da481fdaba986d738db5d8fd469ffa95a8fa1.webp",
+		"head_icon_fa": "https://i0.hdslb.com/bfs/live/826db00da7a712f08a3afe7237cb4f30bbf20564.png",
+		"tail_icon_fa": "http://i0.hdslb.com/bfs/live/38cb2a9f1209b16c0f15162b0b553e3b28d9f16f.png",
+		"head_icon_fan": 1,
+		"tail_icon_fan": 4,
+		"background": "#3D32DBFF",
+		"color": "#FFFFFFFF",
+		"highlight": "#FDFF2FFF",
+		"time": 20
+	},
+	"half": {
+		"head_icon": "https://i0.hdslb.com/bfs/live/aff849ae624547722e09d4423314b94ecdf15583.png",
+		"tail_icon": "http://i0.hdslb.com/bfs/live/822da481fdaba986d738db5d8fd469ffa95a8fa1.webp",
+		"background": "#3D32DBFF",
+		"color": "#FFFFFFFF",
+		"highlight": "#FDFF2FFF",
+		"time": 15
+	},
+	"side": {
+		"head_icon": "https://i0.hdslb.com/bfs/live/1854839a224679044fb51949144eac6a52ddd44a.png",
+		"background": "#EAE9FFFF",
+		"color": "#AE91E3FF",
+		"highlight": "#6936CAFF",
+		"border": "#B6B1FFFF"
+	},
+	"roomid": 21305876,
+	"real_roomid": 21305876,
+	"msg_common": "<%呆萌加加直播间%>成功召唤出<%混沌机甲 mSv型%>，前去参战，击败机甲获得丰厚战利品!",
+	"msg_self": "成功召唤出<%混沌机甲 mSv型%>，快来参战，击败机甲获得丰厚战利品!",
+	"link_url": "http://live.bilibili.com/21305876?from=28003&extra_jump_from=28003",
+	"msg_type": 10,
+	"shield_uid": -1
+}
+```
+
+
+
+#### NOTICE_MSG_H5
+
+全游戏区（网游，手游，单机区）机甲大作战广播。
+
+```json
+{
+	"cmd": "NOTICE_MSG_H5",
+	"data": {
+		"msg": "<%s>降临在<%s>的直播间，参战获大奖！",
+		"value": [
+			"混沌机甲 mSv型",
+			"老骚豆腐"
+		],
+		"special_index": [
+			2
+		],
+		"room_id": 763679,
+		"ts": 1562655097
+	}
 }
 ```
 

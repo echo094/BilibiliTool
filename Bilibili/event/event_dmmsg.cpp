@@ -16,6 +16,7 @@ enum {
 	// DM_LUCK_GIFT_AWARD_USER,
 	// DM_MESSAGEBOX_USER_GAIN_MEDAL,
 	DM_NOTICE_MSG,
+	DM_NOTICE_MSG_H5,
 	DM_GUARD_LOTTERY_START,
 	DM_PK_MATCH,
 	DM_PK_PRE,
@@ -130,11 +131,12 @@ void event_dmmsg::InitCMD() {
 	m_cmdid["ROOM_REAL_TIME_MESSAGE_UPDATE"] = DM_ROOM_REAL_TIME_MESSAGE_UPDATE;
 	m_cmdid["ROOM_SHIELD"] = DM_ROOM_SHIELD;
 	m_cmdid["ROOM_ADMINS"] = DM_ROOM_ADMINS;
-	// 8 3
+	// 9 3
 	m_cmdid["COMBO_SEND"] = DM_COMBO_SEND;
 	m_cmdid["DANMU_MSG"] = DM_DANMU_MSG;
 	m_cmdid["GUARD_BUY"] = DM_GUARD_BUY;
 	m_cmdid["NOTICE_MSG"] = DM_NOTICE_MSG;
+	m_cmdid["NOTICE_MSG_H5"] = DM_NOTICE_MSG_H5;
 	m_cmdid["SEND_GIFT"] = DM_SEND_GIFT;
 	m_cmdid["WELCOME"] = DM_WELCOME;
 	m_cmdid["WELCOME_GUARD"] = DM_WELCOME_GUARD;
@@ -365,7 +367,8 @@ int event_dmmsg::ParseNOTICEMSG(rapidjson::Document &doc, const unsigned room, c
 	case 4:
 	case 5:
 	case 6:
-	case 9: {
+	case 9:
+	case 10: {
 		return 0;
 	}
 	}
