@@ -9,6 +9,9 @@ enum {
 	DM_CHANGE_ROOM_INFO,
 	DM_COMBO_SEND,
 	DM_CUT_OFF,
+	DM_DANMU_LOTTERY_START,
+	DM_DANMU_LOTTERY_END,
+	// DM_DANMU_LOTTERY_AWARD,
 	DM_WARNING,
 	DM_DANMU_MSG,
 	DM_GUARD_BUY,
@@ -53,6 +56,7 @@ enum {
 	DM_SEND_GIFT,
 	// DM_SEND_TOP,
 	DM_SPECIAL_GIFT,
+	DM_WEEK_STAR_CLOCK,
 	DM_WELCOME,
 	DM_WELCOME_GUARD,
 	DM_ENTRY_EFFECT,
@@ -94,6 +98,8 @@ enum {
 	DM_BOX_ACTIVITY_START,
 	DM_ROOM_CHANGE,
 	DM_DAILY_QUEST_NEWDAY,
+	DM_GUIARD_MSG,
+	DM_ROOM_BOX_MASTER,
 
 	DM_ACTIVITY_EVENT,
 	DM_COMBO_END,
@@ -171,7 +177,9 @@ void event_dmmsg::InitCMD() {
 	m_cmdid["PK_BATTLE_SETTLE_USER"] = DM_PK_BATTLE_SETTLE_USER;
 	m_cmdid["PK_BATTLE_SETTLE"] = DM_PK_BATTLE_SETTLE;
 	m_cmdid["PK_LOTTERY_START"] = DM_PK_LOTTERY_START;
-	// 12
+	// 15 1
+	m_cmdid["DANMU_LOTTERY_START"] = DM_DANMU_LOTTERY_START;
+	m_cmdid["DANMU_LOTTERY_END"] = DM_DANMU_LOTTERY_END;
 	m_cmdid["GUARD_LOTTERY_START"] = DM_GUARD_LOTTERY_START;
 	m_cmdid["RAFFLE_START"] = DM_RAFFLE_START;
 	m_cmdid["RAFFLE_END"] = DM_RAFFLE_END;
@@ -179,6 +187,7 @@ void event_dmmsg::InitCMD() {
 	m_cmdid["TV_START"] = DM_TV_START;
 	m_cmdid["TV_END"] = DM_TV_END;
 	m_cmdid["SPECIAL_GIFT"] = DM_SPECIAL_GIFT;
+	m_cmdid["WEEK_STAR_CLOCK"] = DM_WEEK_STAR_CLOCK;
 	m_cmdid["WIN_ACTIVITY"] = DM_WIN_ACTIVITY;
 	m_cmdid["WISH_BOTTLE"] = DM_WISH_BOTTLE;
 	m_cmdid["LOL_ACTIVITY"] = DM_LOL_ACTIVITY;
@@ -194,7 +203,7 @@ void event_dmmsg::InitCMD() {
 	m_cmdid["BOSS_INJURY"] = DM_BOSS_INJURY;
 	m_cmdid["BOSS_BATTLE"] = DM_BOSS_BATTLE;
 	m_cmdid["BOSS_ENERGY"] = DM_BOSS_ENERGY;
-	// 7
+	// 9
 	m_cmdid["USER_TOAST_MSG"] = DM_USER_TOAST_MSG;
 	m_cmdid["room_admin_entrance"] = DM_room_admin_entrance;
 	m_cmdid["new_anchor_reward"] = DM_new_anchor_reward;
@@ -202,6 +211,8 @@ void event_dmmsg::InitCMD() {
 	m_cmdid["BOX_ACTIVITY_START"] = DM_BOX_ACTIVITY_START;
 	m_cmdid["ROOM_CHANGE"] = DM_ROOM_CHANGE;
 	m_cmdid["DAILY_QUEST_NEWDAY"] = DM_DAILY_QUEST_NEWDAY;
+	m_cmdid["GUIARD_MSG"] = DM_GUIARD_MSG;
+	m_cmdid["ROOM_BOX_MASTER"] = DM_ROOM_BOX_MASTER;
 	// 7
 	m_cmdid["ACTIVITY_EVENT"] = DM_ACTIVITY_EVENT;
 	m_cmdid["COMBO_END"] = DM_COMBO_END;

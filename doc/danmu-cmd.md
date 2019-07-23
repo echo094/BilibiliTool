@@ -104,7 +104,7 @@
 
 
 
-## 有效指令(85)
+## 有效指令(91)
 
 
 
@@ -1527,7 +1527,59 @@
 
 
 
-### 活动相关(12)
+### 活动相关(16)
+
+
+
+#### DANMU_LOTTERY_START
+
+添加日期：2019/07/21
+
+房间内消息，弹幕抽奖，出现在5440房间。
+
+```json
+{
+	"cmd": "DANMU_LOTTERY_START",
+	"data": {
+		"asset_icon": "https://i0.hdslb.com/bfs/vc/126f25af295d42311b541177e5fb14a2f6d0012c.png",
+		"award_image": "https://i0.hdslb.com/bfs/live/mlive/1f54cd3893ab8c02f0230fd63d23d2b992b1fb4f.jpg",
+		"award_name": "哔哩哔哩限定PBT键帽",
+		"award_num": 1,
+		"current_time": 1563688999,
+		"danmu": "哔哩哔哩干杯",
+		"id": 1,
+		"max_time": 600,
+		"room_id": 5440,
+		"status": 1,
+		"time": 600,
+		"title": "弹幕抽奖"
+	}
+}
+```
+
+
+
+#### DANMU_LOTTERY_END
+
+添加日期：2019/07/21
+
+房间内消息，出现在5440房间。
+
+```json
+{
+	"cmd": "DANMU_LOTTERY_END",
+	"data": {
+		"id": 1,
+		"room_id": 5440
+	}
+}
+```
+
+
+
+#### DANMU_LOTTERY_AWARD
+
+
 
 #### GUARD_LOTTERY_START
 
@@ -1715,6 +1767,82 @@
 #### SPECIAL_GIFT
 
 房间内节奏风暴开始与结束消息。
+
+
+
+#### WEEK_STAR_CLOCK
+
+添加日期：2019/07/22
+
+房间内消息，周星数据。
+
+```json
+{
+	"cmd": "WEEK_STAR_CLOCK",
+	"data": {
+		"id": 199,
+		"expire_hour": 24,
+		"activity_title": "周星",
+		"title": "周星",
+		"title_text": "",
+		"rank": "999+",
+		"color": "",
+		"cover": "http://i0.hdslb.com/bfs/live/70f9e4e6c9c5d9b32bfd8b70a028954a89be9f1f.png",
+		"extra": "",
+		"jump_url": "https://live.bilibili.com/p/html/live-app-weekstar/index.html?is_live_half_webview=1&hybrid_biz=live-app-weekStar&hybrid_rotate_d=1&hybrid_half_ui=1,3,100p,70p,300e51,0,30,100;2,2,375,100p,300e51,0,30,100;3,3,100p,70p,300e51,0,30,100;4,2,375,100p,300e51,0,30,100;5,3,100p,70p,300e51,0,30,100;6,3,100p,70p,300e51,0,30,100;7,3,100p,70p,300e51,0,30,100&room_id=35399&tab=task",
+		"is_close": 0,
+		"weight": 90,
+		"type": 1,
+		"week_text_color": "#ffffff",
+		"week_rank_color": "#ffffff",
+		"week_gift_color": "#ffffff",
+		"gift_img": "https://s1.hdslb.com/bfs/vc/39aee4bf13b170f22f19ef1c278cebf3a6e40332.png",
+		"rank_name": "打榜",
+		"is_clock_in_over": 1,
+		"gift_progress": [
+			{
+				"id": 1,
+				"gift_id": 1,
+				"name": "辣条",
+				"pic": "http://i0.hdslb.com/bfs/live/d57afb7c5596359970eb430655c6aef501a268ab.png",
+				"num": 50,
+				"current": 50
+			},
+			{
+				"id": 2,
+				"gift_id": 30046,
+				"name": "打榜",
+				"pic": "http://i0.hdslb.com/bfs/live/5668f46bf2a0c57f943b925bdf4f2102a8464067.png",
+				"num": 52,
+				"current": 0
+			},
+			{
+				"id": 3,
+				"gift_id": 30064,
+				"name": "礼花",
+				"pic": "http://i0.hdslb.com/bfs/live/084ff1eaa7832c4c1040772a5fec4911930bd107.png",
+				"num": 3,
+				"current": 0
+			}
+		]
+	},
+	"web_data": {
+		"cover": "https://s1.hdslb.com/bfs/vc/3e248fca6d54135a40a29c831410a745e8e8f14a.png",
+		"url": "https://live.bilibili.com/p/html/live-web-weekstar/?roomid=35399&tab=task",
+		"rank": "999+",
+		"rank_name": "打榜",
+		"gift_img": "https://s1.hdslb.com/bfs/vc/39aee4bf13b170f22f19ef1c278cebf3a6e40332.png",
+		"week_gift_color": "#ffffff",
+		"week_rank_color": "#ffffff",
+		"is_clock_in_over": 1,
+		"gift_progress": {
+			"pic": "http://i0.hdslb.com/bfs/live/084ff1eaa7832c4c1040772a5fec4911930bd107.png",
+			"current": 0,
+			"num": 3
+		}
+	}
+}
+```
 
 
 
@@ -2046,7 +2174,7 @@
 
 
 
-### 其它无处理函数的消息(7)
+### 其它无处理函数的消息(9)
 
 #### USER_TOAST_MSG
 
@@ -2148,6 +2276,57 @@
 {
 	"cmd": "DAILY_QUEST_NEWDAY",
 	"data": {}
+}
+```
+
+
+
+#### GUIARD_MSG
+
+添加日期：2019/07/16
+
+房间内消息。
+
+```json
+{
+	"buy_type": 3,
+	"cmd": "GUIARD_MSG",
+	"msg": ":?猫幼cattyo_:? 在本房间开通了舰长"
+}
+```
+
+
+
+#### ROOM_BOX_MASTER
+
+添加日期：2019/07/22
+
+房间内消息，周星打卡活动奖励。
+
+```json
+{
+	"cmd": "ROOM_BOX_MASTER",
+	"data": {
+		"type": 6,
+		"h5_url": "https://live.bilibili.com/p/html/live-app-weekstar/popup.html?is_live_half_webview=1&hybrid_biz=live-app-weekStar-popup&hybrid_rotate_d=1&hybrid_half_ui=1,5,302,248,0,0,30,0;2,5,302,248,0,0,30,0;3,5,302,248,0,0,30,0;4,5,302,248,0,0,30,0;5,5,302,248,0,0,30,0;6,5,302,248,0,0,30,0;7,5,302,248,0,0,30,0×tamp=1563725680&id=0&type=6&view=daily-tasks",
+		"data": {
+			"user_name": "迷路的牙刷",
+			"room_id": 35298,
+			"time": 200,
+			"reward_data": [
+				{
+					"id": 47,
+					"name": "Star萌星皮肤",
+					"pic": "http://uat-i0.hdslb.com/bfs/live/6a7585ff495c9c6414405db0b295495f5728944f.png"
+				},
+				{
+					"id": 58,
+					"name": "Star萌星头像框",
+					"pic": "https://i0.hdslb.com/bfs/vc/592b6169342c42aec3bc8114b8e06780ba73369c.png"
+				}
+			]
+		}
+	}
 }
 ```
 
