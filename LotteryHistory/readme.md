@@ -46,7 +46,10 @@
 
 ### 大乱斗
 
-为活动版的PK模式，在`音之守护者`活动期间开启，活动规则：[大乱斗教程](https://live.bilibili.com/blackboard/activity-DLD.html)
+为活动版的PK模式。
+
+* 第1赛季：在`音之守护者`第一阶段活动期间开启，活动规则：[大乱斗教程](https://live.bilibili.com/blackboard/activity-DLD.html)
+* 第2赛季：7/22-7/28
 
 
 
@@ -167,4 +170,14 @@
 活动页面：[冲鸭！机甲大作战](https://live.bilibili.com/blackboard/activity-fighting.html)
 
 有专属的免费道具，无付费活动道具。
+
+
+
+### 1907 大乱斗第二赛季
+
+活动页面：[哔哩哔哩直播](https://live.bilibili.com/blackboard/activity-battle-2nd-web.html)
+
+| ID    | 名称   | 说明                                                         |
+| ----- | ------ | ------------------------------------------------------------ |
+| 30266 | 金腰带 | 每投喂一个金腰带触发一次全区公告抽奖，经验值+520000  亲密度+5200；大乱斗对局中投喂，格斗值+60000。 |
 
