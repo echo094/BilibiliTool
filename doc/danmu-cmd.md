@@ -104,7 +104,7 @@
 
 
 
-## 有效指令(91)
+## 有效指令(99)
 
 
 
@@ -210,6 +210,17 @@
 
 
 #### ROOM_LIMIT
+
+房间内限制信息。
+
+```json
+{
+	"cmd": "ROOM_LIMIT",
+	"type": "copyright_area",
+	"delay_range": 60,
+	"roomid": 5440
+}
+```
 
 
 
@@ -2174,7 +2185,7 @@
 
 
 
-### 其它无处理函数的消息(9)
+### 其它无处理函数的消息(17)
 
 #### USER_TOAST_MSG
 
@@ -2326,6 +2337,192 @@
 				}
 			]
 		}
+	}
+}
+```
+
+
+
+#### ROOM_BOX_USER
+
+添加日期：2019/08/18
+
+房间内消息，周星相关。
+
+```json
+{
+	"cmd": "ROOM_BOX_USER",
+	"data": {
+		"type": 7,
+		"h5_url": "https://live.bilibili.com/p/html/live-app-weekstar/popup.html?is_live_half_webview=1&hybrid_biz=live-app-weekStar-popup&hybrid_rotate_d=1&hybrid_half_ui=1,5,302,248,0,0,30,0;2,5,302,248,0,0,30,0;3,5,302,248,0,0,30,0;4,5,302,248,0,0,30,0;5,5,302,248,0,0,30,0;6,5,302,248,0,0,30,0;7,5,302,248,0,0,30,0&timestamp=1566057620&id=240916&type=7&view=user-suc&room_id=813364",
+		"data": {
+			"day": 7,
+			"master_uname": "黎沈King",
+			"master_face": "http://i0.hdslb.com/bfs/face/07fd2853e7c8ac832ce573b40ad332efc0b9f5f0.jpg",
+			"room_id": 813364,
+			"time": 200,
+			"name": "“星之耀”宝箱"
+		}
+	}
+}
+```
+
+
+
+#### GUARD_ACHIEVEMENT_ROOM
+
+添加日期：2019/08/19
+
+房间内消息，舰队规模消息。
+
+```json
+{
+	"cmd": "GUARD_ACHIEVEMENT_ROOM",
+	"data": {
+		"room_id": 3495920,
+		"face": "http://i0.hdslb.com/bfs/face/b8bd2c79fe59196a5aae3aa66105b684c316e565.jpg",
+		"web_basemap_url": "https://i0.hdslb.com/bfs/live/83008812e86cae42049414e965d6ab6002f061cb.png",
+		"app_basemap_url": "https://i0.hdslb.com/bfs/live/83008812e86cae42049414e965d6ab6002f061cb.png",
+		"anchor_basemap_url": "https://i0.hdslb.com/bfs/live/f873a04b1544d8f8bcc37fb2924ac9a2c2554031.png",
+		"headmap_url": "https://i0.hdslb.com/bfs/vc/071eb10548fe9bc482ff69331983d94192ce9507.png",
+		"show_time": 3,
+		"first_line_content": "恭喜主播<%绝不早到小吱吱%>",
+		"first_line_normal_color": "#FFFFFF",
+		"first_line_highlight_color": "#F2AE09",
+		"second_line_content": "舰队规模突破<%100%>",
+		"second_line_normal_color": "#FFFFFF",
+		"second_line_highlight_color": "#06DDFF",
+		"is_first": true,
+		"current_achievement_level": 2,
+		"event_type": 1
+	}
+}
+```
+
+
+
+#### VOICE_JOIN_LIST
+
+添加日期：2019/08/29
+
+```json
+{
+	"cmd": "VOICE_JOIN_LIST",
+	"data": {
+		"room_id": 404538,
+		"category": 1,
+		"apply_count": 1,
+		"red_point": 1,
+		"refresh": 1
+	},
+	"roomid": 404538
+}
+```
+
+
+
+#### VOICE_JOIN_ROOM_COUNT_INFO
+
+添加日期：2019/08/29
+
+```json
+{
+	"cmd": "VOICE_JOIN_ROOM_COUNT_INFO",
+	"data": {
+		"room_id": 404538,
+		"root_status": 1,
+		"room_status": 1,
+		"apply_count": 1,
+		"notify_count": 0,
+		"red_point": 0
+	},
+	"roomid": 404538
+}
+```
+
+
+
+#### VOICE_JOIN_STATUS
+
+添加日期：2019/08/29
+
+```json
+{
+	"cmd": "VOICE_JOIN_STATUS",
+	"data": {
+		"room_id": 404538,
+		"status": 1,
+		"channel": "voice610",
+		"channel_type": "voice",
+		"uid": 71602221,
+		"user_name": "是听风w",
+		"head_pic": "http://i2.hdslb.com/bfs/face/96c07960ba471d529b91b986b3f67fac378437c4.jpg",
+		"guard": 3,
+		"start_at": 1567075316,
+		"current_time": 1567075316,
+		"web_share_link": "https://live.bilibili.com/h5/404538"
+	},
+	"roomid": 404538
+}
+```
+
+
+
+#### VOICE_JOIN_SWITCH
+
+添加日期：2019/08/29
+
+```json
+{
+	"cmd": "VOICE_JOIN_SWITCH",
+	"data": {
+		"room_id": 404538,
+		"room_status": 0,
+		"root_status": 1
+	},
+	"roomid": 404538
+}
+```
+
+
+
+#### ACTIVITY_BANNER_UPDATE_V2
+
+添加日期：2019/09/11
+
+```json
+{
+	"cmd": "ACTIVITY_BANNER_UPDATE_V2",
+	"data": {
+		"id": 378,
+		"title": "未上榜",
+		"cover": "",
+		"background": "http://i0.hdslb.com/bfs/activity-plat/static/20190904/b5e210ef68e55c042f407870de28894b/6mLB2jCQV.png",
+		"jump_url": "https://live.bilibili.com/p/html/live-app-rankcurrent/index.html?is_live_half_webview=1&hybrid_half_ui=1,5,85p,70p,FFE293,0,30,100,10;2,2,320,100p,FFE293,0,30,100,0;4,2,320,100p,FFE293,0,30,100,0;6,5,65p,60p,FFE293,0,30,100,10;5,5,55p,60p,FFE293,0,30,100,10;3,5,85p,70p,FFE293,0,30,100,10;7,5,65p,60p,FFE293,0,30,100,10;&anchor_uid=230941958&is_new_rank_container=1&area_v2_id=272&area_v2_parent_id=6&rank_type=master_realtime_hour_room&area_hour=1",
+		"title_color": "#8B5817",
+		"closeable": 1,
+		"banner_type": 4,
+		"weight": 20,
+		"add_banner": 0
+	}
+}
+```
+
+
+
+#### SUPER_CHAT_ENTRANCE
+
+添加日期：2019/09/11
+
+发送醒目留言。
+
+```json
+{
+	"cmd": "SUPER_CHAT_ENTRANCE",
+	"data": {
+		"icon": "https://i0.hdslb.com/bfs/live/0a9ebd72c76e9cbede9547386dd453475d4af6fe.png",
+		"jump_url": "https://live.bilibili.com/p/html/live-app-superchat/index.html?is_live_half_webview=1&hybrid_biz=superchat&hybrid_half_ui=1,3,100p,320,0,0,30,100;2,2,375,100p,2d2d2d,0,30,100;3,3,100p,320,2d2d2d,0,30,100;4,2,375,100p,2d2d2d,0,30,100;5,3,100p,420,2d2d2d,0,30,100;6,3,100p,420,0,0,30,100;7,3,100p,420,2d2d2d,0,30,100",
+		"status": 1
 	}
 }
 ```
