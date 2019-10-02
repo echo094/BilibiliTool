@@ -16,11 +16,11 @@
 
 对于`WebSocket`方式，使用下述JS收发数据（更新不频繁）：
 
-`s1.hdslb.com/bfs/static/player/live/loader/player-loader-1.7.4.min.js`
+`s1.hdslb.com/bfs/static/player/live/loader/player-loader-1.8.5.min.js`
 
 在脚本中通过`onMessageReply`调用消息处理函数，在该脚本中有一部分命令的处理函数，对于其它命令，调用下述文件中的方法处理（更新频繁）：
 
-`s1.hdslb.com/bfs/static/blive/blfe-live-room/static/js/3.da13c016aef9a1403436.js`
+`s1.hdslb.com/bfs/static/blive/blfe-live-room/static/js/3.d9acb99d72e30bf830d4.js`
 
 该方法处理消息后再将消息通过`onSocket`方法以`postMessage`的形式转发给`_oppositeWindow`的`_createCurrentWindowMessageHandler`，在下述文件中：
 
@@ -104,11 +104,11 @@
 
 
 
-## 有效指令(99)
+## 有效指令(111)
 
 
 
-### 房间配置相关(18)
+### 房间配置相关(21)
 
 #### CHANGE_ROOM_INFO
 
@@ -167,7 +167,68 @@
 
 
 
-#### ROOM_BLOCK_INTO
+#### ROOM_BOX_USER
+
+添加日期：2019/08/18
+
+房间内消息，周星相关。
+
+```json
+{
+	"cmd": "ROOM_BOX_USER",
+	"data": {
+		"type": 7,
+		"h5_url": "https://live.bilibili.com/p/html/live-app-weekstar/popup.html?is_live_half_webview=1&hybrid_biz=live-app-weekStar-popup&hybrid_rotate_d=1&hybrid_half_ui=1,5,302,248,0,0,30,0;2,5,302,248,0,0,30,0;3,5,302,248,0,0,30,0;4,5,302,248,0,0,30,0;5,5,302,248,0,0,30,0;6,5,302,248,0,0,30,0;7,5,302,248,0,0,30,0&timestamp=1566057620&id=240916&type=7&view=user-suc&room_id=813364",
+		"data": {
+			"day": 7,
+			"master_uname": "黎沈King",
+			"master_face": "http://i0.hdslb.com/bfs/face/07fd2853e7c8ac832ce573b40ad332efc0b9f5f0.jpg",
+			"room_id": 813364,
+			"time": 200,
+			"name": "“星之耀”宝箱"
+		}
+	}
+}
+```
+
+
+
+#### ROOM_BOX_MASTER(无处理)
+
+添加日期：2019/07/22
+
+房间内消息，周星打卡活动奖励。
+
+```json
+{
+	"cmd": "ROOM_BOX_MASTER",
+	"data": {
+		"type": 6,
+		"h5_url": "https://live.bilibili.com/p/html/live-app-weekstar/popup.html?is_live_half_webview=1&hybrid_biz=live-app-weekStar-popup&hybrid_rotate_d=1&hybrid_half_ui=1,5,302,248,0,0,30,0;2,5,302,248,0,0,30,0;3,5,302,248,0,0,30,0;4,5,302,248,0,0,30,0;5,5,302,248,0,0,30,0;6,5,302,248,0,0,30,0;7,5,302,248,0,0,30,0×tamp=1563725680&id=0&type=6&view=daily-tasks",
+		"data": {
+			"user_name": "迷路的牙刷",
+			"room_id": 35298,
+			"time": 200,
+			"reward_data": [
+				{
+					"id": 47,
+					"name": "Star萌星皮肤",
+					"pic": "http://uat-i0.hdslb.com/bfs/live/6a7585ff495c9c6414405db0b295495f5728944f.png"
+				},
+				{
+					"id": 58,
+					"name": "Star萌星头像框",
+					"pic": "https://i0.hdslb.com/bfs/vc/592b6169342c42aec3bc8114b8e06780ba73369c.png"
+				}
+			]
+		}
+	}
+}
+```
+
+
+
+#### ROOM_BLOCK_INTO(缺数据)
 
 
 
@@ -191,7 +252,7 @@
 
 
 
-#### ROOM_KICKOUT
+#### ROOM_KICKOUT(缺数据)
 
 
 
@@ -244,7 +305,7 @@
 
 
 
-#### ROOM_REFRESH
+#### ROOM_REFRESH(缺数据)
 
 
 
@@ -325,7 +386,28 @@
 
 
 
-### 消息相关(12)
+#### ROOM_CHANGE
+
+添加日期：2019/06/20
+
+房间内消息，在更改名字或分区后推送。
+
+```json
+{
+	"cmd": "ROOM_CHANGE",
+	"data": {
+		"title": "小仙菇的日常肝书|自习室|北大|轻音乐",
+		"area_id": 259,
+		"parent_area_id": 7,
+		"area_name": "考生加油站",
+		"parent_area_name": "哔考"
+	}
+}
+```
+
+
+
+### 消息相关(15)
 
 #### COMBO_SEND
 
@@ -342,6 +424,29 @@
 		"gift_id": 20004,
 		"action": "赠送",
 		"combo_id": "gift:combo_id:51955965:4801245:20004:1540273897.6808"
+	}
+}
+```
+
+
+
+#### COMBO_END(无处理)
+
+活跃时间：9/30/2019
+
+```json
+{
+	"cmd": "COMBO_END",
+	"data": {
+		"uname": "进击的拓海",
+		"r_uname": "一米八的坤儿",
+		"combo_num": 1,
+		"price": 100,
+		"gift_name": "吃瓜",
+		"gift_id": 20004,
+		"start_time": 1540277390,
+		"end_time": 1540277390,
+		"guard_level": 0
 	}
 }
 ```
@@ -377,11 +482,53 @@
 
 
 
-#### LUCK_GIFT_AWARD_USER
+#### GUARD_ACHIEVEMENT_ROOM
+
+添加日期：2019/08/19
+
+房间内消息，舰队规模消息。
+
+```json
+{
+	"cmd": "GUARD_ACHIEVEMENT_ROOM",
+	"data": {
+		"room_id": 3495920,
+		"face": "http://i0.hdslb.com/bfs/face/b8bd2c79fe59196a5aae3aa66105b684c316e565.jpg",
+		"web_basemap_url": "https://i0.hdslb.com/bfs/live/83008812e86cae42049414e965d6ab6002f061cb.png",
+		"app_basemap_url": "https://i0.hdslb.com/bfs/live/83008812e86cae42049414e965d6ab6002f061cb.png",
+		"anchor_basemap_url": "https://i0.hdslb.com/bfs/live/f873a04b1544d8f8bcc37fb2924ac9a2c2554031.png",
+		"headmap_url": "https://i0.hdslb.com/bfs/vc/071eb10548fe9bc482ff69331983d94192ce9507.png",
+		"show_time": 3,
+		"first_line_content": "恭喜主播<%绝不早到小吱吱%>",
+		"first_line_normal_color": "#FFFFFF",
+		"first_line_highlight_color": "#F2AE09",
+		"second_line_content": "舰队规模突破<%100%>",
+		"second_line_normal_color": "#FFFFFF",
+		"second_line_highlight_color": "#06DDFF",
+		"is_first": true,
+		"current_achievement_level": 2,
+		"event_type": 1
+	}
+}
+```
 
 
 
-#### MESSAGEBOX_USER_GAIN_MEDAL
+#### LUCK_GIFT_AWARD_USER(缺数据)
+
+`onSocketAward`
+
+
+
+#### MESSAGEBOX_USER_GAIN_MEDAL(缺数据)
+
+`gainMedalBySocket`
+
+
+
+#### LITTLE_TIPS(缺数据)
+
+`limitFanMedal`
 
 
 
@@ -811,7 +958,7 @@
 
 
 
-#### NOTICE_MSG_H5
+#### NOTICE_MSG_H5(无处理)
 
 全游戏区（网游，手游，单机区）机甲大作战广播。
 
@@ -841,7 +988,7 @@
 
 
 
-#### SEND_TOP
+#### SEND_TOP(缺数据)
 
 
 
@@ -1237,7 +1384,7 @@
 
 
 
-### 大乱斗(13)
+### 大乱斗(15)
 
 2019/06/17新增的模式：[大乱斗教程](https://live.bilibili.com/blackboard/activity-DLD.html)
 
@@ -1382,6 +1529,56 @@
 
 
 
+#### PK_BATTLE_SPECIAL_GIFT
+
+房间内消息，使用大乱斗道具。
+
+```json
+{
+	"cmd": "PK_BATTLE_SPECIAL_GIFT",
+	"timestamp": 1569322784,
+	"pk_id": 471823,
+	"pk_status": 201,
+	"data": {
+		"type": 1,
+		"room_id": 5389469,
+		"gift_id": 30240,
+		"gift_num": 1,
+		"gift_name": "时光沙漏",
+		"send_uid": 17185604,
+		"send_uname": "小和尚在等一个人",
+		"gift_msg": "小和尚在等...赠送了一个时光沙漏"
+	}
+}
+```
+
+
+
+#### PK_BATTLE_CRIT
+
+房间内消息
+
+```json
+{
+	"cmd": "PK_BATTLE_CRIT",
+	"timestamp": 1569765505,
+	"pk_id": 495528,
+	"pk_status": 201,
+	"data": {
+		"accept_crit_room_id": 13650851,
+		"gift_id": 30363,
+		"gift_num": 1,
+		"gift_name": "魔力星",
+		"crit_num": 5,
+		"pk_votes_name": "魔力值",
+		"send_uid": 385980036,
+		"send_uname": "抚耳摸青丝"
+	}
+}
+```
+
+
+
 #### PK_BATTLE_VOTES_ADD
 
 房间内消息，大乱斗魔法值增加。
@@ -1430,7 +1627,7 @@
 
 
 
-#### PK_BATTLE_RANK_CHANGE(无处理)
+#### PK_BATTLE_RANK_CHANGE
 
 等级变更
 
@@ -1536,9 +1733,156 @@
 
 
 
+### Super Chat(4)
+
+#### SUPER_CHAT_MESSAGE
+
+```json
+{
+	"cmd": "SUPER_CHAT_MESSAGE",
+	"data": {
+		"id": "954",
+		"uid": 440548446,
+		"price": 30,
+		"rate": 1000,
+		"message": "B站居然也有SC了Σ(°Д°;+1",
+		"message_jpn": "",
+		"background_image": "http://i0.hdslb.com/bfs/live/1aee2d5e9e8f03eed462a7b4bbfd0a7128bbc8b1.png",
+		"background_color": "#EDF5FF",
+		"background_icon": "",
+		"background_price_color": "#7497CD",
+		"background_bottom_color": "#2A60B2",
+		"ts": 1569256286,
+		"token": "BEA48BD5",
+		"medal_info": {
+			"icon_id": 0,
+			"target_id": 39267739,
+			"special": "",
+			"anchor_uname": "铃音_Official",
+			"anchor_roomid": 4316215,
+			"medal_level": 15,
+			"medal_name": "铃咕咕",
+			"medal_color": "#ff86b2"
+		},
+		"user_info": {
+			"uname": "水木海泽",
+			"face": "http://i1.hdslb.com/bfs/face/fea7c8de1e9629386415a099170356945388ea61.jpg",
+			"face_frame": "http://i0.hdslb.com/bfs/live/78e8a800e97403f1137c0c1b5029648c390be390.png",
+			"guard_level": 3,
+			"user_level": 21,
+			"level_color": "#5896de",
+			"is_vip": 0,
+			"is_svip": 0,
+			"is_main_vip": 1,
+			"title": "title-249-1",
+			"manager": 0
+		},
+		"time": 60,
+		"start_time": 1569256285,
+		"end_time": 1569256346,
+		"gift": {
+			"num": 1,
+			"gift_id": 12000,
+			"gift_name": "醒目留言"
+		}
+	}
+}
+```
 
 
-### 活动相关(16)
+
+#### SUPER_CHAT_MESSAGE_JPN(无处理)
+
+```json
+{
+	"cmd": "SUPER_CHAT_MESSAGE_JPN",
+	"data": {
+		"id": "3133",
+		"uid": "10385047",
+		"price": 30,
+		"rate": 1000,
+		"message": "她要吃人啦啊啊啊",
+		"message_jpn": "彼女は人を食べますよ。",
+		"background_image": "http://i0.hdslb.com/bfs/live/1aee2d5e9e8f03eed462a7b4bbfd0a7128bbc8b1.png",
+		"background_color": "#EDF5FF",
+		"background_icon": "",
+		"background_price_color": "#7497CD",
+		"background_bottom_color": "#2A60B2",
+		"ts": 1569765650,
+		"token": "211E88C3",
+		"medal_info": {
+			"icon_id": 0,
+			"target_id": 2601367,
+			"special": "",
+			"anchor_uname": "時雨羽衣Official",
+			"anchor_roomid": 9389401,
+			"medal_level": 1,
+			"medal_name": "雨戸",
+			"medal_color": "#61c05a"
+		},
+		"user_info": {
+			"uname": "牛姨的赛马场",
+			"face": "http://i1.hdslb.com/bfs/face/76f60d28db4d5d2d5bdc92ffcdebe1c52f61ccc6.jpg",
+			"face_frame": "",
+			"guard_level": 0,
+			"user_level": 30,
+			"level_color": "#5896de",
+			"is_vip": 0,
+			"is_svip": 0,
+			"is_main_vip": 1,
+			"title": "ice-dust",
+			"manager": 0
+		},
+		"time": 59,
+		"start_time": 1569765649,
+		"end_time": 1569765709,
+		"gift": {
+			"num": 1,
+			"gift_id": 12000,
+			"gift_name": "醒目留言"
+		}
+	}
+}
+```
+
+
+
+#### SUPER_CHAT_MESSAGE_DELETE
+
+```json
+{
+	"cmd": "SUPER_CHAT_MESSAGE_DELETE",
+	"data": {
+		"ids": [
+			1383
+		]
+	},
+	"roomid": 14052636
+}
+```
+
+
+
+#### SUPER_CHAT_ENTRANCE
+
+添加日期：2019/09/11
+
+发送醒目留言。
+
+```json
+{
+	"cmd": "SUPER_CHAT_ENTRANCE",
+	"data": {
+		"icon": "https://i0.hdslb.com/bfs/live/0a9ebd72c76e9cbede9547386dd453475d4af6fe.png",
+		"jump_url": "https://live.bilibili.com/p/html/live-app-superchat/index.html?is_live_half_webview=1&hybrid_biz=superchat&hybrid_half_ui=1,3,100p,320,0,0,30,100;2,2,375,100p,2d2d2d,0,30,100;3,3,100p,320,2d2d2d,0,30,100;4,2,375,100p,2d2d2d,0,30,100;5,3,100p,420,2d2d2d,0,30,100;6,3,100p,420,0,0,30,100;7,3,100p,420,2d2d2d,0,30,100",
+		"status": 1
+	}
+}
+```
+
+
+
+### 活动相关(18)
 
 
 
@@ -1588,7 +1932,7 @@
 
 
 
-#### DANMU_LOTTERY_AWARD
+#### DANMU_LOTTERY_AWARD(缺数据)
 
 
 
@@ -1619,7 +1963,7 @@
 
 
 
-#### RAFFLE_START
+#### RAFFLE_START(无处理)
 
 房间内活动抽奖开始消息，包括摩天大楼、周星、BLS道具。
 
@@ -1857,6 +2201,21 @@
 
 
 
+#### BOX_ACTIVITY_START
+
+添加日期：2019/06/19
+
+房间内消息，实物抽奖开始。
+
+```json
+{
+	"cmd": "BOX_ACTIVITY_START",
+	"aid": 373
+}
+```
+
+
+
 #### WIN_ACTIVITY
 
 实物抽奖进度。
@@ -1867,6 +2226,10 @@
 	"number": 2
 }
 ```
+
+
+
+#### WIN_ACTIVITY_USER(缺数据)
 
 
 
@@ -1990,13 +2353,13 @@
 
 
 
-### 活动音之守护者(3)
+### 大乱斗界面(4)
 
 模块脚本：
 
 `s1.hdslb.com/bfs/static/blive/live-web-mng/static/js/app.97529bd4014acbf08d66.js`
 
-#### ACTIVITY_BANNER_UPDATE
+#### ACTIVITY_BANNER_UPDATE(子模块)
 
 添加日期：2019/06/20
 
@@ -2023,7 +2386,31 @@
 
 
 
-#### ACTIVITY_BANNER_RED_NOTICE_CLOSE
+#### ACTIVITY_BANNER_UPDATE_V2(无处理)
+
+添加日期：2019/09/11
+
+```json
+{
+	"cmd": "ACTIVITY_BANNER_UPDATE_V2",
+	"data": {
+		"id": 378,
+		"title": "未上榜",
+		"cover": "",
+		"background": "http://i0.hdslb.com/bfs/activity-plat/static/20190904/b5e210ef68e55c042f407870de28894b/6mLB2jCQV.png",
+		"jump_url": "https://live.bilibili.com/p/html/live-app-rankcurrent/index.html?is_live_half_webview=1&hybrid_half_ui=1,5,85p,70p,FFE293,0,30,100,10;2,2,320,100p,FFE293,0,30,100,0;4,2,320,100p,FFE293,0,30,100,0;6,5,65p,60p,FFE293,0,30,100,10;5,5,55p,60p,FFE293,0,30,100,10;3,5,85p,70p,FFE293,0,30,100,10;7,5,65p,60p,FFE293,0,30,100,10;&anchor_uid=230941958&is_new_rank_container=1&area_v2_id=272&area_v2_parent_id=6&rank_type=master_realtime_hour_room&area_hour=1",
+		"title_color": "#8B5817",
+		"closeable": 1,
+		"banner_type": 4,
+		"weight": 20,
+		"add_banner": 0
+	}
+}
+```
+
+
+
+#### ACTIVITY_BANNER_RED_NOTICE_CLOSE(无处理)
 
 添加日期：2019/06/25
 
@@ -2041,7 +2428,7 @@
 
 
 
-#### ACTIVITY_BANNER_CLOSE
+#### ACTIVITY_BANNER_CLOSE(子模块)
 
 添加日期：2019/07/03
 
@@ -2083,7 +2470,7 @@
 
 
 
-#### BOSS_INFO
+#### BOSS_INFO(无处理)
 
 添加日期：2019/07/03
 
@@ -2122,7 +2509,7 @@
 
 
 
-#### BOSS_INJURY
+#### BOSS_INJURY(无处理)
 
 添加日期：2019/07/03
 
@@ -2143,7 +2530,7 @@
 
 
 
-#### BOSS_BATTLE
+#### BOSS_BATTLE(无处理)
 
 添加日期：2019/07/03
 
@@ -2166,7 +2553,7 @@
 
 
 
-#### BOSS_ENERGY
+#### BOSS_ENERGY(无处理)
 
 添加日期：2019/07/03
 
@@ -2185,260 +2572,7 @@
 
 
 
-### 其它无处理函数的消息(17)
-
-#### USER_TOAST_MSG
-
-房间内用户购买舰队服务时。
-
-```json
-{
-	"cmd": "USER_TOAST_MSG",
-	"data": {
-		"op_type": 1,
-		"uid": 24655455,
-		"username": "到底有莫得感情",
-		"guard_level": 3,
-		"is_show": 0
-	}
-}
-```
-
-
-
-#### room_admin_entrance
-
-房间内新增房管。
-
-```json
-{
-	"cmd": "room_admin_entrance",
-	"msg": "系统提示：你已被主播设为房管",
-	"uid": 157642459
-}
-```
-
-
-
-#### new_anchor_reward
-
-```json
-{
-	"cmd": "new_anchor_reward",
-	"reward_id": 1,
-	"roomid": 10633444,
-	"uid": 111977978
-}
-```
-
-
-
-#### DANMU_MSG:4:0:2:2:2:0
-
-特殊时期客户端丢弃弹幕消息的作用。
-
-见公告：[弹幕系统技术升级通知](https://t.bilibili.com/258961230595770167)
-
-
-
-#### BOX_ACTIVITY_START
-
-添加日期：2019/06/19
-
-房间内消息，实物抽奖开始。
-
-```json
-{
-	"cmd": "BOX_ACTIVITY_START",
-	"aid": 373
-}
-```
-
-
-
-#### ROOM_CHANGE
-
-添加日期：2019/06/20
-
-房间内消息，在更改名字或分区后推送。
-
-```json
-{
-	"cmd": "ROOM_CHANGE",
-	"data": {
-		"title": "小仙菇的日常肝书|自习室|北大|轻音乐",
-		"area_id": 259,
-		"parent_area_id": 7,
-		"area_name": "考生加油站",
-		"parent_area_name": "哔考"
-	}
-}
-```
-
-
-
-#### DAILY_QUEST_NEWDAY
-
-添加日期：2019/06/26
-
-房间内消息，作用不明。
-
-```json
-{
-	"cmd": "DAILY_QUEST_NEWDAY",
-	"data": {}
-}
-```
-
-
-
-#### GUIARD_MSG
-
-添加日期：2019/07/16
-
-房间内消息。
-
-```json
-{
-	"buy_type": 3,
-	"cmd": "GUIARD_MSG",
-	"msg": ":?猫幼cattyo_:? 在本房间开通了舰长"
-}
-```
-
-
-
-#### ROOM_BOX_MASTER
-
-添加日期：2019/07/22
-
-房间内消息，周星打卡活动奖励。
-
-```json
-{
-	"cmd": "ROOM_BOX_MASTER",
-	"data": {
-		"type": 6,
-		"h5_url": "https://live.bilibili.com/p/html/live-app-weekstar/popup.html?is_live_half_webview=1&hybrid_biz=live-app-weekStar-popup&hybrid_rotate_d=1&hybrid_half_ui=1,5,302,248,0,0,30,0;2,5,302,248,0,0,30,0;3,5,302,248,0,0,30,0;4,5,302,248,0,0,30,0;5,5,302,248,0,0,30,0;6,5,302,248,0,0,30,0;7,5,302,248,0,0,30,0×tamp=1563725680&id=0&type=6&view=daily-tasks",
-		"data": {
-			"user_name": "迷路的牙刷",
-			"room_id": 35298,
-			"time": 200,
-			"reward_data": [
-				{
-					"id": 47,
-					"name": "Star萌星皮肤",
-					"pic": "http://uat-i0.hdslb.com/bfs/live/6a7585ff495c9c6414405db0b295495f5728944f.png"
-				},
-				{
-					"id": 58,
-					"name": "Star萌星头像框",
-					"pic": "https://i0.hdslb.com/bfs/vc/592b6169342c42aec3bc8114b8e06780ba73369c.png"
-				}
-			]
-		}
-	}
-}
-```
-
-
-
-#### ROOM_BOX_USER
-
-添加日期：2019/08/18
-
-房间内消息，周星相关。
-
-```json
-{
-	"cmd": "ROOM_BOX_USER",
-	"data": {
-		"type": 7,
-		"h5_url": "https://live.bilibili.com/p/html/live-app-weekstar/popup.html?is_live_half_webview=1&hybrid_biz=live-app-weekStar-popup&hybrid_rotate_d=1&hybrid_half_ui=1,5,302,248,0,0,30,0;2,5,302,248,0,0,30,0;3,5,302,248,0,0,30,0;4,5,302,248,0,0,30,0;5,5,302,248,0,0,30,0;6,5,302,248,0,0,30,0;7,5,302,248,0,0,30,0&timestamp=1566057620&id=240916&type=7&view=user-suc&room_id=813364",
-		"data": {
-			"day": 7,
-			"master_uname": "黎沈King",
-			"master_face": "http://i0.hdslb.com/bfs/face/07fd2853e7c8ac832ce573b40ad332efc0b9f5f0.jpg",
-			"room_id": 813364,
-			"time": 200,
-			"name": "“星之耀”宝箱"
-		}
-	}
-}
-```
-
-
-
-#### GUARD_ACHIEVEMENT_ROOM
-
-添加日期：2019/08/19
-
-房间内消息，舰队规模消息。
-
-```json
-{
-	"cmd": "GUARD_ACHIEVEMENT_ROOM",
-	"data": {
-		"room_id": 3495920,
-		"face": "http://i0.hdslb.com/bfs/face/b8bd2c79fe59196a5aae3aa66105b684c316e565.jpg",
-		"web_basemap_url": "https://i0.hdslb.com/bfs/live/83008812e86cae42049414e965d6ab6002f061cb.png",
-		"app_basemap_url": "https://i0.hdslb.com/bfs/live/83008812e86cae42049414e965d6ab6002f061cb.png",
-		"anchor_basemap_url": "https://i0.hdslb.com/bfs/live/f873a04b1544d8f8bcc37fb2924ac9a2c2554031.png",
-		"headmap_url": "https://i0.hdslb.com/bfs/vc/071eb10548fe9bc482ff69331983d94192ce9507.png",
-		"show_time": 3,
-		"first_line_content": "恭喜主播<%绝不早到小吱吱%>",
-		"first_line_normal_color": "#FFFFFF",
-		"first_line_highlight_color": "#F2AE09",
-		"second_line_content": "舰队规模突破<%100%>",
-		"second_line_normal_color": "#FFFFFF",
-		"second_line_highlight_color": "#06DDFF",
-		"is_first": true,
-		"current_achievement_level": 2,
-		"event_type": 1
-	}
-}
-```
-
-
-
-#### VOICE_JOIN_LIST
-
-添加日期：2019/08/29
-
-```json
-{
-	"cmd": "VOICE_JOIN_LIST",
-	"data": {
-		"room_id": 404538,
-		"category": 1,
-		"apply_count": 1,
-		"red_point": 1,
-		"refresh": 1
-	},
-	"roomid": 404538
-}
-```
-
-
-
-#### VOICE_JOIN_ROOM_COUNT_INFO
-
-添加日期：2019/08/29
-
-```json
-{
-	"cmd": "VOICE_JOIN_ROOM_COUNT_INFO",
-	"data": {
-		"room_id": 404538,
-		"root_status": 1,
-		"room_status": 1,
-		"apply_count": 1,
-		"notify_count": 0,
-		"red_point": 0
-	},
-	"roomid": 404538
-}
-```
+### VOICE(4)
 
 
 
@@ -2468,7 +2602,48 @@
 
 
 
-#### VOICE_JOIN_SWITCH
+#### VOICE_JOIN_LIST(无处理)
+
+添加日期：2019/08/29
+
+```json
+{
+	"cmd": "VOICE_JOIN_LIST",
+	"data": {
+		"room_id": 404538,
+		"category": 1,
+		"apply_count": 1,
+		"red_point": 1,
+		"refresh": 1
+	},
+	"roomid": 404538
+}
+```
+
+
+
+#### VOICE_JOIN_ROOM_COUNT_INFO(无处理)
+
+添加日期：2019/08/29
+
+```json
+{
+	"cmd": "VOICE_JOIN_ROOM_COUNT_INFO",
+	"data": {
+		"room_id": 404538,
+		"root_status": 1,
+		"room_status": 1,
+		"apply_count": 1,
+		"notify_count": 0,
+		"red_point": 0
+	},
+	"roomid": 404538
+}
+```
+
+
+
+#### VOICE_JOIN_SWITCH(无处理)
 
 添加日期：2019/08/29
 
@@ -2486,131 +2661,9 @@
 
 
 
-#### ACTIVITY_BANNER_UPDATE_V2
+### 播放器中的指令(4)
 
-添加日期：2019/09/11
-
-```json
-{
-	"cmd": "ACTIVITY_BANNER_UPDATE_V2",
-	"data": {
-		"id": 378,
-		"title": "未上榜",
-		"cover": "",
-		"background": "http://i0.hdslb.com/bfs/activity-plat/static/20190904/b5e210ef68e55c042f407870de28894b/6mLB2jCQV.png",
-		"jump_url": "https://live.bilibili.com/p/html/live-app-rankcurrent/index.html?is_live_half_webview=1&hybrid_half_ui=1,5,85p,70p,FFE293,0,30,100,10;2,2,320,100p,FFE293,0,30,100,0;4,2,320,100p,FFE293,0,30,100,0;6,5,65p,60p,FFE293,0,30,100,10;5,5,55p,60p,FFE293,0,30,100,10;3,5,85p,70p,FFE293,0,30,100,10;7,5,65p,60p,FFE293,0,30,100,10;&anchor_uid=230941958&is_new_rank_container=1&area_v2_id=272&area_v2_parent_id=6&rank_type=master_realtime_hour_room&area_hour=1",
-		"title_color": "#8B5817",
-		"closeable": 1,
-		"banner_type": 4,
-		"weight": 20,
-		"add_banner": 0
-	}
-}
-```
-
-
-
-#### SUPER_CHAT_ENTRANCE
-
-添加日期：2019/09/11
-
-发送醒目留言。
-
-```json
-{
-	"cmd": "SUPER_CHAT_ENTRANCE",
-	"data": {
-		"icon": "https://i0.hdslb.com/bfs/live/0a9ebd72c76e9cbede9547386dd453475d4af6fe.png",
-		"jump_url": "https://live.bilibili.com/p/html/live-app-superchat/index.html?is_live_half_webview=1&hybrid_biz=superchat&hybrid_half_ui=1,3,100p,320,0,0,30,100;2,2,375,100p,2d2d2d,0,30,100;3,3,100p,320,2d2d2d,0,30,100;4,2,375,100p,2d2d2d,0,30,100;5,3,100p,420,2d2d2d,0,30,100;6,3,100p,420,0,0,30,100;7,3,100p,420,2d2d2d,0,30,100",
-		"status": 1
-	}
-}
-```
-
-
-
-## 失效指令(7)
-
-在以上JS文件中找不到的指令。
-
-
-
-### ACTIVITY_EVENT
-
-房间内活动信息。目前为BLS预热活动。
-
-```json
-{
-	"cmd": "ACTIVITY_EVENT",
-	"data": {
-		"keyword": "bls_winter_2018",
-		"type": "charge",
-		"limit": 500000,
-		"progress": 48280
-	}
-}
-```
-
-
-
-### COMBO_END
-
-```json
-{
-	"cmd": "COMBO_END",
-	"data": {
-		"uname": "进击的拓海",
-		"r_uname": "一米八的坤儿",
-		"combo_num": 1,
-		"price": 100,
-		"gift_name": "吃瓜",
-		"gift_id": 20004,
-		"start_time": 1540277390,
-		"end_time": 1540277390,
-		"guard_level": 0
-	}
-}
-```
-
-
-
-### LOTTERY_START
-
-旧的房间内抽奖消息。
-
-```json
-{
-	"cmd": "LOTTERY_START",
-	"data": {
-		"id": 531692,
-		"roomid": 425315,
-		"message": "澶お澶お澶簡 鍦ㄣ€?25315銆戣喘涔颁簡鎬荤潱锛岃鍓嶅線鎶藉",
-		"type": "guard",
-		"privilege_type": 1,
-		"link": "https:\/\/live.bilibili.com\/425315",
-		"payflow_id": "web_d0de2bfd7e7dde8b86_201810",
-		"lottery": {
-			"id": 531692,
-			"sender": {
-				"uid": 738417,
-				"uname": "澶お澶お澶簡",
-				"face": "http:\/\/i1.hdslb.com\/bfs\/face\/f8eeeaf0e46329359eb6cfb8960a92ada9f0ea6f.jpg"
-			},
-			"keyword": "guard",
-			"privilege_type": 1,
-			"time": 86400,
-			"status": 1,
-			"mobile_display_mode": 2,
-			"mobile_static_asset": "",
-			"mobile_animation_asset": ""
-		}
-	}
-}
-```
-
-
-
-### SYS_GIFT
+#### SYS_GIFT
 
 旧的全区礼物赠送消息。
 
@@ -2630,32 +2683,154 @@
 
 
 
-### SYS_MSG
+#### SYS_MSG
 
 广播的抽奖信息。
 
 
 
-### GUARD_MSG
+#### GUARD_MSG
 
 广播的总督上船消息。
 
 
 
-### WELCOME_ACTIVITY
+#### GUIARD_MSG(无处理)
 
-房间欢迎特效。
+添加日期：2019/07/16
+
+房间内消息。
 
 ```json
 {
-	"cmd": "WELCOME_ACTIVITY",
+	"buy_type": 3,
+	"cmd": "GUIARD_MSG",
+	"msg": ":?猫幼cattyo_:? 在本房间开通了舰长"
+}
+```
+
+
+
+### 其它无处理函数的消息(6)
+
+
+
+#### DANMU_MSG:4:0:2:2:2:0
+
+活跃时间：2019/09/30
+
+特殊时期客户端丢弃弹幕消息的作用。
+
+见公告：[弹幕系统技术升级通知](https://t.bilibili.com/258961230595770167)
+
+
+
+#### USER_TOAST_MSG
+
+活跃时间：2019/09/30
+
+房间内用户购买舰队服务时。
+
+```json
+{
+	"cmd": "USER_TOAST_MSG",
 	"data": {
-		"uid": 12298306,
-		"uname": "你的丸子_",
-		"type": "comingForYou",
-		"display_mode": 1
+		"op_type": 1,
+		"uid": 24655455,
+		"username": "到底有莫得感情",
+		"guard_level": 3,
+		"is_show": 0
 	}
 }
 ```
 
+
+
+#### LOTTERY_START
+
+活跃时间：2019/09/30
+
+房间内总督抽奖消息。
+
+```json
+{
+	"cmd": "LOTTERY_START",
+	"data": {
+		"id": 1520143,
+		"link": "https://live.bilibili.com/918717",
+		"lottery": {
+			"asset_animation_pic": "https://i0.hdslb.com/bfs/vc/ff2a28492970850ce73df0cc144f1766b222d471.gif",
+			"asset_icon": "https://i0.hdslb.com/bfs/vc/f19b2d85695d001e0173f7b541da36327c27e818.png",
+			"id": 1520143,
+			"keyword": "guard",
+			"mobile_animation_asset": "",
+			"mobile_display_mode": 2,
+			"mobile_static_asset": "",
+			"privilege_type": 1,
+			"sender": {
+				"face": "http://i0.hdslb.com/bfs/face/edee88230332b2bf939863bcc9beef14b6d1fb48.jpg",
+				"uid": 2498537,
+				"uname": "再也不氪金啊"
+			},
+			"status": 1,
+			"thank_text": "恭喜<%再也不氪金啊%>上任总督",
+			"time": 86400,
+			"time_wait": 0,
+			"weight": 0
+		},
+		"payflow_id": "gds_080c8ad97190740794_201909",
+		"privilege_type": 1,
+		"roomid": 918717,
+		"type": "guard"
+	}
+}
+```
+
+
+
+#### room_admin_entrance
+
+活跃时间：2019/09/30
+
+房间内新增房管。
+
+```json
+{
+	"cmd": "room_admin_entrance",
+	"msg": "系统提示：你已被主播设为房管",
+	"uid": 157642459
+}
+```
+
+
+
+#### new_anchor_reward
+
+活跃时间：2019/09/30
+
+```json
+{
+	"cmd": "new_anchor_reward",
+	"reward_id": 1,
+	"roomid": 10633444,
+	"uid": 111977978
+}
+```
+
+
+
+#### DAILY_QUEST_NEWDAY
+
+添加日期：2019/06/26
+
+活跃时间：2019/09/30
+
+房间内消息，作用不明。
+
+```json
+{
+	"cmd": "DAILY_QUEST_NEWDAY",
+	"data": {}
+}
+```
 
