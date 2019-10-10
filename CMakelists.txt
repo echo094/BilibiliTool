@@ -41,22 +41,21 @@ include (CMakeHelpers)
 ############ Build customization
 
 ############ Compiler specific setup
+message (STATUS "* Compiler ${CMAKE_CXX_COMPILER_ID}")
 
-if (MSVC)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   # set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL /Gy /GF /Ox /Ob2 /Ot /Oi /MP /arch:SSE2 /fp:fast")
   # set (CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG /INCREMENTAL:NO /OPT:REF /OPT:ICF")
   add_definitions (-DUNICODE -D_UNICODE)
   add_definitions (-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
   add_definitions (-DNOMINMAX)
   add_definitions (-D_WIN32_WINNT=0x0A00)
-endif ()
-
-# clang
-  if (CMAKE_COMPILER_IS_CLANGXX)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++0x -stdlib=libc++") # todo: is libc++ really needed here?
-  if (NOT APPLE)
-    add_definitions (-DNDEBUG -Wall -Wno-padded) # todo: should we use CMAKE_C_FLAGS for these?
-  endif ()
+  add_definitions (-DNDEBUG -Wall -Wno-padded) # todo: should we use CMAKE_C_FLAGS for these?
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+  set (CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif ()
 
 ############ Dependencies
@@ -69,7 +68,8 @@ message (STATUS "-- Using BOOST_ROOT")
 message (STATUS "       " ${BOOST_ROOT})
 set (Boost_USE_MULTITHREADED TRUE)
 set (Boost_USE_STATIC_LIBS TRUE)
-find_package (Boost 1.39.0 COMPONENTS "${APP_BOOST_LIBS}")
+set (Boost_NO_BOOST_CMAKE ON)
+find_package (Boost 1.69.0 REQUIRED COMPONENTS "${APP_BOOST_LIBS}")
 if (Boost_FOUND)
 	# Pretty print status
 	message (STATUS "-- Include Directories")
