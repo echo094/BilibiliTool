@@ -628,78 +628,88 @@
 
 ```
 {
-	"cmd": "NOTICE_MSG",
-	"full": {
-		"head_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/72337e86020b8d0874d817f15c48a610894b94ff.png",
-		"tail_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/822da481fdaba986d738db5d8fd469ffa95a8fa1.webp",
-		"head_icon_fa": "http:\/\/i0.hdslb.com\/bfs\/live\/72337e86020b8d0874d817f15c48a610894b94ff.png",
-		"tail_icon_fa": "http:\/\/i0.hdslb.com\/bfs\/live\/38cb2a9f1209b16c0f15162b0b553e3b28d9f16f.png",
-		"head_icon_fan": 1,
-		"tail_icon_fan": 4,
-		"background": "#FFB03CFF",
-		"color": "#FFFFFFFF",
-		"highlight": "#B25AC1FF",
-		"time": 10
+	"scene_key": "4",
+	"scene_value": "10556121",
+	"msg": {
+		"roomid": 10556121,
+		"msg_common": "<%无人的回忆の%>在本房间开通了舰长",
+		"msg_self": "<%无人的回忆の%>在本房间开通了舰长",
+		"link_url": "http://live.bilibili.com/10556121?live_lottery_type=2&broadcast_type=",
+		"msg_type": 3,
+		"full": {
+			"head_icon": "http://i0.hdslb.com/bfs/live/72337e86020b8d0874d817f15c48a610894b94ff.png",
+			"tail_icon": "http://i0.hdslb.com/bfs/live/822da481fdaba986d738db5d8fd469ffa95a8fa1.webp",
+			"head_icon_fa": "http://i0.hdslb.com/bfs/live/72337e86020b8d0874d817f15c48a610894b94ff.png",
+			"tail_icon_fa": "http://i0.hdslb.com/bfs/live/38cb2a9f1209b16c0f15162b0b553e3b28d9f16f.png",
+			"head_icon_fan": 1,
+			"tail_icon_fan": 4,
+			"background": "#FFB03CFF",
+			"color": "#FFFFFFFF",
+			"highlight": "#B25AC1FF",
+			"time": 10
+		},
+		"half": {
+			"head_icon": "",
+			"tail_icon": "",
+			"background": "",
+			"color": "",
+			"highlight": "",
+			"time": 0
+		},
+		"side": {
+			"head_icon": "http://i0.hdslb.com/bfs/live/31566d8cd5d468c30de8c148c5d06b3b345d8333.png",
+			"background": "#FFE9C8FF",
+			"color": "#EF903AFF",
+			"highlight": "#D54900FF",
+			"border": "#FFCFA4FF"
+		},
+		"shield_uid": 0,
+		"real_roomid": 10556121,
+		"cmd": "NOTICE_MSG"
 	},
-	"half": {
-		"head_icon": "",
-		"tail_icon": "",
-		"background": "",
-		"color": "",
-		"highlight": "",
-		"time": 8
-	},
-	"side": {
-		"head_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/31566d8cd5d468c30de8c148c5d06b3b345d8333.png",
-		"background": "#FFE9C8FF",
-		"color": "#EF903AFF",
-		"highlight": "#D54900FF",
-		"border": "#FFCFA4FF"
-	},
-	"roomid": 10729306,
-	"real_roomid": 10729306,
-	"msg_common": "<%孤島の風%> 在本房间开通了舰长",
-	"msg_self": "<%孤島の風%> 在本房间开通了舰长",
-	"link_url": "https:\/\/live.bilibili.com\/10729306?live_lottery_type=2&broadcast_type=1&from=28003&extra_jump_from=28003",
-	"msg_type": 3,
-	"shield_uid": -1
+	"from_id": 10556121
 }
 {
-	"cmd": "NOTICE_MSG",
-	"full": {
-		"head_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/d63e78ade2319108390b1d6a59a81b2abe46925d.png",
-		"tail_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/822da481fdaba986d738db5d8fd469ffa95a8fa1.webp",
-		"head_icon_fa": "http:\/\/i0.hdslb.com\/bfs\/live\/d63e78ade2319108390b1d6a59a81b2abe46925d.png",
-		"tail_icon_fa": "http:\/\/i0.hdslb.com\/bfs\/live\/38cb2a9f1209b16c0f15162b0b553e3b28d9f16f.png",
-		"head_icon_fan": 1,
-		"tail_icon_fan": 4,
-		"background": "#FFB03CFF",
-		"color": "#FFFFFFFF",
-		"highlight": "#B25AC1FF",
-		"time": 10
+	"scene_key": "1",
+	"scene_value": "0",
+	"msg": {
+		"roomid": 21664773,
+		"msg_common": "<%和泉纱霧%>在<%芭娜娜Official%>的房间开通了总督并触发了抽奖，点击前往TA的房间去抽奖吧",
+		"msg_self": "<%和泉纱霧%>在本房间开通了总督并触发了抽奖，快来抽奖吧",
+		"link_url": "http://live.bilibili.com/21664773?live_lottery_type=2&broadcast_type=",
+		"msg_type": 3,
+		"full": {
+			"head_icon": "http://i0.hdslb.com/bfs/live/d63e78ade2319108390b1d6a59a81b2abe46925d.png",
+			"tail_icon": "http://i0.hdslb.com/bfs/live/822da481fdaba986d738db5d8fd469ffa95a8fa1.webp",
+			"head_icon_fa": "http://i0.hdslb.com/bfs/live/d63e78ade2319108390b1d6a59a81b2abe46925d.png",
+			"tail_icon_fa": "http://i0.hdslb.com/bfs/live/38cb2a9f1209b16c0f15162b0b553e3b28d9f16f.png",
+			"head_icon_fan": 1,
+			"tail_icon_fan": 4,
+			"background": "#FFB03CFF",
+			"color": "#FFFFFFFF",
+			"highlight": "#B25AC1FF",
+			"time": 10
+		},
+		"half": {
+			"head_icon": "",
+			"tail_icon": "",
+			"background": "",
+			"color": "",
+			"highlight": "",
+			"time": 0
+		},
+		"side": {
+			"head_icon": "http://i0.hdslb.com/bfs/live/17c5353140045345f31c7475432920df08351837.png",
+			"background": "#FFE9C8FF",
+			"color": "#EF903AFF",
+			"highlight": "#D54900FF",
+			"border": "#FFCFA4FF"
+		},
+		"shield_uid": 0,
+		"real_roomid": 21664773,
+		"cmd": "NOTICE_MSG"
 	},
-	"half": {
-		"head_icon": "",
-		"tail_icon": "",
-		"background": "",
-		"color": "",
-		"highlight": "",
-		"time": 8
-	},
-	"side": {
-		"head_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/17c5353140045345f31c7475432920df08351837.png",
-		"background": "#FFE9C8FF",
-		"color": "#EF903AFF",
-		"highlight": "#D54900FF",
-		"border": "#FFCFA4FF"
-	},
-	"roomid": 425315,
-	"real_roomid": 425315,
-	"msg_common": "<%太太太太太了%> 在 <%Dae-天涯ovo%> 的房间开通了总督并触发了抽奖，点击前往TA的房间去抽奖吧",
-	"msg_self": "<%太太太太太了%> 在本房间开通了总督并触发了抽奖，快来抽奖吧",
-	"link_url": "https:\/\/live.bilibili.com\/425315?live_lottery_type=2&broadcast_type=0&from=28003&extra_jump_from=28003",
-	"msg_type": 3,
-	"shield_uid": -1
+	"from_id": 21664773
 }
 ```
 

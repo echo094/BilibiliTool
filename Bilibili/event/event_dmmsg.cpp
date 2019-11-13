@@ -288,11 +288,29 @@ int event_dmmsg::ParseJSON(MSG_INFO *data) {
 	rapidjson::Document doc;
 	doc.Parse(data->buff.get());
 
-	if (!doc.IsObject() || !doc.HasMember("cmd") || !doc["cmd"].IsString()) {
+	if (!doc.IsObject()) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[DMMSG] " << data->id << " JSON Wrong.";
 		return -1;
 	}
-	std::string strtype = doc["cmd"].GetString();
+	rapidjson::Value &value = doc;
+	if (value.HasMember("cmd")) {
+		if (!value["cmd"].IsString()) {
+			BOOST_LOG_SEV(g_logger::get(), error) << "[DMMSG] " << data->id << " JSON Wrong.";
+			return -1;
+		}
+	}
+	else if (value.HasMember("msg") && value["msg"].IsObject() && value["msg"].HasMember("cmd")) {
+		value = value["msg"];
+		if (!value["cmd"].IsString()) {
+			BOOST_LOG_SEV(g_logger::get(), error) << "[DMMSG] " << data->id << " JSON Wrong.";
+			return -1;
+		}
+	}
+	else {
+		BOOST_LOG_SEV(g_logger::get(), error) << "[DMMSG] " << data->id << " JSON Wrong.";
+		return -1;
+	}
+	std::string strtype = value["cmd"].GetString();
 	if (!m_cmdid.count(strtype)) {
 		// 新指令
 		return -1;
@@ -305,25 +323,25 @@ int event_dmmsg::ParseJSON(MSG_INFO *data) {
 	}
 	case DM_SPECIAL_GIFT: {
 		if (data->opt & DM_HIDDENEVENT) {
-			return this->ParseSTORMMSG(doc, data->id);
+			return this->ParseSTORMMSG(value, data->id);
 		}
 		return 0;
 	}
 	case DM_NOTICE_MSG: {
 		if (data->opt & DM_PUBEVENT) {
-			return this->ParseNOTICEMSG(doc, data->id, DM_ROOM_AREA(data->opt));
+			return this->ParseNOTICEMSG(value, data->id, DM_ROOM_AREA(data->opt));
 		}
 		return 0;
 	}
 	case DM_GUARD_LOTTERY_START: {
 		if (data->opt & DM_HIDDENEVENT) {
-			return this->ParseGUARDLO(doc, data->id);
+			return this->ParseGUARDLO(value, data->id);
 		}
 		return 0;
 	}
 	case DM_PK_LOTTERY_START: {
 		if (data->opt & DM_HIDDENEVENT) {
-			return this->ParsePKLOTTERY(doc, data->id);
+			return this->ParsePKLOTTERY(value, data->id);
 		}
 		return 0;
 	}
@@ -338,7 +356,7 @@ int event_dmmsg::ParseJSON(MSG_INFO *data) {
 	}
 	case DM_ROOM_CHANGE: {
 		if (data->opt & DM_PUBEVENT) {
-			return ParseROOMMSG(doc, data->id, data->opt);
+			return ParseROOMMSG(value, data->id, data->opt);
 		}
 		return 0;
 	}
@@ -347,7 +365,7 @@ int event_dmmsg::ParseJSON(MSG_INFO *data) {
 	return 0;
 }
 
-int event_dmmsg::ParseSTORMMSG(rapidjson::Document &doc, const unsigned room) {
+int event_dmmsg::ParseSTORMMSG(rapidjson::Value &doc, const unsigned room) {
 	if (!doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("39")
 		|| !doc["data"]["39"].IsObject() || !doc["data"]["39"].HasMember("action")) {
 		return -1;
@@ -394,7 +412,7 @@ int event_dmmsg::ParseSTORMMSG(rapidjson::Document &doc, const unsigned room) {
 	return -1;
 }
 
-int event_dmmsg::ParseNOTICEMSG(rapidjson::Document &doc, const unsigned room, const unsigned area) {
+int event_dmmsg::ParseNOTICEMSG(rapidjson::Value &doc, const unsigned room, const unsigned area) {
 	// 如果消息不含有房间ID 则说明不是抽奖信息
 	if (!doc.HasMember("msg_type") || !doc["msg_type"].IsInt()) {
 		return -1;
@@ -421,7 +439,7 @@ int event_dmmsg::ParseNOTICEMSG(rapidjson::Document &doc, const unsigned room, c
 	return -1;
 }
 
-int event_dmmsg::ParseSYSMSG(rapidjson::Document &doc, const unsigned room, const unsigned area) {
+int event_dmmsg::ParseSYSMSG(rapidjson::Value &doc, const unsigned room, const unsigned area) {
 	// 如果消息不含有房间ID 则说明不是抽奖信息
 	if (!doc.HasMember("real_roomid") || !doc["real_roomid"].IsInt()) {
 		return -1;
@@ -445,12 +463,10 @@ int event_dmmsg::ParseSYSMSG(rapidjson::Document &doc, const unsigned room, cons
 }
 
 // 处理广播事件总督上船消息
-int event_dmmsg::ParseGUARDMSG(rapidjson::Document &doc, const unsigned room, const unsigned area) {
+int event_dmmsg::ParseGUARDMSG(rapidjson::Value &doc, const unsigned room, const unsigned area) {
 	// 过滤当前房间的开通信息
 	std::string tstr = doc["msg_common"].GetString();
-	std::wstring wmsg;
-	toollib::UTF8ToUTF16(tstr, wmsg);
-	if (wmsg.find(L"在本房间") != -1) {
+	if (tstr.find(u8"在本房间") != -1) {
 		return 0;
 	}
 	// 全区广播只需通知一次
@@ -464,7 +480,7 @@ int event_dmmsg::ParseGUARDMSG(rapidjson::Document &doc, const unsigned room, co
 }
 
 // 处理房间事件非总督上船消息
-int event_dmmsg::ParseGUARDLO(rapidjson::Document &doc, const unsigned room) {
+int event_dmmsg::ParseGUARDLO(rapidjson::Value &doc, const unsigned room) {
 	int btype = doc["data"]["privilege_type"].GetInt();
 	if (btype != 1) {
 		std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
@@ -480,7 +496,7 @@ int event_dmmsg::ParseGUARDLO(rapidjson::Document &doc, const unsigned room) {
 	return 0;
 }
 
-int event_dmmsg::ParsePKLOTTERY(rapidjson::Document & doc, const unsigned room) {
+int event_dmmsg::ParsePKLOTTERY(rapidjson::Value & doc, const unsigned room) {
 	std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
 	data->srid = doc["data"]["room_id"].GetInt();
 	data->rrid = room;
@@ -492,7 +508,7 @@ int event_dmmsg::ParsePKLOTTERY(rapidjson::Document & doc, const unsigned room) 
 	return 0;
 }
 
-int event_dmmsg::ParseROOMMSG(rapidjson::Document & doc, const unsigned room, const unsigned opt) {
+int event_dmmsg::ParseROOMMSG(rapidjson::Value & doc, const unsigned room, const unsigned opt) {
 	unsigned area_cur = DM_ROOM_AREA(opt);
 	unsigned area_new = doc["data"]["parent_area_id"].GetUint();
 	if (area_cur != area_new) {
