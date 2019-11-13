@@ -71,7 +71,7 @@ BILIRET event_list_base::_CheckRoom(CURL* pcurl, std::shared_ptr<BILI_LOTTERYDAT
 
 BILIRET lottery_list::_GetLotteryID(CURL *pcurl, std::shared_ptr<BILI_LOTTERYDATA> &data) {
 	std::ostringstream oss;
-	oss << URL_LIVEAPI_HEAD << "/xlive/lottery-interface/v3/smalltv/Check?roomid=" << data->rrid;
+	oss << URL_LIVEAPI_HEAD << "/xlive/lottery-interface/v1/lottery/Check?roomid=" << data->rrid;
 	m_httppack->url = oss.str();
 	m_httppack->ClearHeader();
 	int ret = toollib::HttpGetEx(pcurl, m_httppack);
@@ -84,12 +84,12 @@ BILIRET lottery_list::_GetLotteryID(CURL *pcurl, std::shared_ptr<BILI_LOTTERYDAT
 	rapidjson::Document doc;
 	doc.Parse(m_httppack->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
-		|| !doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("list") || !doc["data"]["list"].IsArray()) {
+		|| !doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("gift") || !doc["data"]["gift"].IsArray()) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[Lottery] ERROR:" << doc["code"].GetInt();
 		return BILIRET::JSON_ERROR;
 	}
 	// 处理并添加新的抽奖信息
-	this->_UpdateLotteryList(doc["data"]["list"], data);
+	this->_UpdateLotteryList(doc["data"]["gift"], data);
 
 	return BILIRET::NOFAULT;
 }
@@ -120,7 +120,7 @@ void lottery_list::_UpdateLotteryList(rapidjson::Value &infoArray, std::shared_p
 		pdata->time_end = curtime + infoArray[i]["time"].GetInt();
 		pdata->time_start = pdata->time_end - infoArray[i]["max_time"].GetInt();
 		pdata->type = infoArray[i]["type"].GetString();
-		pdata->title = infoArray[i]["title"].GetString();
+		pdata->title = infoArray[i]["thank_text"].GetString();
 		tlist.push_back(pdata);
 	}
 	// 排序
@@ -170,7 +170,7 @@ bool lottery_list::_CheckLoid(const long long id) {
 
 BILIRET guard_list::_GetLotteryID(CURL *pcurl, std::shared_ptr<BILI_LOTTERYDATA> &data) {
 	std::ostringstream oss;
-	oss << URL_LIVEAPI_HEAD << "/lottery/v1/Lottery/check_guard?roomid=" << data->rrid;
+	oss << URL_LIVEAPI_HEAD << "/xlive/lottery-interface/v1/lottery/Check?roomid=" << data->rrid;
 	m_httppack->url = oss.str();
 	m_httppack->ClearHeader();
 	int ret = toollib::HttpGetEx(pcurl, m_httppack);
@@ -183,12 +183,12 @@ BILIRET guard_list::_GetLotteryID(CURL *pcurl, std::shared_ptr<BILI_LOTTERYDATA>
 	rapidjson::Document doc;
 	doc.Parse(m_httppack->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()
-		|| !doc.HasMember("data") || !doc["data"].IsArray()) {
+		|| !doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("guard") || !doc["data"]["guard"].IsArray()) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[Guard] ERROR:" << doc["code"].GetInt();
 		return BILIRET::JSON_ERROR;
 	}
 	// 处理并添加新的上船信息
-	this->_UpdateLotteryList(doc["data"], data);
+	this->_UpdateLotteryList(doc["data"]["guard"], data);
 
 	return BILIRET::NOFAULT;
 }
@@ -218,7 +218,7 @@ void guard_list::_UpdateLotteryList(rapidjson::Value &infoArray, std::shared_ptr
 		pdata->loid = tloid;
 		pdata->time_start = curtime;
 		pdata->time_end = pdata->time_start + infoArray[i]["time"].GetInt();
-		pdata->type = infoArray[i]["keyword"].GetString();
+		pdata->type = infoArray[i]["thank_text"].GetString();
 		pdata->exinfo = ttype;
 		tlist.push_back(pdata);
 	}
