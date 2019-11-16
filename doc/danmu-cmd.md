@@ -104,7 +104,7 @@
 
 
 
-## 有效指令(111)
+## 有效指令(118)
 
 
 
@@ -2716,6 +2716,216 @@
 	"buy_type": 3,
 	"cmd": "GUIARD_MSG",
 	"msg": ":?猫幼cattyo_:? 在本房间开通了舰长"
+}
+```
+
+
+
+### 新增(7)
+
+
+
+#### DANMU_GIFT_LOTTERY_START
+
+添加日期：2019/10/13
+
+房间内消息，弹幕抽奖。
+
+```json
+{
+	"cmd": "DANMU_GIFT_LOTTERY_START",
+	"data": {
+		"asset_icon": "https://i0.hdslb.com/bfs/vc/126f25af295d42311b541177e5fb14a2f6d0012c.png",
+		"award_image": "http://i0.hdslb.com/bfs/live/1d7f90b938cc10bb211ba98aeb64abf696fef364.png",
+		"award_name": "OPPO Reno Ace手机",
+		"award_num": 1,
+		"cur_gift_num": 0,
+		"current_time": 1570969184,
+		"danmu": "RenoAce超级玩家，一机致胜！",
+		"gift_id": 0,
+		"gift_name": "",
+		"id": 14,
+		"join_type": 0,
+		"max_time": 300,
+		"price": 0,
+		"require_text": "关注主播",
+		"require_type": 1,
+		"require_value": 0,
+		"room_id": 7734200,
+		"show_panel": 1,
+		"status": 1,
+		"time": 300,
+		"title": "弹幕抽奖"
+	}
+}
+```
+
+
+
+#### DANMU_GIFT_LOTTERY_AWARD
+
+添加日期：2019/10/13
+
+房间内消息，弹幕抽奖。
+
+```json
+{
+	"cmd": "DANMU_GIFT_LOTTERY_AWARD",
+	"data": {
+		"award_id": 14,
+		"award_image": "http://i0.hdslb.com/bfs/live/1d7f90b938cc10bb211ba98aeb64abf696fef364.png",
+		"award_name": "OPPO Reno Ace手机",
+		"award_num": 1,
+		"award_text": "",
+		"award_type": 1,
+		"award_users": [
+			{
+				"face": "http://i2.hdslb.com/bfs/face/5dbbaf88ddc150c67e56e277eb36670a5d923432.jpg",
+				"level": 21,
+				"uid": 40234639,
+				"uname": "双刀李老大"
+			}
+		],
+		"id": 14
+	}
+}
+```
+
+
+
+#### DANMU_GIFT_LOTTERY_END
+
+添加日期：2019/10/13
+
+房间内消息，弹幕抽奖。
+
+```json
+{
+	"cmd": "DANMU_GIFT_LOTTERY_END",
+	"data": {
+		"id": 14,
+		"room_id": 7734200
+	}
+}
+```
+
+
+
+#### ANCHOR_LOT_CHECKSTATUS
+
+添加日期：2019/10/28
+
+房间内消息，天选时刻抽奖。
+
+```json
+{
+	"cmd": "ANCHOR_LOT_CHECKSTATUS",
+	"data": {
+		"id": 52,
+		"status": 4,
+		"uid": 40667810
+	}
+}
+```
+
+
+
+#### ANCHOR_LOT_START
+
+添加日期：2019/10/28
+
+房间内消息，天选时刻抽奖。
+
+```json
+{
+	"cmd": "ANCHOR_LOT_START",
+	"data": {
+		"asset_icon": "https://i0.hdslb.com/bfs/live/992c2ccf88d3ea99620fb3a75e672e0abe850e9c.png",
+		"award_image": "",
+		"award_name": "10000LOL点券",
+		"award_num": 3,
+		"cur_gift_num": 0,
+		"current_time": 1572261492,
+		"danmu": "Zzr",
+		"gift_id": 0,
+		"gift_name": "",
+		"gift_num": 1,
+		"gift_price": 0,
+		"goaway_time": 180,
+		"id": 52,
+		"join_type": 0,
+		"lot_status": 0,
+		"max_time": 600,
+		"require_text": "无",
+		"require_type": 0,
+		"require_value": 0,
+		"room_id": 11382758,
+		"show_panel": 1,
+		"status": 1,
+		"time": 599,
+		"url": "https://live.bilibili.com/p/html/live-lottery/anchor-join.html?is_live_half_webview=1&hybrid_biz=live-lottery-anchor&hybrid_half_ui=1,5,100p,100p,000000,0,30,0,0,1;2,5,100p,100p,000000,0,30,0,0,1;3,5,100p,100p,000000,0,30,0,0,1;4,5,100p,100p,000000,0,30,0,0,1;5,5,100p,100p,000000,0,30,0,0,1;6,5,100p,100p,000000,0,30,0,0,1;7,5,100p,100p,000000,0,30,0,0,1;8,5,100p,100p,000000,0,30,0,0,1"
+	}
+}
+```
+
+
+
+#### ANCHOR_LOT_AWARD
+
+添加日期：2019/10/28
+
+房间内消息，天选时刻抽奖。
+
+```json
+{
+	"cmd": "ANCHOR_LOT_AWARD",
+	"data": {
+		"award_image": "",
+		"award_name": "10000LOL点券",
+		"award_num": 1,
+		"award_users": [
+			{
+				"uid": 12736723,
+				"uname": "mzzzzzzzzzzzzzzz",
+				"face": "http://static.hdslb.com/images/member/noface.gif",
+				"level": 0,
+				"color": 9868950
+			},
+			{
+				"uid": 1941591,
+				"uname": "月下奔逃",
+				"face": "http://i1.hdslb.com/bfs/face/0ea1dbb2be7dbe5b3dc95368e0fab7d2722ca00f.jpg",
+				"level": 14,
+				"color": 6406234
+			},
+			{
+				"uid": 17546401,
+				"uname": "肯打基没有套餐",
+				"face": "http://static.hdslb.com/images/member/noface.gif",
+				"level": 20,
+				"color": 6406234
+			}
+		],
+		"id": 52,
+		"url": "https://live.bilibili.com/p/html/live-lottery/anchor-join.html?is_live_half_webview=1&hybrid_biz=live-lottery-anchor&hybrid_half_ui=1,5,100p,100p,000000,0,30,0,0,1;2,5,100p,100p,000000,0,30,0,0,1;3,5,100p,100p,000000,0,30,0,0,1;4,5,100p,100p,000000,0,30,0,0,1;5,5,100p,100p,000000,0,30,0,0,1;6,5,100p,100p,000000,0,30,0,0,1;7,5,100p,100p,000000,0,30,0,0,1;8,5,100p,100p,000000,0,30,0,0,1"
+	}
+}
+```
+
+
+
+#### ANCHOR_LOT_END
+
+添加日期：2019/10/28
+
+房间内消息，天选时刻抽奖。
+
+```json
+{
+	"cmd": "ANCHOR_LOT_END",
+	"data": {
+		"id": 52
+	}
 }
 ```
 
