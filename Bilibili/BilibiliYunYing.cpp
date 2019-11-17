@@ -119,6 +119,7 @@ void lottery_list::_UpdateLotteryList(rapidjson::Value &infoArray, std::shared_p
 		pdata->loid = tmpid;
 		pdata->time_end = curtime + infoArray[i]["time"].GetInt();
 		pdata->time_start = pdata->time_end - infoArray[i]["max_time"].GetInt();
+		pdata->time_get = curtime + infoArray[i]["time_wait"].GetInt();
 		pdata->type = infoArray[i]["type"].GetString();
 		pdata->title = infoArray[i]["thank_text"].GetString();
 		tlist.push_back(pdata);
@@ -217,8 +218,9 @@ void guard_list::_UpdateLotteryList(rapidjson::Value &infoArray, std::shared_ptr
 		pdata->rrid = data->rrid;
 		pdata->loid = tloid;
 		pdata->time_start = curtime;
-		pdata->time_end = pdata->time_start + infoArray[i]["time"].GetInt();
-		pdata->type = infoArray[i]["thank_text"].GetString();
+		pdata->time_end = curtime + infoArray[i]["time"].GetInt();
+		pdata->time_get = curtime + infoArray[i]["time_wait"].GetInt();
+		pdata->type = infoArray[i]["keyword"].GetString();
 		pdata->exinfo = ttype;
 		tlist.push_back(pdata);
 	}

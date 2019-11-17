@@ -60,16 +60,20 @@ typedef struct _BILI_LOTTERYDATA {
 	long long loid = 0;
 	// 开始时间
 	time_t time_start = 0;
+	// 领取时间
+	time_t time_get = 0;
 	// 失效时间
 	time_t time_end = 0;
 	// 事件类型
 	// 抽奖为礼物编号 网页API统一为 Gift
-	// 亲密为 guard
 	// 风暴为 storm 实际没用
+	// 亲密为 guard
 	// 大乱斗为 pk 实际没用
+	// 弹幕为 danmu 实际没用
+	// 天选为 anchor 实际没用
 	std::string type;
-	// Guard等级
-	int exinfo = 0;
-	// 抽奖的名称
+	// 额外记录的数据 守护类型或奖品数量
+	unsigned exinfo = 0;
+	// 额外记录的抽奖信息 名称或奖品
 	std::string title;
 }BILI_LOTTERYDATA;

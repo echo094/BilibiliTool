@@ -4,11 +4,13 @@
 #include "BilibiliStruct.h"
 
 enum {
-	MSG_NEWLOTTERY = 612,
-	MSG_NEWSPECIALGIFT,
-	MSG_NEWGUARD1,
-	MSG_NEWGUARD0,
-	MSG_NEWPK,
+	MSG_NOTICE_GIFT = 612,
+	MSG_NOTICE_GUARD,
+	MSG_LOT_GUARD,
+	MSG_LOT_STORM,
+	MSG_LOT_PK,
+	MSG_LOT_DANMU,
+	MSG_LOT_ANCHOR,
 	MSG_CHANGEROOM1,
 	MSG_CHANGEROOM2,
 	MSG_CLOSEROOM
@@ -34,11 +36,26 @@ public:
 	virtual void process_data(MSG_INFO *data) = 0;
 
 protected:
-	void post_lottery_msg(unsigned rrid);
-	void post_storm_msg(std::shared_ptr<BILI_LOTTERYDATA> data);
-	void post_guard1_msg(unsigned rrid);
-	void post_guard23_msg(std::shared_ptr<BILI_LOTTERYDATA> data);
-	void post_pk_msg(std::shared_ptr<BILI_LOTTERYDATA> data);
+	/**
+	 * @brief 传递广播抽奖消息
+	 *
+	 * 包括 礼物|总督
+	 *
+	 * @param type  消息类型
+	 * @param rrid  需查询的直播间号
+	 *
+	 */
+	void post_lottery_pub(unsigned type, unsigned rrid);
+	/**
+	 * @brief 传递房间内抽奖消息
+	 *
+	 * 包括 节奏风暴|舰长提督|PK
+	 *
+	 * @param type  消息类型
+	 * @param data  抽奖信息
+	 *
+	 */
+	void post_lottery_hidden(unsigned type, std::shared_ptr<BILI_LOTTERYDATA> data);
 	void post_close_event(unsigned rrid, unsigned opt);
 	void post_close_msg(unsigned rrid, unsigned opt);
 	void post_open_msg(unsigned rrid, unsigned opt);

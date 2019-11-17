@@ -13,45 +13,20 @@ void event_base::connection_close(unsigned rrid, unsigned opt) {
 	post_close_event(rrid, opt);
 }
 
-void event_base::post_lottery_msg(unsigned rrid) {
-	BOOST_LOG_SEV(g_logger::get(), info) << "[EVENT] lottery room: " << rrid;
+void event_base::post_lottery_pub(unsigned type, unsigned rrid) {
+	BOOST_LOG_SEV(g_logger::get(), info) << "[EVENT] lottery pub room: " << rrid;
 	std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
 	data->rrid = rrid;
 	if (event_act_) {
-		event_act_(MSG_NEWLOTTERY, data);
+		event_act_(type, data);
 	}
 }
 
-void event_base::post_storm_msg(std::shared_ptr<BILI_LOTTERYDATA> data) {
-	BOOST_LOG_SEV(g_logger::get(), info) << "[EVENT] storm room: " << data->rrid
+void event_base::post_lottery_hidden(unsigned type, std::shared_ptr<BILI_LOTTERYDATA> data) {
+	BOOST_LOG_SEV(g_logger::get(), info) << "[EVENT] lottery hidden room: " << data->rrid
 		<< " id: " << data->loid;
 	if (event_act_) {
-		event_act_(MSG_NEWSPECIALGIFT, data);
-	}
-}
-
-void event_base::post_guard1_msg(unsigned rrid) {
-	BOOST_LOG_SEV(g_logger::get(), info) << "[EVENT] guard room: " << rrid;
-	std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
-	data->rrid = rrid;
-	if (event_act_) {
-		event_act_(MSG_NEWGUARD1, data);
-	}
-}
-
-void event_base::post_guard23_msg(std::shared_ptr<BILI_LOTTERYDATA> data) {
-	BOOST_LOG_SEV(g_logger::get(), info) << "[EVENT] guard room: " << data->rrid
-		<< " id: " << data->loid << " type: " << data->exinfo;
-	if (event_act_) {
-		event_act_(MSG_NEWGUARD0, data);
-	}
-}
-
-void event_base::post_pk_msg(std::shared_ptr<BILI_LOTTERYDATA> data) {
-	BOOST_LOG_SEV(g_logger::get(), info) << "[EVENT] pk room: " << data->srid
-		<< " real room: " << data->rrid << " pk id: " << data->loid;
-	if (event_act_) {
-		event_act_(MSG_NEWPK, data);
+		event_act_(type, data);
 	}
 }
 

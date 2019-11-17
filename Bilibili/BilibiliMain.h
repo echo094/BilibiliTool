@@ -73,15 +73,19 @@ private:
 	// 非广播模式下更新监控的房间
 	int UpdateLiveRoom();
 	// 抽奖消息
-	int JoinLottery(std::shared_ptr<BILI_LOTTERYDATA> data);
+	int CheckLotGift(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 上船消息通告只含有房间号
-	int JoinGuardGift1(std::shared_ptr<BILI_LOTTERYDATA> data);
+	int CheckLotGuard(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 上船抽奖事件通告含有完整抽奖信息
-	int JoinGuardGift0(std::shared_ptr<BILI_LOTTERYDATA> data);
+	int JoinLotGuard(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 节奏风暴
-	int JoinSpecialGift(std::shared_ptr<BILI_LOTTERYDATA> data);
+	int JoinLotStorm(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 大乱斗抽奖
-	int JoinPKLottery (std::shared_ptr<BILI_LOTTERYDATA> data);
+	int JoinLotPK (std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 弹幕抽奖
+	int JoinLotDanmu(std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 天选时刻抽奖
+	int JoinLotAnchor(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 用户心跳
 	int HeartExp(unsigned type);
 

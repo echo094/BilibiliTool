@@ -337,30 +337,6 @@ int event_dmmsg::ParseJSON(MSG_INFO *data) {
 	case DM_DANMU_MSG: {
 		return 0;
 	}
-	case DM_SPECIAL_GIFT: {
-		if (data->opt & DM_HIDDENEVENT) {
-			return this->ParseSTORMMSG(value, data->id);
-		}
-		return 0;
-	}
-	case DM_NOTICE_MSG: {
-		if (data->opt & DM_PUBEVENT) {
-			return this->ParseNOTICEMSG(value, data->id, DM_ROOM_AREA(data->opt));
-		}
-		return 0;
-	}
-	case DM_GUARD_LOTTERY_START: {
-		if (data->opt & DM_HIDDENEVENT) {
-			return this->ParseGUARDLO(value, data->id);
-		}
-		return 0;
-	}
-	case DM_PK_LOTTERY_START: {
-		if (data->opt & DM_HIDDENEVENT) {
-			return this->ParsePKLOTTERY(value, data->id);
-		}
-		return 0;
-	}
 	case DM_PREPARING:
 	case DM_CUT_OFF: {
 		event_base::post_close_msg(data->id, data->opt);
@@ -372,7 +348,44 @@ int event_dmmsg::ParseJSON(MSG_INFO *data) {
 	}
 	case DM_ROOM_CHANGE: {
 		if (data->opt & DM_PUBEVENT) {
-			return ParseROOMMSG(value, data->id, data->opt);
+			return ParseMsgRoomChange(value, data->id, data->opt);
+		}
+		return 0;
+	}
+	case DM_NOTICE_MSG: {
+		if (data->opt & DM_PUBEVENT) {
+			return ParseMsgNotice(value, data->id, DM_ROOM_AREA(data->opt));
+		}
+		return 0;
+	}
+	case DM_SPECIAL_GIFT: {
+		if (data->opt & DM_HIDDENEVENT) {
+			return ParseLotStorm(value, data->id);
+		}
+		return 0;
+	}
+	case DM_GUARD_LOTTERY_START: {
+		if (data->opt & DM_HIDDENEVENT) {
+			return ParseLotGuard(value, data->id);
+		}
+		return 0;
+	}
+	case DM_PK_LOTTERY_START: {
+		if (data->opt & DM_HIDDENEVENT) {
+			return ParseLotPK(value, data->id);
+		}
+		return 0;
+	}
+	case DM_DANMU_LOTTERY_START:
+	case DM_DANMU_GIFT_LOTTERY_START: {
+		if (data->opt & DM_HIDDENEVENT) {
+			return ParseLotDanmu(value, data->id);
+		}
+		return 0;
+	}
+	case DM_ANCHOR_LOT_START: {
+		if (data->opt & DM_HIDDENEVENT) {
+			return ParseLotAnchor(value, data->id);
 		}
 		return 0;
 	}
@@ -381,54 +394,19 @@ int event_dmmsg::ParseJSON(MSG_INFO *data) {
 	return 0;
 }
 
-int event_dmmsg::ParseSTORMMSG(rapidjson::Value &doc, const unsigned room) {
-	if (!doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("39")
-		|| !doc["data"]["39"].IsObject() || !doc["data"]["39"].HasMember("action")) {
-		return -1;
+int event_dmmsg::ParseMsgRoomChange(rapidjson::Value & doc, const unsigned room, const unsigned opt) {
+	unsigned area_cur = DM_ROOM_AREA(opt);
+	unsigned area_new = doc["data"]["parent_area_id"].GetUint();
+	if (area_cur != area_new) {
+		// 主分区发生更改
+		BOOST_LOG_SEV(g_logger::get(), trace) << "[DMMSG] room area change " << room
+			<< " from:" << area_cur << " to:" << area_new;
+		event_base::post_close_msg(room, opt);
 	}
-	std::string tstr;
-	tstr = doc["data"]["39"]["action"].GetString();
-	if (tstr == "start") {
-		if (!doc["data"]["39"].HasMember("id")) {
-			return -1;
-		}
-		long long id = 0;
-		if (doc["data"]["39"]["id"].IsString()) {
-			id = _atoi64(doc["data"]["39"]["id"].GetString());
-		}
-		if (doc["data"]["39"]["id"].IsInt64()) {
-			id = doc["data"]["39"]["id"].GetInt64();
-		}
-		if (!id) {
-			return -1;
-		}
-		std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
-		data->srid = room;
-		data->rrid = room;
-		data->loid = id;
-		data->time_start = toollib::GetTimeStamp();
-		data->time_end = data->time_start + 90;
-		data->type = "storm";
-		int num = 0;
-		std::string content;
-		if (doc["data"]["39"].HasMember("num") && doc["data"]["39"]["num"].IsInt()) {
-			num = doc["data"]["39"]["num"].GetInt();
-		}
-		if (doc["data"]["39"].HasMember("content") && doc["data"]["39"]["content"].IsString()) {
-			content = doc["data"]["39"]["content"].GetString();
-		}
-		BOOST_LOG_SEV(g_logger::get(), trace) << "[DMMSG] storm " << room
-			<< " num:" << num << " content:" << content;
-		event_base::post_storm_msg(data);
-		return 0;
-	}
-	if (tstr == "end") {
-		return 0;
-	}
-	return -1;
+	return 0;
 }
 
-int event_dmmsg::ParseNOTICEMSG(rapidjson::Value &doc, const unsigned room, const unsigned area) {
+int event_dmmsg::ParseMsgNotice(rapidjson::Value &doc, const unsigned room, const unsigned area) {
 	// 如果消息不含有房间ID 则说明不是抽奖信息
 	if (!doc.HasMember("msg_type") || !doc["msg_type"].IsInt()) {
 		return -1;
@@ -437,10 +415,10 @@ int event_dmmsg::ParseNOTICEMSG(rapidjson::Value &doc, const unsigned room, cons
 	switch (type) {
 	case 2:
 	case 8: {
-		return ParseSYSMSG(doc, room, area);
+		return ParseNoticeGift(doc, room, area);
 	}
 	case 3: {
-		return ParseGUARDMSG(doc, room, area);
+		return ParseNoticeGuard(doc, room, area);
 	}
 	case 1:
 	case 4:
@@ -455,7 +433,7 @@ int event_dmmsg::ParseNOTICEMSG(rapidjson::Value &doc, const unsigned room, cons
 	return -1;
 }
 
-int event_dmmsg::ParseSYSMSG(rapidjson::Value &doc, const unsigned room, const unsigned area) {
+int event_dmmsg::ParseNoticeGift(rapidjson::Value &doc, const unsigned room, const unsigned area) {
 	// 如果消息不含有房间ID 则说明不是抽奖信息
 	if (!doc.HasMember("real_roomid") || !doc["real_roomid"].IsInt()) {
 		return -1;
@@ -473,13 +451,12 @@ int event_dmmsg::ParseSYSMSG(rapidjson::Value &doc, const unsigned room, const u
 	}
 
 	// 有房间号就进行抽奖
-	event_base::post_lottery_msg(rrid);
+	event_base::post_lottery_pub(MSG_NOTICE_GIFT, rrid);
 
 	return 0;
 }
 
-// 处理广播事件总督上船消息
-int event_dmmsg::ParseGUARDMSG(rapidjson::Value &doc, const unsigned room, const unsigned area) {
+int event_dmmsg::ParseNoticeGuard(rapidjson::Value &doc, const unsigned room, const unsigned area) {
 	// 过滤当前房间的开通信息
 	std::string tstr = doc["msg_common"].GetString();
 	if (tstr.find(u8"在本房间") != -1) {
@@ -490,48 +467,117 @@ int event_dmmsg::ParseGUARDMSG(rapidjson::Value &doc, const unsigned room, const
 		return 0;
 	}
 	int rid = doc["real_roomid"].GetInt();
-	event_base::post_guard1_msg(rid);
+	event_base::post_lottery_pub(MSG_NOTICE_GUARD, rid);
 
 	return 0;
 }
 
-// 处理房间事件非总督上船消息
-int event_dmmsg::ParseGUARDLO(rapidjson::Value &doc, const unsigned room) {
+int event_dmmsg::ParseLotStorm(rapidjson::Value &doc, const unsigned room) {
+	if (!doc.HasMember("data") || !doc["data"].IsObject() || !doc["data"].HasMember("39")
+		|| !doc["data"]["39"].IsObject() || !doc["data"]["39"].HasMember("action")) {
+		return -1;
+	}
+	std::string tstr = doc["data"]["39"]["action"].GetString();
+	if (tstr == "start") {
+		if (!doc["data"]["39"].HasMember("id")) {
+			return -1;
+		}
+		long long id = 0;
+		if (doc["data"]["39"]["id"].IsString()) {
+			id = _atoi64(doc["data"]["39"]["id"].GetString());
+		}
+		if (doc["data"]["39"]["id"].IsInt64()) {
+			id = doc["data"]["39"]["id"].GetInt64();
+		}
+		if (!id) {
+			return -1;
+		}
+		std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
+		auto curtime = toollib::GetTimeStamp();
+		data->srid = room;
+		data->rrid = room;
+		data->loid = id;
+		data->time_start = curtime;
+		data->time_end = curtime + doc["data"]["39"]["time"].GetInt();
+		data->time_get = curtime;
+		data->type = "storm";
+		if (doc["data"]["39"].HasMember("num") && doc["data"]["39"]["num"].IsInt()) {
+			data->exinfo = doc["data"]["39"]["num"].GetInt();
+		}
+		if (doc["data"]["39"].HasMember("content") && doc["data"]["39"]["content"].IsString()) {
+			data->title = doc["data"]["39"]["content"].GetString();
+		}
+		BOOST_LOG_SEV(g_logger::get(), trace) << "[DMMSG] storm " << room
+			<< " num:" << data->exinfo << " content:" << data->title;
+		event_base::post_lottery_hidden(MSG_LOT_STORM, data);
+		return 0;
+	}
+	if (tstr == "end") {
+		return 0;
+	}
+	return -1;
+}
+
+int event_dmmsg::ParseLotGuard(rapidjson::Value &doc, const unsigned room) {
 	int btype = doc["data"]["privilege_type"].GetInt();
 	if (btype != 1) {
 		std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
-		data->srid = room;
+		auto curtime = toollib::GetTimeStamp();
+		data->srid = doc["data"]["room_id"].GetInt();
 		data->rrid = room;
 		data->loid = doc["data"]["id"].GetInt();
-		data->time_start = toollib::GetTimeStamp();
-		// data->time_end = data->time_start;
+		data->time_end = curtime + doc["data"]["lottery"]["time"].GetInt();
+		data->time_start = curtime;
+		data->time_get = curtime + doc["data"]["lottery"]["time_wait"].GetInt();
 		data->type = doc["data"]["lottery"]["keyword"].GetString();
 		data->exinfo = btype;
-		event_base::post_guard23_msg(data);
+		event_base::post_lottery_hidden(MSG_LOT_GUARD, data);
 	}
 	return 0;
 }
 
-int event_dmmsg::ParsePKLOTTERY(rapidjson::Value & doc, const unsigned room) {
+int event_dmmsg::ParseLotPK(rapidjson::Value & doc, const unsigned room) {
 	std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
+	auto curtime = toollib::GetTimeStamp();
 	data->srid = doc["data"]["room_id"].GetInt();
 	data->rrid = room;
 	data->loid = doc["data"]["pk_id"].GetInt();
-	data->time_start = toollib::GetTimeStamp();
-	data->time_end = data->time_start + doc["data"]["time"].GetInt();
+	data->time_end = curtime + doc["data"]["time"].GetInt();
+	data->time_start = data->time_end - doc["data"]["max_time"].GetInt();
+	data->time_get = curtime;
 	data->type = "pk";
-	event_base::post_pk_msg(data);
+	event_base::post_lottery_hidden(MSG_LOT_PK, data);
 	return 0;
 }
 
-int event_dmmsg::ParseROOMMSG(rapidjson::Value & doc, const unsigned room, const unsigned opt) {
-	unsigned area_cur = DM_ROOM_AREA(opt);
-	unsigned area_new = doc["data"]["parent_area_id"].GetUint();
-	if (area_cur != area_new) {
-		// 主分区发生更改
-		BOOST_LOG_SEV(g_logger::get(), trace) << "[DMMSG] room area change " << room
-			<< " from:" << area_cur << " to:" << area_new;
-		event_base::post_close_msg(room, opt);
-	}
+int event_dmmsg::ParseLotDanmu(rapidjson::Value & doc, const unsigned room) {
+	std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
+	auto curtime = toollib::GetTimeStamp();
+	data->srid = doc["data"]["room_id"].GetInt();
+	data->rrid = room;
+	data->loid = doc["data"]["id"].GetInt();
+	data->time_end = curtime + doc["data"]["time"].GetInt();
+	data->time_start = data->time_end - doc["data"]["max_time"].GetInt();
+	data->time_get = curtime;
+	data->type = "danmu";
+	data->title = doc["data"]["award_name"].GetString();
+	data->exinfo = doc["data"]["award_num"].GetUint();
+	event_base::post_lottery_hidden(MSG_LOT_DANMU, data);
+	return 0;
+}
+
+int event_dmmsg::ParseLotAnchor(rapidjson::Value & doc, const unsigned room) {
+	std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
+	auto curtime = toollib::GetTimeStamp();
+	data->srid = doc["data"]["room_id"].GetInt();
+	data->rrid = room;
+	data->loid = doc["data"]["id"].GetInt();
+	data->time_end = curtime + doc["data"]["time"].GetInt();
+	data->time_start = data->time_end - doc["data"]["max_time"].GetInt();
+	data->time_get = curtime;
+	data->type = "anchor";
+	data->title = doc["data"]["award_name"].GetString();
+	data->exinfo = doc["data"]["award_num"].GetUint();
+	event_base::post_lottery_hidden(MSG_LOT_ANCHOR, data);
 	return 0;
 }
