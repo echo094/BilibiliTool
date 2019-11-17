@@ -24,10 +24,12 @@ public:
 	unsigned uid;
 	// 配置信息
 	unsigned conf_coin;
-	unsigned conf_lottery;
+	unsigned conf_gift;
 	unsigned conf_storm;
 	unsigned conf_guard;
 	unsigned conf_pk;
+	unsigned conf_danmu;
+	unsigned conf_anchor;
 	std::string account;
 	std::string password;
 	std::string tokena, tokenr;

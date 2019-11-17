@@ -54,13 +54,17 @@ public:
 	// 经验心跳
 	int HeartExp(int firsttime = 0);
 	// 参与抽奖
-	int JoinLotteryALL(std::shared_ptr<BILI_LOTTERYDATA> data);
+	int JoinLotGift(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 参与亲密度
-	int JoinGuardALL(std::shared_ptr<BILI_LOTTERYDATA> data);
+	int JoinLotGuard(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 参与风暴
-	int JoinSpecialGiftALL(std::shared_ptr<BILI_LOTTERYDATA> data);
+	int JoinLotStorm(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 参与大乱斗抽奖
-	int JoinPKLotteryALL(std::shared_ptr<BILI_LOTTERYDATA> data);
+	int JoinLotPk(std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 参与弹幕抽奖
+	int JoinLotDanmu(std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 参与天选抽奖
+	int JoinLotAnchor(std::shared_ptr<BILI_LOTTERYDATA> data);
 
 private:
 	// 新用户登录
@@ -83,6 +87,10 @@ private:
 	int _ActStorm(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 大乱斗
 	int _ActPK(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 弹幕
+	int _ActDanmu(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 天选
+	int _ActAnchor(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 抽奖线程
 	void Thread_ActLottery(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 舰队低保领取线程
@@ -91,6 +99,10 @@ private:
 	void Thread_ActStorm(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 大乱斗领取线程
 	void Thread_ActPK(std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 弹幕领取线程
+	void Thread_ActDanmu(std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 天选领取线程
+	void Thread_ActAnchor(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 取随机数
 	int _GetRand(int start, int len);
 

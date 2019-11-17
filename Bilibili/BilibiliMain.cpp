@@ -566,7 +566,7 @@ int CBilibiliMain::CheckLotGift(std::shared_ptr<BILI_LOTTERYDATA> data)
 		if (isSkip()) {
 			continue;
 		}
-		_userlist->JoinLotteryALL(data);
+		_userlist->JoinLotGift(data);
 	}
 	return 0;
 }
@@ -599,7 +599,7 @@ int CBilibiliMain::CheckLotGuard(std::shared_ptr<BILI_LOTTERYDATA> data)
 		if (isSkip()) {
 			continue;
 		}
-		_userlist->JoinGuardALL(data);
+		_userlist->JoinLotGuard(data);
 	}
 
 	return 0;
@@ -617,7 +617,7 @@ int CBilibiliMain::JoinLotGuard(std::shared_ptr<BILI_LOTTERYDATA> data)
 	if (isSkip()) {
 		return 0;
 	}
-	_userlist->JoinGuardALL(data);
+	_userlist->JoinLotGuard(data);
 
 	return 0;
 }
@@ -635,7 +635,7 @@ int CBilibiliMain::JoinLotStorm(std::shared_ptr<BILI_LOTTERYDATA> data)
 	if (isSkip()) {
 		return 0;
 	}
-	_userlist->JoinSpecialGiftALL(data);
+	_userlist->JoinLotStorm(data);
 
 	return 0;
 }
@@ -651,7 +651,7 @@ int CBilibiliMain::JoinLotPK(std::shared_ptr<BILI_LOTTERYDATA> data)
 	if (isSkip()) {
 		return 0;
 	}
-	_userlist->JoinPKLotteryALL(data);
+	_userlist->JoinLotPk(data);
 
 	return 0;
 }
@@ -662,13 +662,14 @@ int CBilibiliMain::JoinLotDanmu(std::shared_ptr<BILI_LOTTERYDATA> data)
 		<< ",type:'" << data->type
 		<< "',ruid:" << data->rrid
 		<< ",loid:" << data->loid
-		<< ",gift:'" << data->title
-		<< "',num:" << data->exinfo
+		<< ",award_name:'" << data->title
+		<< "',award_num:" << data->exinfo
 		<< "}," << std::endl;
 
 	if (isSkip()) {
 		return 0;
 	}
+	_userlist->JoinLotDanmu(data);
 
 	return 0;
 }
@@ -679,13 +680,20 @@ int CBilibiliMain::JoinLotAnchor(std::shared_ptr<BILI_LOTTERYDATA> data)
 		<< ",type:'" << data->type
 		<< "',ruid:" << data->rrid
 		<< ",loid:" << data->loid
-		<< ",gift:'" << data->title
-		<< "',num:" << data->exinfo
+		<< ",award_name:'" << data->title
+		<< "',award_num:" << data->exinfo
+		<< ",gift_id:" << data->gift_id
+		<< ",gift_num:" << data->gift_num
 		<< "}," << std::endl;
 
 	if (isSkip()) {
 		return 0;
 	}
+	// 需要送礼的不领取
+	if (data->gift_id) {
+		return 0;
+	}
+	_userlist->JoinLotAnchor(data);
 
 	return 0;
 }

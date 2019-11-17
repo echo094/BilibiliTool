@@ -27,7 +27,7 @@ namespace apibl {
 	// 获取直播站主要信息
 	BILIRET APIWebGetUserInfo(const std::shared_ptr<user_info> &user);
 
-	/* 网页端 v1 API*/
+	/* 网页端 常规 API*/
 
 	// 直播服务器信息获取
 	BILIRET APIWebv1DanmuConf(
@@ -42,39 +42,126 @@ namespace apibl {
 	BILIRET APIWebv1TaskAward(const std::shared_ptr<user_info> &user);
 	// 银瓜子换硬币新API
 	BILIRET APIWebv1Silver2Coin(const std::shared_ptr<user_info> &user);
-	// 进入房间历史记录
-	BILIRET APIWebv1RoomEntry(const std::shared_ptr<user_info> &user, unsigned room);
-	// 领取风暴
-	BILIRET APIWebv1StormJoin(
-		std::shared_ptr<user_info> &user, 
-		std::shared_ptr<BILI_LOTTERYDATA> data, 
-		std::string code, 
-		std::string token
-	);
-	// 大乱斗抽奖
-	BILIRET APIWebv1PKJOIN(
-		std::shared_ptr<user_info> &user,
-		std::shared_ptr<BILI_LOTTERYDATA> data
-	);
 	// 查询扭蛋币数量
 	BILIRET APIWebv1CapsuleCheck(const std::shared_ptr<user_info> &user);
 
-	/* 网页端 v2 API*/
-
 	// 领取每日礼物
 	BILIRET APIWebv2GiftDaily(const std::shared_ptr<user_info> &user);
-	// 上船低保领取
-	BILIRET APIWebv2LotteryJoin(
-		std::shared_ptr<user_info> &user, 
-		std::shared_ptr<BILI_LOTTERYDATA> data
-	);
 	// 查询背包道具
 	BILIRET APIWebv2GiftBag(const std::shared_ptr<user_info> &user);
-
-	/* 网页端 v3 API*/
-
-	// 通告礼物抽奖
-	BILIRET APIWebv3SmallTV(
+	/**
+	 * @brief 进入直播间 留下历史记录
+	 *
+	 * 更新日期 11/17/2019
+	 *
+	 * @param user  用户IO
+	 * @param room  直播间编号
+	 *
+	 * @return
+	 *   返回抽奖参与情况
+	 */
+	BILIRET APIWebv1RoomEntry(const std::shared_ptr<user_info> &user, unsigned room);
+	/**
+	 * @brief 参加风暴抽奖
+	 *
+	 * 更新日期 11/17/2019
+	 *
+	 * 在未被拉黑时 一个抽奖可参与多次 直到抽奖结束或中奖
+	 *
+	 * @param user  用户IO
+	 * @param data  抽奖信息
+	 * @param code  验证码答案
+	 * @param token 验证码ID
+	 *
+	 * @return
+	 *   返回抽奖参与情况
+	 */
+	BILIRET APIWebv1StormJoin(
+		std::shared_ptr<user_info> &user,
+		std::shared_ptr<BILI_LOTTERYDATA> data,
+		std::string code,
+		std::string token
+	);
+	/**
+	 * @brief 参加礼物抽奖
+	 *
+	 * 更新日期 11/17/2019
+	 *
+	 * 有两种形式：
+	 * - 关注 参数有 follow （目前参数无效）
+	 * - 送礼 参数有 gift_id|gift_num
+	 *
+	 * @param user  用户IO
+	 * @param data  抽奖信息
+	 *
+	 * @return
+	 *   返回抽奖参与情况
+	 */
+	BILIRET APIWebv5SmalltvJoin(
+		std::shared_ptr<user_info> &user,
+		std::shared_ptr<BILI_LOTTERYDATA> data
+	);
+	/**
+	 * @brief 参加守护抽奖
+	 *
+	 * 更新日期 11/17/2019
+	 *
+	 * @param user  用户IO
+	 * @param data  抽奖信息
+	 *
+	 * @return
+	 *   返回抽奖参与情况
+	 */
+	BILIRET APIWebv3GuardJoin(
+		std::shared_ptr<user_info> &user,
+		std::shared_ptr<BILI_LOTTERYDATA> data
+	);
+	/**
+	 * @brief 参加PK抽奖
+	 *
+	 * 更新日期 11/17/2019
+	 *
+	 * @param user  用户IO
+	 * @param data  抽奖信息
+	 *
+	 * @return
+	 *   返回抽奖参与情况
+	 */
+	BILIRET APIWebv2PKJoin(
+		std::shared_ptr<user_info> &user,
+		std::shared_ptr<BILI_LOTTERYDATA> data
+	);
+	/**
+	 * @brief 参加弹幕抽奖
+	 *
+	 * 更新日期 11/17/2019 未验证
+	 *
+	 * @param user  用户IO
+	 * @param data  抽奖信息
+	 *
+	 * @return
+	 *   返回抽奖参与情况
+	 */
+	BILIRET APIWebv1DanmuJoin(
+		std::shared_ptr<user_info> &user,
+		std::shared_ptr<BILI_LOTTERYDATA> data
+	);
+	/**
+	 * @brief 参加天选抽奖
+	 *
+	 * 更新日期 11/17/2019
+	 *
+	 * 有两种形式：
+	 * - 关注 参数有 follow （目前参数无效）
+	 * - 送礼 参数有 gift_id|gift_num
+	 *
+	 * @param user  用户IO
+	 * @param data  抽奖信息
+	 *
+	 * @return
+	 *   返回抽奖参与情况
+	 */
+	BILIRET APIWebv1AnchorJoin(
 		std::shared_ptr<user_info> &user,
 		std::shared_ptr<BILI_LOTTERYDATA> data
 	);

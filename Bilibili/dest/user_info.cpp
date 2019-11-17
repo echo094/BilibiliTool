@@ -11,10 +11,12 @@ user_info::user_info() :
 	fileid(0),
 	uid(0),
 	conf_coin(0),
-	conf_lottery(0),
+	conf_gift(0),
 	conf_storm(0),
 	conf_guard(0),
 	conf_pk(0),
+	conf_danmu(0),
+	conf_anchor(0),
 	httpweb(new CHTTPPack()),
 	httpapp(new CHTTPPack("Mozilla/5.0 BiliDroid/5.43.0 (bbcallen@gmail.com)")) {
 	curlweb = curl_easy_init();
@@ -57,8 +59,8 @@ void user_info::ReadFileAccount(const std::string &key, const rapidjson::Value& 
 	if (data["Conf"].HasMember("CoinExchange")) {
 		conf_coin = data["Conf"]["CoinExchange"].GetUint();
 	}
-	if (data["Conf"].HasMember("Lottery")) {
-		conf_lottery = data["Conf"]["Lottery"].GetUint();
+	if (data["Conf"].HasMember("Gift")) {
+		conf_gift = data["Conf"]["Gift"].GetUint();
 	}
 	if (data["Conf"].HasMember("Storm")) {
 		conf_storm = data["Conf"]["Storm"].GetUint();
@@ -68,6 +70,12 @@ void user_info::ReadFileAccount(const std::string &key, const rapidjson::Value& 
 	}
 	if (data["Conf"].HasMember("PK")) {
 		conf_pk = data["Conf"]["PK"].GetUint();
+	}
+	if (data["Conf"].HasMember("Danmu")) {
+		conf_danmu = data["Conf"]["Danmu"].GetUint();
+	}
+	if (data["Conf"].HasMember("Anchor")) {
+		conf_anchor = data["Conf"]["Anchor"].GetUint();
 	}
 	// 账号
 	if (!data.HasMember("Username") || !data["Username"].IsString()) {
@@ -117,10 +125,12 @@ void user_info::WriteFileAccount(const std::string key, rapidjson::Document& doc
 	// 配置信息
 	Value conf(kObjectType);
 	conf.AddMember("CoinExchange", conf_coin, allocator);
-	conf.AddMember("Lottery", conf_lottery, allocator);
+	conf.AddMember("Gift", conf_gift, allocator);
 	conf.AddMember("Storm", conf_storm, allocator);
 	conf.AddMember("Guard", conf_guard, allocator);
 	conf.AddMember("PK", conf_pk, allocator);
+	conf.AddMember("Danmu", conf_danmu, allocator);
+	conf.AddMember("Anchor", conf_anchor, allocator);
 	data.AddMember("Conf", conf.Move(), allocator);
 	// 账号
 	data.AddMember(
@@ -176,9 +186,12 @@ bool user_info::CheckBanned(const std::string &msg) {
 
 void user_info::SetBanned() {
 	// 账户被封禁时取消所有抽奖
-	conf_lottery = 0;
+	conf_gift = 0;
 	conf_storm = 0;
 	conf_guard = 0;
+	conf_pk = 0;
+	conf_danmu = 0;
+	conf_anchor = 0;
 }
 
 // 生成随机访问ID

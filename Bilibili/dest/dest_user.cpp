@@ -273,7 +273,7 @@ int dest_user::HeartExp(int firsttime) {
 	return 0;
 }
 
-int dest_user::JoinLotteryALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
+int dest_user::JoinLotGift(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Gift Room: " << data->rrid << " ID: " << data->loid;
 	// 当前没有用户则不领取
 	if (!_usercount)
@@ -290,7 +290,7 @@ int dest_user::JoinLotteryALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	return 0;
 }
 
-int dest_user::JoinGuardALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
+int dest_user::JoinLotGuard(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Guard Room: " << data->rrid << " ID: " << data->loid;
 	// 当前没有用户则不领取
 	if (!_usercount)
@@ -307,7 +307,7 @@ int dest_user::JoinGuardALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	return 0;
 }
 
-int dest_user::JoinSpecialGiftALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
+int dest_user::JoinLotStorm(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] SpecialGift Room: " << data->rrid;
 	// 当前没有用户则不领取
 	if (!_usercount)
@@ -324,7 +324,7 @@ int dest_user::JoinSpecialGiftALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	return 0;
 }
 
-int dest_user::JoinPKLotteryALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
+int dest_user::JoinLotPk(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] PK Lottery Room: " << data->rrid;
 	// 当前没有用户则不领取
 	if (!_usercount)
@@ -338,6 +338,40 @@ int dest_user::JoinPKLotteryALL(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	);
 	task.detach();
 	
+	return 0;
+}
+
+int dest_user::JoinLotDanmu(std::shared_ptr<BILI_LOTTERYDATA> data) {
+	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Danmu Lottery Room: " << data->rrid;
+	// 当前没有用户则不领取
+	if (!_usercount)
+		return 0;
+
+	_threadcount++;
+	auto task = std::thread(std::bind(
+		&dest_user::Thread_ActDanmu,
+		this,
+		data)
+	);
+	task.detach();
+
+	return 0;
+}
+
+int dest_user::JoinLotAnchor(std::shared_ptr<BILI_LOTTERYDATA> data) {
+	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Anchor Lottery Room: " << data->rrid;
+	// 当前没有用户则不领取
+	if (!_usercount)
+		return 0;
+
+	_threadcount++;
+	auto task = std::thread(std::bind(
+		&dest_user::Thread_ActAnchor,
+		this,
+		data)
+	);
+	task.detach();
+
 	return 0;
 }
 
@@ -481,25 +515,11 @@ void dest_user::_ActHeartContinue(std::shared_ptr<user_info> &user) {
 int dest_user::_ActLottery(std::shared_ptr<user_info>& user, std::shared_ptr<BILI_LOTTERYDATA> data) {
 	BILIRET bret;
 	int count;
-	if (user->conf_lottery == 1) {
+	if (user->conf_gift == 1) {
 		// 产生访问记录
 		apibl::APIWebv1RoomEntry(user, data->rrid);
-		// 网页端最多尝试三次
-		count = 2;
-		bret = apibl::APIWebv3SmallTV(user, data);
-		while ((bret != BILIRET::NOFAULT) && count) {
-			Sleep(1000);
-			bret = apibl::APIWebv3SmallTV(user, data);
-			count--;
-		}
-	}
-	// 手机端需要 time_wait 倒计时结束才能抽奖
-	if (user->conf_lottery == 2) {
-		// 产生访问记录
-		apibl::APIAndv1RoomEntry(user, data->rrid);
-		// 调用客户端API领取
-		apibl::APIAndv4SmallTV(user, data);
-		return 0;
+		// 网页端API
+		apibl::APIWebv5SmalltvJoin(user, data);
 	}
 	return 0;
 }
@@ -509,15 +529,7 @@ int dest_user::_ActGuard(std::shared_ptr<user_info>& user, std::shared_ptr<BILI_
 		// 产生访问记录
 		apibl::APIWebv1RoomEntry(user, data->rrid);
 		// 网页端API
-		apibl::APIWebv2LotteryJoin(user, data);
-		return 0;
-	}
-	if (user->conf_guard == 2) {
-		// 产生访问记录
-		apibl::APIAndv1RoomEntry(user, data->rrid);
-		// 调用客户端API领取
-		apibl::APIAndv2LotteryJoin(user, data);
-		return 0;
+		apibl::APIWebv3GuardJoin(user, data);
 	}
 	return 0;
 }
@@ -529,14 +541,6 @@ int dest_user::_ActStorm(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_
 		apibl::APIWebv1RoomEntry(user, data->rrid);
 		// 网页端API
 		apibl::APIWebv1StormJoin(user, data, "", "");
-		return 0;
-	}
-	if (user->conf_storm == 2) {
-		// 产生访问记录
-		apibl::APIAndv1RoomEntry(user, data->rrid);
-		// 调用客户端API领取
-		apibl::APIAndv1StormJoin(user, data);
-		return 0;
 	}
 	return 0;
 }
@@ -546,23 +550,37 @@ int dest_user::_ActPK(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOT
 		// 产生访问记录
 		apibl::APIWebv1RoomEntry(user, data->rrid);
 		// 网页端API
-		apibl::APIWebv1PKJOIN(user, data);
-		return 0;
+		apibl::APIWebv2PKJoin(user, data);
 	}
-	if (user->conf_pk == 2) {
+	return 0;
+}
+
+int dest_user::_ActDanmu(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data) {
+	if (user->conf_danmu == 1) {
 		// 产生访问记录
-		apibl::APIAndv1RoomEntry(user, data->rrid);
-		// 调用客户端API领取
-		apibl::APIAndv1PKJOIN(user, data);
-		return 0;
+		apibl::APIWebv1RoomEntry(user, data->rrid);
+		// 网页端API
+		apibl::APIWebv1DanmuJoin(user, data);
+	}
+	return 0;
+}
+
+int dest_user::_ActAnchor(std::shared_ptr<user_info> &user, std::shared_ptr<BILI_LOTTERYDATA> data) {
+	if (user->conf_anchor == 1) {
+		// 产生访问记录
+		apibl::APIWebv1RoomEntry(user, data->rrid);
+		// 网页端API
+		apibl::APIWebv1AnchorJoin(user, data);
 	}
 	return 0;
 }
 
 void dest_user::Thread_ActLottery(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	// 等待领取
-	BOOST_LOG_SEV(g_logger::get(), trace) << "[UserList] Thread join gift: " << data->loid;
-	Sleep(_GetRand(5000, 5000));
+	BOOST_LOG_SEV(g_logger::get(), trace) << "[UserList] Thread join gift: " << data->loid; 
+	int wait = data->time_get - toollib::GetTimeStamp();
+	wait = wait < 0 ? 0 : wait * 1000;
+	Sleep(_GetRand(wait + 5000, 5000));
 	// 领取为防止冲突 同一时间只能有一个用户在领取
 	// 在同一抽奖的两次抽奖之间增加间隔
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
@@ -581,7 +599,9 @@ void dest_user::Thread_ActLottery(std::shared_ptr<BILI_LOTTERYDATA> data) {
 void dest_user::Thread_ActGuard(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	// 等待领取
 	BOOST_LOG_SEV(g_logger::get(), trace) << "[UserList] Thread join guard: " << data->loid;
-	Sleep(_GetRand(5000, 5000));
+	int wait = data->time_get - toollib::GetTimeStamp();
+	wait = wait < 0 ? 0 : wait * 1000;
+	Sleep(_GetRand(wait + 5000, 5000));
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
 		if (!(*itor)->islogin)
 			continue;
@@ -598,7 +618,6 @@ void dest_user::Thread_ActGuard(std::shared_ptr<BILI_LOTTERYDATA> data) {
 void dest_user::Thread_ActStorm(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	// 等待领取
 	BOOST_LOG_SEV(g_logger::get(), trace) << "[UserList] Thread join storm: " << data->loid;
-	// Sleep(_GetRand(8000, 4000));
 	// 领取为防止冲突 同一时间只能有一个用户在领取
 	// 在同一抽奖的两次抽奖之间增加间隔
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
@@ -617,7 +636,9 @@ void dest_user::Thread_ActStorm(std::shared_ptr<BILI_LOTTERYDATA> data) {
 void dest_user::Thread_ActPK(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	// 等待领取
 	BOOST_LOG_SEV(g_logger::get(), trace) << "[UserList] Thread join pk: " << data->loid;
-	Sleep(_GetRand(5000, 5000));
+	int wait = data->time_get - toollib::GetTimeStamp();
+	wait = wait < 0 ? 0 : wait * 1000;
+	Sleep(_GetRand(wait + 5000, 5000));
 	// 领取为防止冲突 同一时间只能有一个用户在领取
 	// 在同一抽奖的两次抽奖之间增加间隔
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
@@ -627,6 +648,48 @@ void dest_user::Thread_ActPK(std::shared_ptr<BILI_LOTTERYDATA> data) {
 		{
 			boost::unique_lock<boost::shared_mutex> m(rwmutex_);
 			_ActPK(*itor, data);
+		}
+	}
+	// 退出线程
+	_threadcount--;
+}
+
+void dest_user::Thread_ActDanmu(std::shared_ptr<BILI_LOTTERYDATA> data) {
+	// 等待领取
+	BOOST_LOG_SEV(g_logger::get(), trace) << "[UserList] Thread join danmu: " << data->loid;
+	int wait = data->time_get - toollib::GetTimeStamp();
+	wait = wait < 0 ? 0 : wait * 1000;
+	Sleep(_GetRand(wait + 5000, 5000));
+	// 领取为防止冲突 同一时间只能有一个用户在领取
+	// 在同一抽奖的两次抽奖之间增加间隔
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
+		if (!(*itor)->islogin)
+			continue;
+		Sleep(_GetRand(1000, 1500));
+		{
+			boost::unique_lock<boost::shared_mutex> m(rwmutex_);
+			_ActDanmu(*itor, data);
+		}
+	}
+	// 退出线程
+	_threadcount--;
+}
+
+void dest_user::Thread_ActAnchor(std::shared_ptr<BILI_LOTTERYDATA> data) {
+	// 等待领取
+	BOOST_LOG_SEV(g_logger::get(), trace) << "[UserList] Thread join anchor: " << data->loid;
+	int wait = data->time_get - toollib::GetTimeStamp();
+	wait = wait < 0 ? 0 : wait * 1000;
+	Sleep(_GetRand(wait + 5000, 5000));
+	// 领取为防止冲突 同一时间只能有一个用户在领取
+	// 在同一抽奖的两次抽奖之间增加间隔
+	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
+		if (!(*itor)->islogin)
+			continue;
+		Sleep(_GetRand(1000, 1500));
+		{
+			boost::unique_lock<boost::shared_mutex> m(rwmutex_);
+			_ActAnchor(*itor, data);
 		}
 	}
 	// 退出线程

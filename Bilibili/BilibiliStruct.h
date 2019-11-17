@@ -52,28 +52,70 @@ typedef struct _MSG_INFO{
 }MSG_INFO;
 
 typedef struct _BILI_LOTTERYDATA {
-	// 房间短ID
+	/**
+	 * @brief 房间短ID
+	 */
 	int srid = 0;
-	// 房间真实ID
+	/**
+	 * @brief 房间真实ID
+	 */
 	int rrid = 0;
-	// 事件编号
+	/**
+	 * @brief 事件编号
+	 */
 	long long loid = 0;
-	// 开始时间
+	/**
+	 * @brief 事件开始时间
+	 */
 	time_t time_start = 0;
-	// 领取时间
+	/**
+	 * @brief 事件可参与时间
+	 */
 	time_t time_get = 0;
-	// 失效时间
+	/**
+	 * @brief 事件结束时间
+	 *
+	 * 节奏风暴会提前结束
+	 *
+	 */
 	time_t time_end = 0;
-	// 事件类型
-	// 抽奖为礼物编号 网页API统一为 Gift
-	// 风暴为 storm 实际没用
-	// 亲密为 guard
-	// 大乱斗为 pk 实际没用
-	// 弹幕为 danmu 实际没用
-	// 天选为 anchor 实际没用
+	/**
+	 * @brief 事件类型
+	 *
+	 * - 风暴 storm
+	 * - 礼物 礼物的type
+	 * - 守护 guard
+	 * - PK   pk
+	 * - 弹幕 danmu
+	 * - 天选 anchor
+	 *
+	 */
 	std::string type;
-	// 额外记录的数据 守护类型或奖品数量
+	/**
+	 * @brief 额外记录的数量数据
+	 *
+	 * - 守护 privilege_type
+	 * - 弹幕 award_num
+	 * - 天选 award_num
+	 *
+	 */
+	// 
 	unsigned exinfo = 0;
-	// 额外记录的抽奖信息 名称或奖品
+	/**
+	 * @brief 额外记录的抽奖信息 名称或奖品
+	 *
+	 * - 礼物 thank_text
+	 * - 弹幕 award_name
+	 * - 天选 award_name
+	 *
+	 */
 	std::string title;
+	/**
+	 * @brief 天选抽奖所需送的礼物编号
+	 */
+	unsigned gift_id = 0;
+	/**
+	 * @brief 天选抽奖所需送的礼物数量
+	 */
+	unsigned gift_num = 0;
 }BILI_LOTTERYDATA;

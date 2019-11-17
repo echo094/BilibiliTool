@@ -578,6 +578,8 @@ int event_dmmsg::ParseLotAnchor(rapidjson::Value & doc, const unsigned room) {
 	data->type = "anchor";
 	data->title = doc["data"]["award_name"].GetString();
 	data->exinfo = doc["data"]["award_num"].GetUint();
+	data->gift_id = doc["data"]["gift_id"].GetUint();
+	data->gift_num = doc["data"]["gift_num"].GetUint();
 	event_base::post_lottery_hidden(MSG_LOT_ANCHOR, data);
 	return 0;
 }
