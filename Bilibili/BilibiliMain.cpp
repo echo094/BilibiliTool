@@ -79,8 +79,7 @@ int CBilibiliMain::Run() {
 		std::bind(
 			&CBilibiliMain::post_msg_act,
 			this,
-			std::placeholders::_1,
-			std::placeholders::_2
+			std::placeholders::_1
 		));
 
 	_apidm->set_event_room(
@@ -123,13 +122,13 @@ void CBilibiliMain::post_msg_room(unsigned msg, unsigned rrid, unsigned opt) {
 	);
 }
 
-void CBilibiliMain::post_msg_act(unsigned msg, std::shared_ptr<BILI_LOTTERYDATA> data) {
+void CBilibiliMain::post_msg_act(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	boost::asio::post(
 		io_context_,
 		boost::bind(
 			&CBilibiliMain::ProcessMSGAct,
 			this,
-			msg,
+			data->cmd,
 			data
 		)
 	);
@@ -348,8 +347,6 @@ int CBilibiliMain::StopMonitorALL() {
 		_dmsource = nullptr;
 
 		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Monitor stopped.";
-		ret = _userlist->WaitActThreadStop();
-		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] User Thread Clear.";
 	}
 	if (curmode == TOOL_EVENT::GET_HIDEN_GIFT) {
 		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Closing socket threads...";
@@ -363,8 +360,6 @@ int CBilibiliMain::StopMonitorALL() {
 		_dmsource = nullptr;
 
 		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] Monitor stopped.";
-		ret = _userlist->WaitActThreadStop();
-		BOOST_LOG_SEV(g_logger::get(), info) << "[Main] User Thread Clear.";
 	}
 	curmode = TOOL_EVENT::STOP;
 
@@ -566,7 +561,7 @@ int CBilibiliMain::CheckLotGift(std::shared_ptr<BILI_LOTTERYDATA> data)
 		if (isSkip()) {
 			continue;
 		}
-		_userlist->JoinLotGift(data);
+		_userlist->JoinLottery(data);
 	}
 	return 0;
 }
@@ -599,7 +594,7 @@ int CBilibiliMain::CheckLotGuard(std::shared_ptr<BILI_LOTTERYDATA> data)
 		if (isSkip()) {
 			continue;
 		}
-		_userlist->JoinLotGuard(data);
+		_userlist->JoinLottery(data);
 	}
 
 	return 0;
@@ -617,7 +612,7 @@ int CBilibiliMain::JoinLotGuard(std::shared_ptr<BILI_LOTTERYDATA> data)
 	if (isSkip()) {
 		return 0;
 	}
-	_userlist->JoinLotGuard(data);
+	_userlist->JoinLottery(data);
 
 	return 0;
 }
@@ -635,7 +630,7 @@ int CBilibiliMain::JoinLotStorm(std::shared_ptr<BILI_LOTTERYDATA> data)
 	if (isSkip()) {
 		return 0;
 	}
-	_userlist->JoinLotStorm(data);
+	_userlist->JoinLottery(data);
 
 	return 0;
 }
@@ -651,7 +646,7 @@ int CBilibiliMain::JoinLotPK(std::shared_ptr<BILI_LOTTERYDATA> data)
 	if (isSkip()) {
 		return 0;
 	}
-	_userlist->JoinLotPk(data);
+	_userlist->JoinLottery(data);
 
 	return 0;
 }
@@ -669,7 +664,7 @@ int CBilibiliMain::JoinLotDanmu(std::shared_ptr<BILI_LOTTERYDATA> data)
 	if (isSkip()) {
 		return 0;
 	}
-	_userlist->JoinLotDanmu(data);
+	_userlist->JoinLottery(data);
 
 	return 0;
 }
@@ -693,7 +688,7 @@ int CBilibiliMain::JoinLotAnchor(std::shared_ptr<BILI_LOTTERYDATA> data)
 	if (data->gift_id) {
 		return 0;
 	}
-	_userlist->JoinLotAnchor(data);
+	_userlist->JoinLottery(data);
 
 	return 0;
 }

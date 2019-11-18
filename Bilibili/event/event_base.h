@@ -3,22 +3,9 @@
 #include <map>
 #include "BilibiliStruct.h"
 
-enum {
-	MSG_NOTICE_GIFT = 612,
-	MSG_NOTICE_GUARD,
-	MSG_LOT_GUARD,
-	MSG_LOT_STORM,
-	MSG_LOT_PK,
-	MSG_LOT_DANMU,
-	MSG_LOT_ANCHOR,
-	MSG_CHANGEROOM1,
-	MSG_CHANGEROOM2,
-	MSG_CLOSEROOM
-};
-
 class event_base {
 private:
-	typedef std::function<void(unsigned, std::shared_ptr<BILI_LOTTERYDATA>)> event_act;
+	typedef std::function<void(std::shared_ptr<BILI_LOTTERYDATA>)> event_act;
 	typedef std::function<void(unsigned, unsigned, unsigned)> event_room;
 public:
 	event_base() :
@@ -51,11 +38,10 @@ protected:
 	 *
 	 * 包括 节奏风暴|舰长提督|PK
 	 *
-	 * @param type  消息类型
 	 * @param data  抽奖信息
 	 *
 	 */
-	void post_lottery_hidden(unsigned type, std::shared_ptr<BILI_LOTTERYDATA> data);
+	void post_lottery_hidden(std::shared_ptr<BILI_LOTTERYDATA> data);
 	void post_close_event(unsigned rrid, unsigned opt);
 	void post_close_msg(unsigned rrid, unsigned opt);
 	void post_open_msg(unsigned rrid, unsigned opt);

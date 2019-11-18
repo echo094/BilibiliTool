@@ -41,7 +41,7 @@ public:
 	// 房间消息回调
 	void post_msg_room(unsigned msg, unsigned rrid, unsigned opt);
 	// 活动消息回调
-	void post_msg_act(unsigned msg, std::shared_ptr<BILI_LOTTERYDATA> data);
+	void post_msg_act(std::shared_ptr<BILI_LOTTERYDATA> data);
 
 private:
 	// Start heart timer

@@ -12,9 +12,25 @@ conf_pk      大乱斗抽奖
 */
 #pragma once
 #include <memory>
+#include <queue>
 #include <string>
+#include <boost/asio.hpp>
 #include "rapidjson/document.h"
 #include "utility/httpex.h"
+#include "BilibiliStruct.h"
+
+
+/**
+ * @brief 任务的待执行队列 开始时间早的靠前
+ */
+struct task_cmp {
+	bool operator ()(
+		const std::shared_ptr<BILI_LOTTERYDATA> &a, 
+		const std::shared_ptr<BILI_LOTTERYDATA> &b)
+	{
+		return a->time_get > b->time_get;
+	}
+};
 
 class user_info {
 public:
@@ -70,4 +86,61 @@ public:
 	bool GetToken();
 	// 获取 Cookie bili_jct 的失效时间
 	int GetExpiredTime();
+	/**
+	 * @brief 将抽奖任务通过IO线程投递到任务队列
+	 *
+	 * @param lot   抽奖信息
+	 *
+	 */
+	void post_task(std::shared_ptr<BILI_LOTTERYDATA> lot);
+	/**
+	 * @brief 通过IO线程清空抽奖列表
+	 */
+	void clear_task();
+
+private:
+	/**
+	 * @brief 设置定时器 等待时间1秒
+	 */
+	void start_timer();
+	/**
+	 * @brief 定时器回调函数
+	 *
+	 * @param ec    定时器错误码
+	 *
+	 */
+	void on_timer(boost::system::error_code ec);
+	/**
+	 * @brief 执行抽奖
+	 *
+	 * @param data  抽奖信息
+	 *
+	 */
+	void do_task(const std::shared_ptr<BILI_LOTTERYDATA> &data);
+
+private:
+	/**
+	 * @brief 当前用户的IO
+	 */
+	boost::asio::io_context ioc_;
+	/**
+	 * @brief 定时器 定期检查事件队列
+	 */
+	boost::asio::deadline_timer timer_;
+	/**
+	 * @brief Maintenance worker
+	 */
+	std::shared_ptr<boost::asio::io_context::work> worker_;
+	/**
+	 * @brief IO工作线程
+	 */
+	std::shared_ptr<std::thread> thread_;
+	/**
+	 * @brief 任务队列
+	 */
+	std::priority_queue<
+		std::shared_ptr<BILI_LOTTERYDATA>,
+		std::vector<std::shared_ptr<BILI_LOTTERYDATA>>,
+		task_cmp
+	> tasks_;
 };

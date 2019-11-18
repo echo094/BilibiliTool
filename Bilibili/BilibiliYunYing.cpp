@@ -114,6 +114,7 @@ void lottery_list::_UpdateLotteryList(rapidjson::Value &infoArray, std::shared_p
 			continue;
 		}
 		std::shared_ptr<BILI_LOTTERYDATA> pdata(new BILI_LOTTERYDATA);
+		pdata->cmd = MSG_LOT_GIFT;
 		pdata->srid = data->srid;
 		pdata->rrid = data->rrid;
 		pdata->loid = tmpid;
@@ -214,6 +215,7 @@ void guard_list::_UpdateLotteryList(rapidjson::Value &infoArray, std::shared_ptr
 			continue;
 		}
 		std::shared_ptr<BILI_LOTTERYDATA> pdata(new BILI_LOTTERYDATA);
+		pdata->cmd = MSG_LOT_GUARD;
 		pdata->srid = data->srid;
 		pdata->rrid = data->rrid;
 		pdata->loid = tloid;

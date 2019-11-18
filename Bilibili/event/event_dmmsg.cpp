@@ -477,6 +477,7 @@ int event_dmmsg::ParseLotStorm(rapidjson::Value &doc, const unsigned room) {
 		}
 		std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
 		auto curtime = toollib::GetTimeStamp();
+		data->cmd = MSG_LOT_STORM;
 		data->srid = room;
 		data->rrid = room;
 		data->loid = id;
@@ -490,9 +491,9 @@ int event_dmmsg::ParseLotStorm(rapidjson::Value &doc, const unsigned room) {
 		if (doc["data"]["39"].HasMember("content") && doc["data"]["39"]["content"].IsString()) {
 			data->title = doc["data"]["39"]["content"].GetString();
 		}
-		BOOST_LOG_SEV(g_logger::get(), trace) << "[DMMSG] storm " << room
+		BOOST_LOG_SEV(g_logger::get(), info) << "[DMMSG] storm " << room
 			<< " num:" << data->exinfo << " content:" << data->title;
-		event_base::post_lottery_hidden(MSG_LOT_STORM, data);
+		event_base::post_lottery_hidden(data);
 		return 0;
 	}
 	if (tstr == "end") {
@@ -506,6 +507,7 @@ int event_dmmsg::ParseLotGuard(rapidjson::Value &doc, const unsigned room) {
 	if (btype != 1) {
 		std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
 		auto curtime = toollib::GetTimeStamp();
+		data->cmd = MSG_LOT_GUARD;
 		data->srid = doc["data"]["room_id"].GetInt();
 		data->rrid = room;
 		data->loid = doc["data"]["id"].GetInt();
@@ -514,7 +516,9 @@ int event_dmmsg::ParseLotGuard(rapidjson::Value &doc, const unsigned room) {
 		data->time_get = curtime + doc["data"]["lottery"]["time_wait"].GetInt();
 		data->type = doc["data"]["lottery"]["keyword"].GetString();
 		data->exinfo = btype;
-		event_base::post_lottery_hidden(MSG_LOT_GUARD, data);
+		BOOST_LOG_SEV(g_logger::get(), info) << "[DMMSG] guard " << room
+			<< " id: " << data->loid << " type:" << data->exinfo;
+		event_base::post_lottery_hidden(data);
 	}
 	return 0;
 }
@@ -522,6 +526,7 @@ int event_dmmsg::ParseLotGuard(rapidjson::Value &doc, const unsigned room) {
 int event_dmmsg::ParseLotPK(rapidjson::Value & doc, const unsigned room) {
 	std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
 	auto curtime = toollib::GetTimeStamp();
+	data->cmd = MSG_LOT_PK;
 	data->srid = doc["data"]["room_id"].GetInt();
 	data->rrid = room;
 	data->loid = doc["data"]["pk_id"].GetInt();
@@ -529,13 +534,16 @@ int event_dmmsg::ParseLotPK(rapidjson::Value & doc, const unsigned room) {
 	data->time_start = data->time_end - doc["data"]["max_time"].GetInt();
 	data->time_get = curtime;
 	data->type = "pk";
-	event_base::post_lottery_hidden(MSG_LOT_PK, data);
+	BOOST_LOG_SEV(g_logger::get(), info) << "[DMMSG] pk " << room
+		<< " id: " << data->loid;
+	event_base::post_lottery_hidden(data);
 	return 0;
 }
 
 int event_dmmsg::ParseLotDanmu(rapidjson::Value & doc, const unsigned room) {
 	std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
 	auto curtime = toollib::GetTimeStamp();
+	data->cmd = MSG_LOT_DANMU;
 	data->srid = doc["data"]["room_id"].GetInt();
 	data->rrid = room;
 	data->loid = doc["data"]["id"].GetInt();
@@ -545,13 +553,16 @@ int event_dmmsg::ParseLotDanmu(rapidjson::Value & doc, const unsigned room) {
 	data->type = "danmu";
 	data->title = doc["data"]["award_name"].GetString();
 	data->exinfo = doc["data"]["award_num"].GetUint();
-	event_base::post_lottery_hidden(MSG_LOT_DANMU, data);
+	BOOST_LOG_SEV(g_logger::get(), info) << "[DMMSG] danmu " << room
+		<< " id: " << data->loid;
+	event_base::post_lottery_hidden(data);
 	return 0;
 }
 
 int event_dmmsg::ParseLotAnchor(rapidjson::Value & doc, const unsigned room) {
 	std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
 	auto curtime = toollib::GetTimeStamp();
+	data->cmd = MSG_LOT_ANCHOR;
 	data->srid = doc["data"]["room_id"].GetInt();
 	data->rrid = room;
 	data->loid = doc["data"]["id"].GetInt();
@@ -563,6 +574,8 @@ int event_dmmsg::ParseLotAnchor(rapidjson::Value & doc, const unsigned room) {
 	data->exinfo = doc["data"]["award_num"].GetUint();
 	data->gift_id = doc["data"]["gift_id"].GetUint();
 	data->gift_num = doc["data"]["gift_num"].GetUint();
-	event_base::post_lottery_hidden(MSG_LOT_ANCHOR, data);
+	BOOST_LOG_SEV(g_logger::get(), info) << "[DMMSG] anchor " << room
+		<< " id: " << data->loid;
+	event_base::post_lottery_hidden(data);
 	return 0;
 }

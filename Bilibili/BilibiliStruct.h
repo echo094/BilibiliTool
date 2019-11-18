@@ -22,7 +22,7 @@ enum class BILIRET {
 	// 查询结果为0
 	NORESULT,
 	ROOM_BLOCK,
-	JOINEVENT_FAILED,
+	JOIN_AGAIN,
 
 	LOGIN_NAMEWRONG = 12,
 	LOGIN_PASSWORDWRONG,
@@ -34,6 +34,20 @@ enum class BILIRET {
 	RESCODE_ERROR,
 	JSON_ERROR,
 	HTMLTEXT_ERROR
+};
+
+enum {
+	MSG_NOTICE_GIFT = 1,
+	MSG_NOTICE_GUARD,
+	MSG_LOT_GIFT,
+	MSG_LOT_GUARD,
+	MSG_LOT_STORM,
+	MSG_LOT_PK,
+	MSG_LOT_DANMU,
+	MSG_LOT_ANCHOR,
+	MSG_CHANGEROOM1,
+	MSG_CHANGEROOM2,
+	MSG_CLOSEROOM
 };
 
 typedef struct _MSG_INFO{
@@ -51,7 +65,19 @@ typedef struct _MSG_INFO{
 
 }MSG_INFO;
 
-typedef struct _BILI_LOTTERYDATA {
+struct BILI_LOTTERYDATA {
+	/**
+	 * @brief 数据包计数
+	 */
+	static unsigned count;
+	/**
+	 * @brief 剩余数据包计数
+	 */
+	static unsigned remain;
+	/**
+	 * @brief 抽奖类型
+	 */
+	int cmd = 0;
 	/**
 	 * @brief 房间短ID
 	 */
@@ -118,4 +144,7 @@ typedef struct _BILI_LOTTERYDATA {
 	 * @brief 天选抽奖所需送的礼物数量
 	 */
 	unsigned gift_num = 0;
-}BILI_LOTTERYDATA;
+
+	BILI_LOTTERYDATA();
+	~BILI_LOTTERYDATA();
+};

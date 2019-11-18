@@ -2,7 +2,7 @@
 
 #include <fstream>
 #include <sstream>
-#include "rapidjson/document.h"
+#include <rapidjson/document.h>
 
 #include "logger/log.h"
 #include "utility/md5.h"
@@ -132,11 +132,11 @@ BILIRET apibl::APIWebTaskInfo(const std::shared_ptr<user_info>& user) {
 		|| !doc.HasMember("data") || !doc["data"].IsObject()) {
 		return BILIRET::JSON_ERROR;
 	}
-	auto obj = doc["data"].GetObject();
+	auto obj = doc["data"].GetObjectW();
 	if (!obj.HasMember("double_watch_info") || !obj["double_watch_info"].IsObject()) {
 		return BILIRET::JSON_ERROR;
 	}
-	obj = obj["double_watch_info"].GetObject();
+	obj = obj["double_watch_info"].GetObjectW();
 	if (!obj.HasMember("status") || !obj["status"].IsInt()) {
 		return BILIRET::JSON_ERROR;
 	}
@@ -435,7 +435,7 @@ BILIRET apibl::APIWebv2GiftBag(const std::shared_ptr<user_info>& user) {
 	return BILIRET::NOFAULT;
 }
 
-BILIRET apibl::APIWebv1RoomEntry(const std::shared_ptr<user_info>& user, unsigned room) {
+BILIRET apibl::APIWebv1RoomEntry(const user_info *user, unsigned room) {
 	user->httpweb->url = URL_LIVEAPI_HEAD + "/room/v1/Room/room_entry_action";
 	std::ostringstream oss;
 	oss << "room_id=" << room
@@ -460,7 +460,7 @@ BILIRET apibl::APIWebv1RoomEntry(const std::shared_ptr<user_info>& user, unsigne
 }
 
 BILIRET apibl::APIWebv1StormJoin(
-	std::shared_ptr<user_info> &user,
+	user_info *user,
 	std::shared_ptr<BILI_LOTTERYDATA> data,
 	std::string code,
 	std::string token
@@ -498,16 +498,20 @@ BILIRET apibl::APIWebv1StormJoin(
 	// 429需要验证码 400未抽中或已过期
 	if (ret) {
 		msg = doc["msg"].GetString();
-		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << user->fileid << "] "
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
 			<< "APIWebv1StormJoin: " << ret << " " << msg;
-		// 检查是否被封禁
 		if (ret == 400) {
 			if (user->CheckBanned(msg)) {
+				// 检查是否被封禁
 				return BILIRET::NOFAULT;
 			}
+			if (msg.find(u8"你错过了奖励") != -1) {
+				// 未抽中 可多次参与抽奖
+				return BILIRET::JOIN_AGAIN;
+			}
 		}
-		// 可多次参与抽奖
-		return BILIRET::JOINEVENT_FAILED;
+		// 抽奖过期或其它未知情况
+		return BILIRET::NOFAULT;
 	}
 	// 抽中的返回值为0
 	msg = doc["data"]["mobile_content"].GetString();
@@ -518,7 +522,7 @@ BILIRET apibl::APIWebv1StormJoin(
 }
 
 BILIRET apibl::APIWebv5SmalltvJoin(
-	std::shared_ptr<user_info> &user,
+	user_info *user,
 	std::shared_ptr<BILI_LOTTERYDATA> data
 ) {
 	user->httpweb->url = URL_LIVEAPI_HEAD + "/xlive/lottery-interface/v5/smalltv/join";
@@ -569,7 +573,10 @@ BILIRET apibl::APIWebv5SmalltvJoin(
 	return BILIRET::NOFAULT;
 }
 
-BILIRET apibl::APIWebv3GuardJoin(std::shared_ptr<user_info>& user, std::shared_ptr<BILI_LOTTERYDATA> data) {
+BILIRET apibl::APIWebv3GuardJoin(
+	user_info *user,
+	std::shared_ptr<BILI_LOTTERYDATA> data
+) {
 	user->httpweb->url = URL_LIVEAPI_HEAD + "/xlive/lottery-interface/v3/guard/join";
 	std::ostringstream oss;
 	oss << "id=" << data->loid
@@ -615,7 +622,7 @@ BILIRET apibl::APIWebv3GuardJoin(std::shared_ptr<user_info>& user, std::shared_p
 }
 
 BILIRET apibl::APIWebv2PKJoin(
-	std::shared_ptr<user_info> &user,
+	user_info *user,
 	std::shared_ptr<BILI_LOTTERYDATA> data
 ) {
 	user->httpweb->url = URL_LIVEAPI_HEAD + "/xlive/lottery-interface/v2/pk/join";
@@ -667,7 +674,7 @@ BILIRET apibl::APIWebv2PKJoin(
 }
 
 BILIRET apibl::APIWebv1DanmuJoin(
-	std::shared_ptr<user_info> &user,
+	user_info *user,
 	std::shared_ptr<BILI_LOTTERYDATA> data
 ) {
 	user->httpweb->url = URL_LIVEAPI_HEAD + "/xlive/lottery-interface/v1/Danmu/Join";
@@ -696,7 +703,7 @@ BILIRET apibl::APIWebv1DanmuJoin(
 }
 
 BILIRET apibl::APIWebv1AnchorJoin(
-	std::shared_ptr<user_info> &user,
+	user_info *user,
 	std::shared_ptr<BILI_LOTTERYDATA> data
 ) {
 	user->httpweb->url = URL_LIVEAPI_HEAD + "/xlive/lottery-interface/v1/Anchor/Join";
@@ -979,13 +986,18 @@ BILIRET apibl::APIAndv1StormJoin(
 		msg = doc["msg"].GetString();
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
 			<< "APIAndv1StormJoin: " << ret << " " << msg;
-		// 检查是否被封禁
 		if (ret == 400) {
 			if (user->CheckBanned(msg)) {
+				// 检查是否被封禁
 				return BILIRET::NOFAULT;
 			}
+			if (msg.find(u8"你错过了奖励") != -1) {
+				// 未抽中 可多次参与抽奖
+				return BILIRET::JOIN_AGAIN;
+			}
 		}
-		return BILIRET::JOINEVENT_FAILED;
+		// 抽奖过期或其它未知情况
+		return BILIRET::NOFAULT;
 	}
 	msg = doc["data"]["mobile_content"].GetString();
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "

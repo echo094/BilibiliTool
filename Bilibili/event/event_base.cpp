@@ -16,17 +16,16 @@ void event_base::connection_close(unsigned rrid, unsigned opt) {
 void event_base::post_lottery_pub(unsigned type, unsigned rrid) {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[EVENT] lottery pub room: " << rrid;
 	std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
+	data->cmd = type;
 	data->rrid = rrid;
 	if (event_act_) {
-		event_act_(type, data);
+		event_act_(data);
 	}
 }
 
-void event_base::post_lottery_hidden(unsigned type, std::shared_ptr<BILI_LOTTERYDATA> data) {
-	BOOST_LOG_SEV(g_logger::get(), info) << "[EVENT] lottery hidden room: " << data->rrid
-		<< " id: " << data->loid;
+void event_base::post_lottery_hidden(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	if (event_act_) {
-		event_act_(type, data);
+		event_act_(data);
 	}
 }
 

@@ -1,5 +1,7 @@
 ﻿#include "user_info.h"
 #include <cstdlib>
+#include <boost/bind.hpp>
+#include "api_bl.h" 
 #include "utility/base64.h"
 #include "utility/sslex.h"
 #include "utility/strconvert.h"
@@ -18,7 +20,10 @@ user_info::user_info() :
 	conf_danmu(0),
 	conf_anchor(0),
 	httpweb(new CHTTPPack()),
-	httpapp(new CHTTPPack("Mozilla/5.0 BiliDroid/5.43.0 (bbcallen@gmail.com)")) {
+	httpapp(new CHTTPPack("Mozilla/5.0 BiliDroid/5.43.0 (bbcallen@gmail.com)")),
+	ioc_(),
+	timer_(ioc_)
+{
 	curlweb = curl_easy_init();
 	curlapp = curl_easy_init();
 	httpweb->AddHeaderInf("Accept-Language: zh-CN,zh;q=0.8");
@@ -30,9 +35,22 @@ user_info::user_info() :
 	httpapp->AddHeaderInf("Display-ID: XZ843B78BAAB10F554BBD584271300E8DE86A-1560783638");
 	httpapp->AddHeaderInf("env: prod");
 	httpapp->AddHeaderInf("Connection: keep-alive");
+	// 启动用户IO
+	worker_ = std::make_shared< boost::asio::io_context::work>(ioc_);
+	start_timer();
+	thread_ = std::make_shared< std::thread>(
+		boost::bind(&boost::asio::io_service::run, &ioc_)
+		);
 }
 
 user_info::~user_info() {
+	// 停止用户IO
+	timer_.cancel();
+	clear_task();
+	worker_.reset();
+	thread_->join();
+	thread_.reset();
+	// 清理其它内容
 	curl_easy_cleanup(curlweb);
 	curlweb = nullptr;
 	curl_easy_cleanup(curlapp);
@@ -236,4 +254,103 @@ int user_info::GetExpiredTime() {
 		return 0;
 	}
 	return cktime;
+}
+
+void user_info::post_task(std::shared_ptr<BILI_LOTTERYDATA> lot)
+{
+	boost::asio::post(
+		ioc_,
+		[this, lot] {
+		BOOST_LOG_SEV(g_logger::get(), trace) << "[User] Push task type: " << lot->cmd;
+		this->tasks_.push(lot);
+	});
+}
+
+void user_info::clear_task()
+{
+	boost::asio::post(
+		ioc_,
+		[this] {
+		BOOST_LOG_SEV(g_logger::get(), trace) << "[User] Clear task. ";
+		while (this->tasks_.size()) {
+			this->tasks_.pop();
+		}
+	});
+}
+
+void user_info::start_timer()
+{
+	timer_.expires_from_now(boost::posix_time::seconds(1));
+	timer_.async_wait(
+		boost::bind(
+			&user_info::on_timer,
+			this,
+			boost::asio::placeholders::error
+		)
+	);
+}
+
+void user_info::on_timer(boost::system::error_code ec)
+{
+	if (ec) {
+		return;
+	}
+	// 检查任务列表
+	auto curtime = toollib::GetTimeStamp();
+	while (!tasks_.empty() && tasks_.top()->time_get < curtime) {
+		do_task(tasks_.top());
+		tasks_.pop();
+	}
+
+	start_timer();
+}
+
+void user_info::do_task(const std::shared_ptr<BILI_LOTTERYDATA>& data)
+{
+	BOOST_LOG_SEV(g_logger::get(), trace) << "[User] Do task type: " << data->cmd
+		<< " id: " << data->loid;
+	switch (data->cmd) {
+	case MSG_LOT_STORM: {
+		if (conf_storm == 1) {
+			apibl::APIWebv1RoomEntry(this, data->rrid);
+			apibl::APIWebv1StormJoin(this, data, "", "");
+		}
+		break;
+	}
+	case MSG_LOT_GIFT: {
+		if (conf_gift == 1) {
+			apibl::APIWebv1RoomEntry(this, data->rrid);
+			apibl::APIWebv5SmalltvJoin(this, data);
+		}
+		break;
+	}
+	case MSG_LOT_GUARD: {
+		if (conf_guard == 1) {
+			apibl::APIWebv1RoomEntry(this, data->rrid);
+			apibl::APIWebv3GuardJoin(this, data);
+		}
+		break;
+	}
+	case MSG_LOT_PK: {
+		if (conf_pk == 1) {
+			apibl::APIWebv1RoomEntry(this, data->rrid);
+			apibl::APIWebv2PKJoin(this, data);
+		}
+		break;
+	}
+	case MSG_LOT_DANMU: {
+		if (conf_danmu == 1) {
+			apibl::APIWebv1RoomEntry(this, data->rrid);
+			apibl::APIWebv1DanmuJoin(this, data);
+		}
+		break;
+	}
+	case MSG_LOT_ANCHOR: {
+		if (conf_anchor == 1) {
+			apibl::APIWebv1RoomEntry(this, data->rrid);
+			apibl::APIWebv1AnchorJoin(this, data);
+		}
+		break;
+	}
+	}
 }

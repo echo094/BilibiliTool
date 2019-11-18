@@ -60,13 +60,19 @@ namespace apibl {
 	 * @return
 	 *   返回抽奖参与情况
 	 */
-	BILIRET APIWebv1RoomEntry(const std::shared_ptr<user_info> &user, unsigned room);
+	BILIRET APIWebv1RoomEntry(const user_info *user, unsigned room);
 	/**
 	 * @brief 参加风暴抽奖
 	 *
 	 * 更新日期 11/17/2019
 	 *
 	 * 在未被拉黑时 一个抽奖可参与多次 直到抽奖结束或中奖
+	 * 领取成功时返回码为 0
+	 * 需要验证码时返回码为 429 待测试
+	 * 领取失败时返回码为 400 有多种情况
+	 * - 你错过了奖励，下次要更快一点哦~
+	 * - 节奏风暴抽奖过期
+	 * - 访问被拒绝
 	 *
 	 * @param user  用户IO
 	 * @param data  抽奖信息
@@ -77,7 +83,7 @@ namespace apibl {
 	 *   返回抽奖参与情况
 	 */
 	BILIRET APIWebv1StormJoin(
-		std::shared_ptr<user_info> &user,
+		user_info *user,
 		std::shared_ptr<BILI_LOTTERYDATA> data,
 		std::string code,
 		std::string token
@@ -98,7 +104,7 @@ namespace apibl {
 	 *   返回抽奖参与情况
 	 */
 	BILIRET APIWebv5SmalltvJoin(
-		std::shared_ptr<user_info> &user,
+		user_info *user,
 		std::shared_ptr<BILI_LOTTERYDATA> data
 	);
 	/**
@@ -113,7 +119,7 @@ namespace apibl {
 	 *   返回抽奖参与情况
 	 */
 	BILIRET APIWebv3GuardJoin(
-		std::shared_ptr<user_info> &user,
+		user_info *user,
 		std::shared_ptr<BILI_LOTTERYDATA> data
 	);
 	/**
@@ -128,7 +134,7 @@ namespace apibl {
 	 *   返回抽奖参与情况
 	 */
 	BILIRET APIWebv2PKJoin(
-		std::shared_ptr<user_info> &user,
+		user_info *user,
 		std::shared_ptr<BILI_LOTTERYDATA> data
 	);
 	/**
@@ -143,7 +149,7 @@ namespace apibl {
 	 *   返回抽奖参与情况
 	 */
 	BILIRET APIWebv1DanmuJoin(
-		std::shared_ptr<user_info> &user,
+		user_info *user,
 		std::shared_ptr<BILI_LOTTERYDATA> data
 	);
 	/**
@@ -162,7 +168,7 @@ namespace apibl {
 	 *   返回抽奖参与情况
 	 */
 	BILIRET APIWebv1AnchorJoin(
-		std::shared_ptr<user_info> &user,
+		user_info *user,
 		std::shared_ptr<BILI_LOTTERYDATA> data
 	);
 
