@@ -16,11 +16,11 @@
 
 对于`WebSocket`方式，使用下述JS收发数据（更新不频繁）：
 
-`s1.hdslb.com/bfs/static/player/live/loader/player-loader-1.8.5.min.js`
+`s1.hdslb.com/bfs/static/player/live/loader/player-loader-1.8.11.min.js`
 
 在脚本中通过`onMessageReply`调用消息处理函数，在该脚本中有一部分命令的处理函数，对于其它命令，调用下述文件中的方法处理（更新频繁）：
 
-`s1.hdslb.com/bfs/static/blive/blfe-live-room/static/js/3.d9acb99d72e30bf830d4.js`
+`s1.hdslb.com/bfs/static/blive/blfe-live-room/static/js/3.2e0c384af0227e790bb5.js`
 
 该方法处理消息后再将消息通过`onSocket`方法以`postMessage`的形式转发给`_oppositeWindow`的`_createCurrentWindowMessageHandler`，在下述文件中：
 
@@ -58,14 +58,14 @@
 
 ## 操作码
 
-| 操作码 | 发送方 | 协议版本 | sequence | 内容                                   |
-| ------ | ------ | -------- | -------- | -------------------------------------- |
-| 2      | 客户端 | 1        | 1        | 心跳包                                 |
-| 3      | 服务器 | 1        | 1        | 回应心跳包 内容为人气值                |
-| 5      | 服务器 | 0        | 0        | 未经压缩的JSON数据包                   |
-| 5      | 服务器 | 2        | 0        | 经过压缩的JSON数据包（包含一个或多个） |
-| 7      | 客户端 | 1        | 1        | 认证并加入房间                         |
-| 8      | 服务器 | 1        | 1        | 连接成功的回应包                       |
+| 操作码 | 发送方 | 协议版本 | sequence | 内容                                      |
+| ------ | ------ | -------- | -------- | ----------------------------------------- |
+| 2      | 客户端 | 1        | 1        | 心跳包                                    |
+| 3      | 服务器 | 1        | 1        | 回应心跳包 内容为人气值                   |
+| 5      | 服务器 | 0        | 0        | 未经压缩的JSON数据包                      |
+| 5      | 服务器 | 2        | 0        | 经过压缩的JSON数据包（包含一个或多个）    |
+| 7      | 客户端 | 1        | 1        | 认证并加入房间                            |
+| 8      | 服务器 | 1        | 1        | 连接成功的回应包 成功时内容为`{"code":0}` |
 
 
 
@@ -104,7 +104,7 @@
 
 
 
-## 有效指令(118)
+## 有效指令(112)
 
 
 
@@ -459,23 +459,21 @@
 
 
 
-#### GUARD_BUY
+#### USER_TOAST_MSG
 
-房间内船员购买消息。
+活跃时间：2019/09/30
+
+房间内用户购买舰队服务时。
 
 ```json
 {
-	"cmd": "GUARD_BUY",
+	"cmd": "USER_TOAST_MSG",
 	"data": {
-		"uid": 606066,
-		"username": "病理酱Alter",
+		"op_type": 1,
+		"uid": 24655455,
+		"username": "到底有莫得感情",
 		"guard_level": 3,
-		"num": 1,
-		"price": 198000,
-		"gift_id": 10003,
-		"gift_name": "舰长",
-		"start_time": 1540273959,
-		"end_time": 1540273959
+		"is_show": 0
 	}
 }
 ```
@@ -1892,88 +1890,34 @@
 
 
 
-### 活动相关(18)
+### 活动相关(22)
 
 
 
-#### DANMU_LOTTERY_START
+#### SPECIAL_GIFT
 
-添加日期：2019/07/21
-
-房间内消息，弹幕抽奖，出现在5440房间。
+房间内节奏风暴开始与结束消息。
 
 ```json
 {
-	"cmd": "DANMU_LOTTERY_START",
+	"cmd": "SPECIAL_GIFT",
 	"data": {
-		"asset_icon": "https://i0.hdslb.com/bfs/vc/126f25af295d42311b541177e5fb14a2f6d0012c.png",
-		"award_image": "https://i0.hdslb.com/bfs/live/mlive/1f54cd3893ab8c02f0230fd63d23d2b992b1fb4f.jpg",
-		"award_name": "哔哩哔哩限定PBT键帽",
-		"award_num": 1,
-		"current_time": 1563688999,
-		"danmu": "哔哩哔哩干杯",
-		"id": 1,
-		"max_time": 600,
-		"room_id": 5440,
-		"status": 1,
-		"time": 600,
-		"title": "弹幕抽奖"
+		"39": {
+			"action": "start",
+			"content": "可爱即正义~~",
+			"hadJoin": 0,
+			"id": "1664048596371",
+			"num": 1,
+			"storm_gif": "http://static.hdslb.com/live-static/live-room/images/gift-section/mobilegift/2/jiezou.gif?2017011901",
+			"time": 90
+		}
 	}
 }
 ```
 
 
 
-#### DANMU_LOTTERY_END
-
-添加日期：2019/07/21
-
-房间内消息，出现在5440房间。
-
-```json
-{
-	"cmd": "DANMU_LOTTERY_END",
-	"data": {
-		"id": 1,
-		"room_id": 5440
-	}
-}
-```
-
-
-
-#### DANMU_LOTTERY_AWARD(缺数据)
-
-
-
-#### GUARD_LOTTERY_START
-
-房间内登船活动开启消息。
-
-
-
-#### SCORE_CARD
-
-分数卡。
-
-```json
-{
-	"cmd": "SCORE_CARD",
-	"data": {
-		"start_time": 1552740607,
-		"end_time": 1552740667,
-		"now_time": 1552740607,
-		"gift_id": 30081,
-		"uid": 2232963,
-		"ruid": 1577804,
-		"id": 66
-	}
-}
-```
-
-
-
-#### RAFFLE_START(无处理)
+#### RAFFLE_START
 
 房间内活动抽奖开始消息，包括摩天大楼、周星、BLS道具。
 
@@ -2129,9 +2073,270 @@
 
 
 
-#### SPECIAL_GIFT
+#### GUARD_LOTTERY_START
 
-房间内节奏风暴开始与结束消息。
+房间内登船活动开启消息。
+
+```json
+{
+	"cmd": "GUARD_LOTTERY_START",
+	"data": {
+		"id": 1663877,
+		"link": "https://live.bilibili.com/1104745",
+		"lottery": {
+			"asset_animation_pic": "https://i0.hdslb.com/bfs/vc/ff2a28492970850ce73df0cc144f1766b222d471.gif",
+			"asset_icon": "https://i0.hdslb.com/bfs/vc/43f488e7c4dca5ba6fbdcb88f40052d56bf777d8.png",
+			"id": 1663877,
+			"keyword": "guard",
+			"mobile_animation_asset": "",
+			"mobile_display_mode": 2,
+			"mobile_static_asset": "",
+			"privilege_type": 3,
+			"sender": {
+				"face": "http://i2.hdslb.com/bfs/face/368fcc7bc5534c6dadd1c07ce95e1ffb77de5f7f.jpg",
+				"uid": 280512644,
+				"uname": "丶无雨"
+			},
+			"status": 1,
+			"thank_text": "恭喜<%丶无雨%>上任舰长",
+			"time": 1200,
+			"time_wait": 0,
+			"weight": 0
+		},
+		"payflow_id": "android_9d662076969bf28221_201911",
+		"privilege_type": 3,
+		"roomid": 1104745,
+		"type": "guard"
+	}
+}
+```
+
+
+
+#### DANMU_GIFT_LOTTERY_START
+
+添加日期：2019/10/13
+
+房间内消息，弹幕抽奖。
+
+```json
+{
+	"cmd": "DANMU_GIFT_LOTTERY_START",
+	"data": {
+		"asset_icon": "https://i0.hdslb.com/bfs/vc/126f25af295d42311b541177e5fb14a2f6d0012c.png",
+		"award_image": "http://i0.hdslb.com/bfs/live/1d7f90b938cc10bb211ba98aeb64abf696fef364.png",
+		"award_name": "OPPO Reno Ace手机",
+		"award_num": 1,
+		"cur_gift_num": 0,
+		"current_time": 1570969184,
+		"danmu": "RenoAce超级玩家，一机致胜！",
+		"gift_id": 0,
+		"gift_name": "",
+		"id": 14,
+		"join_type": 0,
+		"max_time": 300,
+		"price": 0,
+		"require_text": "关注主播",
+		"require_type": 1,
+		"require_value": 0,
+		"room_id": 7734200,
+		"show_panel": 1,
+		"status": 1,
+		"time": 300,
+		"title": "弹幕抽奖"
+	}
+}
+```
+
+
+
+#### DANMU_GIFT_LOTTERY_END
+
+添加日期：2019/10/13
+
+房间内消息，弹幕抽奖。
+
+```json
+{
+	"cmd": "DANMU_GIFT_LOTTERY_END",
+	"data": {
+		"id": 14,
+		"room_id": 7734200
+	}
+}
+```
+
+
+
+#### DANMU_GIFT_LOTTERY_AWARD
+
+添加日期：2019/10/13
+
+房间内消息，弹幕抽奖。
+
+```json
+{
+	"cmd": "DANMU_GIFT_LOTTERY_AWARD",
+	"data": {
+		"award_id": 14,
+		"award_image": "http://i0.hdslb.com/bfs/live/1d7f90b938cc10bb211ba98aeb64abf696fef364.png",
+		"award_name": "OPPO Reno Ace手机",
+		"award_num": 1,
+		"award_text": "",
+		"award_type": 1,
+		"award_users": [
+			{
+				"face": "http://i2.hdslb.com/bfs/face/5dbbaf88ddc150c67e56e277eb36670a5d923432.jpg",
+				"level": 21,
+				"uid": 40234639,
+				"uname": "双刀李老大"
+			}
+		],
+		"id": 14
+	}
+}
+```
+
+
+
+#### ANCHOR_LOT_CHECKSTATUS
+
+添加日期：2019/10/28
+
+房间内消息，天选时刻抽奖。
+
+```json
+{
+	"cmd": "ANCHOR_LOT_CHECKSTATUS",
+	"data": {
+		"id": 52,
+		"status": 4,
+		"uid": 40667810
+	}
+}
+```
+
+
+
+#### ANCHOR_LOT_START
+
+添加日期：2019/10/28
+
+房间内消息，天选时刻抽奖。
+
+```json
+{
+	"cmd": "ANCHOR_LOT_START",
+	"data": {
+		"asset_icon": "https://i0.hdslb.com/bfs/live/992c2ccf88d3ea99620fb3a75e672e0abe850e9c.png",
+		"award_image": "",
+		"award_name": "10000LOL点券",
+		"award_num": 3,
+		"cur_gift_num": 0,
+		"current_time": 1572261492,
+		"danmu": "Zzr",
+		"gift_id": 0,
+		"gift_name": "",
+		"gift_num": 1,
+		"gift_price": 0,
+		"goaway_time": 180,
+		"id": 52,
+		"join_type": 0,
+		"lot_status": 0,
+		"max_time": 600,
+		"require_text": "无",
+		"require_type": 0,
+		"require_value": 0,
+		"room_id": 11382758,
+		"show_panel": 1,
+		"status": 1,
+		"time": 599,
+		"url": "https://live.bilibili.com/p/html/live-lottery/anchor-join.html?is_live_half_webview=1&hybrid_biz=live-lottery-anchor&hybrid_half_ui=1,5,100p,100p,000000,0,30,0,0,1;2,5,100p,100p,000000,0,30,0,0,1;3,5,100p,100p,000000,0,30,0,0,1;4,5,100p,100p,000000,0,30,0,0,1;5,5,100p,100p,000000,0,30,0,0,1;6,5,100p,100p,000000,0,30,0,0,1;7,5,100p,100p,000000,0,30,0,0,1;8,5,100p,100p,000000,0,30,0,0,1"
+	}
+}
+```
+
+
+
+#### ANCHOR_LOT_AWARD
+
+添加日期：2019/10/28
+
+房间内消息，天选时刻抽奖。
+
+```json
+{
+	"cmd": "ANCHOR_LOT_AWARD",
+	"data": {
+		"award_image": "",
+		"award_name": "10000LOL点券",
+		"award_num": 1,
+		"award_users": [
+			{
+				"uid": 12736723,
+				"uname": "mzzzzzzzzzzzzzzz",
+				"face": "http://static.hdslb.com/images/member/noface.gif",
+				"level": 0,
+				"color": 9868950
+			},
+			{
+				"uid": 1941591,
+				"uname": "月下奔逃",
+				"face": "http://i1.hdslb.com/bfs/face/0ea1dbb2be7dbe5b3dc95368e0fab7d2722ca00f.jpg",
+				"level": 14,
+				"color": 6406234
+			},
+			{
+				"uid": 17546401,
+				"uname": "肯打基没有套餐",
+				"face": "http://static.hdslb.com/images/member/noface.gif",
+				"level": 20,
+				"color": 6406234
+			}
+		],
+		"id": 52,
+		"url": "https://live.bilibili.com/p/html/live-lottery/anchor-join.html?is_live_half_webview=1&hybrid_biz=live-lottery-anchor&hybrid_half_ui=1,5,100p,100p,000000,0,30,0,0,1;2,5,100p,100p,000000,0,30,0,0,1;3,5,100p,100p,000000,0,30,0,0,1;4,5,100p,100p,000000,0,30,0,0,1;5,5,100p,100p,000000,0,30,0,0,1;6,5,100p,100p,000000,0,30,0,0,1;7,5,100p,100p,000000,0,30,0,0,1;8,5,100p,100p,000000,0,30,0,0,1"
+	}
+}
+```
+
+
+
+#### ANCHOR_LOT_END
+
+添加日期：2019/10/28
+
+房间内消息，天选时刻抽奖。
+
+```json
+{
+	"cmd": "ANCHOR_LOT_END",
+	"data": {
+		"id": 52
+	}
+}
+```
+
+
+
+#### SCORE_CARD
+
+分数卡。
+
+```json
+{
+	"cmd": "SCORE_CARD",
+	"data": {
+		"start_time": 1552740607,
+		"end_time": 1552740667,
+		"now_time": 1552740607,
+		"gift_id": 30081,
+		"uid": 2232963,
+		"ruid": 1577804,
+		"id": 66
+	}
+}
+```
 
 
 
@@ -2363,99 +2568,6 @@
 
 
 
-### 大乱斗界面(4)
-
-模块脚本：
-
-`s1.hdslb.com/bfs/static/blive/live-web-mng/static/js/app.97529bd4014acbf08d66.js`
-
-#### ACTIVITY_BANNER_UPDATE(子模块)
-
-添加日期：2019/06/20
-
-房间内消息，大乱斗活动条更新。
-
-```json
-{
-	"cmd": "ACTIVITY_BANNER_UPDATE",
-	"data": {
-		"id": 299,
-		"title": "初阶守护者x2星",
-		"cover": "http://i0.hdslb.com/bfs/live/dfd84488f4cc342ca51819a9adcb61ba8bbccc07.png",
-		"background": "http://i0.hdslb.com/bfs/live/4807ff55e5b93980b4811ed6c0da69d8fc757a0c.png",
-		"jump_url": "https://live.bilibili.com/p/html/live-app-battle/u-anchor.html?is_live_half_webview=1&hybrid_biz=live-app-battle-u-anchor&hybrid_half_ui=1,5,272,320,0,0,30,0,8;2,5,272,320,0,0,30,0,8;3,5,272,320,0,0,30,0,8;4,5,272,320,0,0,30,0,8;5,5,272,320,0,0,30,0,8;6,5,272,320,0,0,30,0,8;7,5,272,320,0,0,30,0,8;8,5,272,320,0,0,30,0,8&battleAnchorId=421470960",
-		"title_color": "#ffffff",
-		"closeable": 0,
-		"banner_type": 1,
-		"weight": 10,
-		"web_text": "",
-		"web_cover": ""
-	}
-}
-```
-
-
-
-#### ACTIVITY_BANNER_UPDATE_V2(无处理)
-
-添加日期：2019/09/11
-
-```json
-{
-	"cmd": "ACTIVITY_BANNER_UPDATE_V2",
-	"data": {
-		"id": 378,
-		"title": "未上榜",
-		"cover": "",
-		"background": "http://i0.hdslb.com/bfs/activity-plat/static/20190904/b5e210ef68e55c042f407870de28894b/6mLB2jCQV.png",
-		"jump_url": "https://live.bilibili.com/p/html/live-app-rankcurrent/index.html?is_live_half_webview=1&hybrid_half_ui=1,5,85p,70p,FFE293,0,30,100,10;2,2,320,100p,FFE293,0,30,100,0;4,2,320,100p,FFE293,0,30,100,0;6,5,65p,60p,FFE293,0,30,100,10;5,5,55p,60p,FFE293,0,30,100,10;3,5,85p,70p,FFE293,0,30,100,10;7,5,65p,60p,FFE293,0,30,100,10;&anchor_uid=230941958&is_new_rank_container=1&area_v2_id=272&area_v2_parent_id=6&rank_type=master_realtime_hour_room&area_hour=1",
-		"title_color": "#8B5817",
-		"closeable": 1,
-		"banner_type": 4,
-		"weight": 20,
-		"add_banner": 0
-	}
-}
-```
-
-
-
-#### ACTIVITY_BANNER_RED_NOTICE_CLOSE(无处理)
-
-添加日期：2019/06/25
-
-房间内消息，大乱斗活动条关闭。
-
-```json
-{
-	"cmd": "ACTIVITY_BANNER_RED_NOTICE_CLOSE",
-	"data": {
-		"id": 297,
-		"type": "revenue_banner"
-	}
-}
-```
-
-
-
-#### ACTIVITY_BANNER_CLOSE(子模块)
-
-添加日期：2019/07/03
-
-房间内消息，大乱斗活动条关闭。
-
-```json
-{
-	"cmd": "ACTIVITY_BANNER_CLOSE",
-	"data": {
-		"id": 297,
-		"banner_type": 2
-	}
-}
-```
-
-
-
 ### 活动机甲大作战(5)
 
 
@@ -2673,7 +2785,7 @@
 
 ### 播放器中的指令(4)
 
-#### SYS_GIFT
+#### SYS_GIFT(其它模块)
 
 旧的全区礼物赠送消息。
 
@@ -2693,13 +2805,13 @@
 
 
 
-#### SYS_MSG
+#### SYS_MSG(其它模块)
 
 广播的抽奖信息。
 
 
 
-#### GUARD_MSG
+#### GUARD_MSG(其它模块)
 
 广播的总督上船消息。
 
@@ -2721,221 +2833,11 @@
 
 
 
-### 新增(7)
+### 其它函数消息(7)
 
 
 
-#### DANMU_GIFT_LOTTERY_START
-
-添加日期：2019/10/13
-
-房间内消息，弹幕抽奖。
-
-```json
-{
-	"cmd": "DANMU_GIFT_LOTTERY_START",
-	"data": {
-		"asset_icon": "https://i0.hdslb.com/bfs/vc/126f25af295d42311b541177e5fb14a2f6d0012c.png",
-		"award_image": "http://i0.hdslb.com/bfs/live/1d7f90b938cc10bb211ba98aeb64abf696fef364.png",
-		"award_name": "OPPO Reno Ace手机",
-		"award_num": 1,
-		"cur_gift_num": 0,
-		"current_time": 1570969184,
-		"danmu": "RenoAce超级玩家，一机致胜！",
-		"gift_id": 0,
-		"gift_name": "",
-		"id": 14,
-		"join_type": 0,
-		"max_time": 300,
-		"price": 0,
-		"require_text": "关注主播",
-		"require_type": 1,
-		"require_value": 0,
-		"room_id": 7734200,
-		"show_panel": 1,
-		"status": 1,
-		"time": 300,
-		"title": "弹幕抽奖"
-	}
-}
-```
-
-
-
-#### DANMU_GIFT_LOTTERY_AWARD
-
-添加日期：2019/10/13
-
-房间内消息，弹幕抽奖。
-
-```json
-{
-	"cmd": "DANMU_GIFT_LOTTERY_AWARD",
-	"data": {
-		"award_id": 14,
-		"award_image": "http://i0.hdslb.com/bfs/live/1d7f90b938cc10bb211ba98aeb64abf696fef364.png",
-		"award_name": "OPPO Reno Ace手机",
-		"award_num": 1,
-		"award_text": "",
-		"award_type": 1,
-		"award_users": [
-			{
-				"face": "http://i2.hdslb.com/bfs/face/5dbbaf88ddc150c67e56e277eb36670a5d923432.jpg",
-				"level": 21,
-				"uid": 40234639,
-				"uname": "双刀李老大"
-			}
-		],
-		"id": 14
-	}
-}
-```
-
-
-
-#### DANMU_GIFT_LOTTERY_END
-
-添加日期：2019/10/13
-
-房间内消息，弹幕抽奖。
-
-```json
-{
-	"cmd": "DANMU_GIFT_LOTTERY_END",
-	"data": {
-		"id": 14,
-		"room_id": 7734200
-	}
-}
-```
-
-
-
-#### ANCHOR_LOT_CHECKSTATUS
-
-添加日期：2019/10/28
-
-房间内消息，天选时刻抽奖。
-
-```json
-{
-	"cmd": "ANCHOR_LOT_CHECKSTATUS",
-	"data": {
-		"id": 52,
-		"status": 4,
-		"uid": 40667810
-	}
-}
-```
-
-
-
-#### ANCHOR_LOT_START
-
-添加日期：2019/10/28
-
-房间内消息，天选时刻抽奖。
-
-```json
-{
-	"cmd": "ANCHOR_LOT_START",
-	"data": {
-		"asset_icon": "https://i0.hdslb.com/bfs/live/992c2ccf88d3ea99620fb3a75e672e0abe850e9c.png",
-		"award_image": "",
-		"award_name": "10000LOL点券",
-		"award_num": 3,
-		"cur_gift_num": 0,
-		"current_time": 1572261492,
-		"danmu": "Zzr",
-		"gift_id": 0,
-		"gift_name": "",
-		"gift_num": 1,
-		"gift_price": 0,
-		"goaway_time": 180,
-		"id": 52,
-		"join_type": 0,
-		"lot_status": 0,
-		"max_time": 600,
-		"require_text": "无",
-		"require_type": 0,
-		"require_value": 0,
-		"room_id": 11382758,
-		"show_panel": 1,
-		"status": 1,
-		"time": 599,
-		"url": "https://live.bilibili.com/p/html/live-lottery/anchor-join.html?is_live_half_webview=1&hybrid_biz=live-lottery-anchor&hybrid_half_ui=1,5,100p,100p,000000,0,30,0,0,1;2,5,100p,100p,000000,0,30,0,0,1;3,5,100p,100p,000000,0,30,0,0,1;4,5,100p,100p,000000,0,30,0,0,1;5,5,100p,100p,000000,0,30,0,0,1;6,5,100p,100p,000000,0,30,0,0,1;7,5,100p,100p,000000,0,30,0,0,1;8,5,100p,100p,000000,0,30,0,0,1"
-	}
-}
-```
-
-
-
-#### ANCHOR_LOT_AWARD
-
-添加日期：2019/10/28
-
-房间内消息，天选时刻抽奖。
-
-```json
-{
-	"cmd": "ANCHOR_LOT_AWARD",
-	"data": {
-		"award_image": "",
-		"award_name": "10000LOL点券",
-		"award_num": 1,
-		"award_users": [
-			{
-				"uid": 12736723,
-				"uname": "mzzzzzzzzzzzzzzz",
-				"face": "http://static.hdslb.com/images/member/noface.gif",
-				"level": 0,
-				"color": 9868950
-			},
-			{
-				"uid": 1941591,
-				"uname": "月下奔逃",
-				"face": "http://i1.hdslb.com/bfs/face/0ea1dbb2be7dbe5b3dc95368e0fab7d2722ca00f.jpg",
-				"level": 14,
-				"color": 6406234
-			},
-			{
-				"uid": 17546401,
-				"uname": "肯打基没有套餐",
-				"face": "http://static.hdslb.com/images/member/noface.gif",
-				"level": 20,
-				"color": 6406234
-			}
-		],
-		"id": 52,
-		"url": "https://live.bilibili.com/p/html/live-lottery/anchor-join.html?is_live_half_webview=1&hybrid_biz=live-lottery-anchor&hybrid_half_ui=1,5,100p,100p,000000,0,30,0,0,1;2,5,100p,100p,000000,0,30,0,0,1;3,5,100p,100p,000000,0,30,0,0,1;4,5,100p,100p,000000,0,30,0,0,1;5,5,100p,100p,000000,0,30,0,0,1;6,5,100p,100p,000000,0,30,0,0,1;7,5,100p,100p,000000,0,30,0,0,1;8,5,100p,100p,000000,0,30,0,0,1"
-	}
-}
-```
-
-
-
-#### ANCHOR_LOT_END
-
-添加日期：2019/10/28
-
-房间内消息，天选时刻抽奖。
-
-```json
-{
-	"cmd": "ANCHOR_LOT_END",
-	"data": {
-		"id": 52
-	}
-}
-```
-
-
-
-### 其它无处理函数的消息(6)
-
-
-
-#### DANMU_MSG:4:0:2:2:2:0
+#### DANMU_MSG:4:0:2:2:2:0(无处理)
 
 活跃时间：2019/09/30
 
@@ -2945,28 +2847,7 @@
 
 
 
-#### USER_TOAST_MSG
-
-活跃时间：2019/09/30
-
-房间内用户购买舰队服务时。
-
-```json
-{
-	"cmd": "USER_TOAST_MSG",
-	"data": {
-		"op_type": 1,
-		"uid": 24655455,
-		"username": "到底有莫得感情",
-		"guard_level": 3,
-		"is_show": 0
-	}
-}
-```
-
-
-
-#### LOTTERY_START
+#### LOTTERY_START(无处理)
 
 活跃时间：2019/09/30
 
@@ -3008,7 +2889,7 @@
 
 
 
-#### room_admin_entrance
+#### room_admin_entrance(无处理)
 
 活跃时间：2019/09/30
 
@@ -3024,7 +2905,7 @@
 
 
 
-#### new_anchor_reward
+#### new_anchor_reward(无处理)
 
 活跃时间：2019/09/30
 
@@ -3039,7 +2920,7 @@
 
 
 
-#### DAILY_QUEST_NEWDAY
+#### DAILY_QUEST_NEWDAY(无处理)
 
 添加日期：2019/06/26
 
@@ -3053,4 +2934,56 @@
 	"data": {}
 }
 ```
+
+
+
+#### GUARD_BUY(无处理)
+
+房间内船员购买消息。
+
+活跃时间：2019/11/18
+
+```json
+{
+	"cmd": "GUARD_BUY",
+	"data": {
+		"uid": 606066,
+		"username": "病理酱Alter",
+		"guard_level": 3,
+		"num": 1,
+		"price": 198000,
+		"gift_id": 10003,
+		"gift_name": "舰长",
+		"start_time": 1540273959,
+		"end_time": 1540273959
+	}
+}
+```
+
+
+
+#### ACTIVITY_BANNER_UPDATE_V2(无处理)
+
+添加日期：2019/09/11
+
+活跃时间：2019/11/18
+
+```json
+{
+	"cmd": "ACTIVITY_BANNER_UPDATE_V2",
+	"data": {
+		"id": 378,
+		"title": "未上榜",
+		"cover": "",
+		"background": "http://i0.hdslb.com/bfs/activity-plat/static/20190904/b5e210ef68e55c042f407870de28894b/6mLB2jCQV.png",
+		"jump_url": "https://live.bilibili.com/p/html/live-app-rankcurrent/index.html?is_live_half_webview=1&hybrid_half_ui=1,5,85p,70p,FFE293,0,30,100,10;2,2,320,100p,FFE293,0,30,100,0;4,2,320,100p,FFE293,0,30,100,0;6,5,65p,60p,FFE293,0,30,100,10;5,5,55p,60p,FFE293,0,30,100,10;3,5,85p,70p,FFE293,0,30,100,10;7,5,65p,60p,FFE293,0,30,100,10;&anchor_uid=230941958&is_new_rank_container=1&area_v2_id=272&area_v2_parent_id=6&rank_type=master_realtime_hour_room&area_hour=1",
+		"title_color": "#8B5817",
+		"closeable": 1,
+		"banner_type": 4,
+		"weight": 20,
+		"add_banner": 0
+	}
+}
+```
+
 

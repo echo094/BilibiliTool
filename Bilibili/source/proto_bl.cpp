@@ -8,7 +8,7 @@
 const int DM_FLASH_PROTO = 2;
 const char DM_FLASH_VER[] = "2.4.6-9e02b4f1";
 const int DM_WEB_PROTO = 2;
-const char DM_WEB_VER[] = "1.7.4";
+const char DM_WEB_VER[] = "1.8.11";
 
 long long GetRUID() {
 	srand(unsigned(time(0)));
