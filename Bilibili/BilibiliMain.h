@@ -54,11 +54,41 @@ private:
 	void on_timer_userheart(boost::system::error_code ec, unsigned type);
 
 private:
-	// 处理房间消息
+	/**
+	 * @brief IO线程 处理房间消息
+	 *
+	 * 由 post_msg_room 调用
+	 *
+	 * @param msg   消息类型
+	 * @param rrid  直播间编号
+	 * @param opt   接口配置信息
+	 *
+	 * @return
+	 *   返回0
+	 */
 	int ProcessMSGRoom(unsigned msg, unsigned rrid, unsigned opt);
-	// 处理活动消息
+	/**
+	 * @brief IO线程 处理活动消息
+	 *
+	 * 由 post_msg_act 调用
+	 *
+	 * @param msg   消息类型
+	 * @param data  抽奖信息
+	 *
+	 * @return
+	 *   返回0
+	 */
 	int ProcessMSGAct(unsigned msg, std::shared_ptr<BILI_LOTTERYDATA> data);
-	// 处理用户指令
+	/**
+	 * @brief UI线程 处理用户指令
+	 *
+	 * 由 Run 调用
+	 *
+	 * @param str   指令信息
+	 *
+	 * @return
+	 *   退出程序时返回0 其它情况返回1
+	 */
 	int ProcessCommand(std::string str);
 
 	int StopMonitorALL();

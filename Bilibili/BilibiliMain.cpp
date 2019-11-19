@@ -264,44 +264,68 @@ int CBilibiliMain::ProcessCommand(std::string str) {
 		PrintHelp();
 	}
 	else if (!str.compare("1") || !str.compare("userimport")) {
-		if (curmode == TOOL_EVENT::STOP) {
-			_userlist->ImportUserList();
-		}
+		boost::asio::post(
+			io_context_,
+			[this] {
+				this->_userlist->ImportUserList();
+		});
 	}
 	else if (!str.compare("2") || !str.compare("userexport")) {
-		if (curmode == TOOL_EVENT::STOP) {
-			_userlist->ExportUserList();
-		}
+		boost::asio::post(
+			io_context_,
+			[this] {
+			this->_userlist->ExportUserList();
+		});
 	}
 	else if (!str.compare("3") || !str.compare("userlist")) {
-		_userlist->ShowUserList();
+		boost::asio::post(
+			io_context_,
+			[this] {
+			this->_userlist->ShowUserList();
+		});
 	}
 	else if (!str.compare("4") || !str.compare("useradd")) {
-		if (curmode == TOOL_EVENT::STOP) {
-			std::string name, psd;
-			cout << "Account: ";
-			getline(cin, name);
-			cout << "Password: ";
-			GetPassword(psd);
-			_userlist->AddUser(name, psd);
-		}
+		std::string name, psd;
+		cout << "Account: ";
+		getline(cin, name);
+		cout << "Password: ";
+		GetPassword(psd);
+		boost::asio::post(
+			io_context_,
+			[this, name, psd] {
+			this->_userlist->AddUser(name, psd);
+		});
 	}
 	else if (!str.compare("5") || !str.compare("userdel")) {
-		if (curmode == TOOL_EVENT::STOP) {
-			char tstr[30];
-			cout << "Account: ";
-			cin >> tstr;
-			_userlist->DeleteUser(tstr);
-		}
+		char tstr[30];
+		cout << "Account: ";
+		cin >> tstr;
+		boost::asio::post(
+			io_context_,
+			[this, tstr] {
+			this->_userlist->DeleteUser(tstr);
+		});
 	}
 	else if (!str.compare("6") || !str.compare("userre")) {
-		_userlist->ReloginAll();
+		boost::asio::post(
+			io_context_,
+			[this] {
+			this->_userlist->ReloginAll();
+		});
 	}
 	else if (!str.compare("7") || !str.compare("userlogin")) {
-		_userlist->CheckUserStatusALL();
+		boost::asio::post(
+			io_context_,
+			[this] {
+			this->_userlist->CheckUserStatusALL();
+		});
 	}
 	else if (!str.compare("8") || !str.compare("usergetinfo")) {
-		_userlist->GetUserInfoALL();
+		boost::asio::post(
+			io_context_,
+			[this] {
+			this->_userlist->GetUserInfoALL();
+		});
 	}
 	else if (!str.compare("10") || !str.compare("stopall")) {
 		StopMonitorALL();
