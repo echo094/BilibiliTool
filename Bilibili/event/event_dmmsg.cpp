@@ -348,6 +348,13 @@ int event_dmmsg::ParseJSON(MSG_INFO *data) {
 		}
 		return 0;
 	}
+	case DM_TV_START:
+	case DM_RAFFLE_START: {
+		if (data->opt & DM_HIDDENEVENT) {
+			return ParseLotGift(value, data->id);
+		}
+		return 0;
+	}
 	case DM_GUARD_LOTTERY_START: {
 		if (data->opt & DM_HIDDENEVENT) {
 			return ParseLotGuard(value, data->id);
@@ -500,6 +507,28 @@ int event_dmmsg::ParseLotStorm(rapidjson::Value &doc, const unsigned room) {
 		return 0;
 	}
 	return -1;
+}
+
+int event_dmmsg::ParseLotGift(rapidjson::Value & doc, const unsigned room) {
+	unsigned gift_id = doc["data"]["gift_id"].GetInt();
+	if (gift_id != 30405 && gift_id != 30406) {
+		return 0;
+	}
+	std::shared_ptr<BILI_LOTTERYDATA> data(new BILI_LOTTERYDATA());
+	auto curtime = toollib::GetTimeStamp();
+	data->cmd = MSG_LOT_GIFT;
+	data->srid = room;
+	data->rrid = room;
+	data->loid = doc["data"]["raffleId"].GetInt();
+	data->time_end = curtime + doc["data"]["time"].GetInt();
+	data->time_start = data->time_end - doc["data"]["max_time"].GetInt();
+	data->time_get = curtime + doc["data"]["time_wait"].GetInt();
+	data->type = doc["data"]["type"].GetString();
+	data->title = doc["data"]["thank_text"].GetString();
+	BOOST_LOG_SEV(g_logger::get(), info) << "[DMMSG] gift " << room
+		<< " id: " << data->loid;
+	event_base::post_lottery_hidden(data);
+	return 0;
 }
 
 int event_dmmsg::ParseLotGuard(rapidjson::Value &doc, const unsigned room) {

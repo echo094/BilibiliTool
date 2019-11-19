@@ -86,7 +86,19 @@ private:
 	 * @return
 	 *   数据包正确返回0 错误返回-1
 	 */
-	int ParseLotStorm(rapidjson::Value &alue, const unsigned room);
+	int ParseLotStorm(rapidjson::Value &doc, const unsigned room);
+	/**
+	 * @brief 当前直播间的礼物抽奖消息
+	 *
+	 * 目前只处理 30405|30406 这两个房间内礼物
+	 *
+	 * @param doc   消息数据包
+	 * @param room  订阅的直播间号
+	 *
+	 * @return
+	 *   数据包正确返回0 错误返回-1
+	 */
+	int ParseLotGift(rapidjson::Value &doc, const unsigned room);
 	/**
 	 * @brief 当前直播间的守护抽奖消息 只处理舰长以及提督消息
 	 *

@@ -226,6 +226,10 @@ int CBilibiliMain::ProcessMSGAct(unsigned msg, std::shared_ptr<BILI_LOTTERYDATA>
 		JoinLotStorm(data);
 		break;
 	}
+	case MSG_LOT_GIFT: {
+		JoinLotGift(data);
+		break;
+	}
 	case MSG_LOT_GUARD: {
 		JoinLotGuard(data);
 		break;
@@ -551,17 +555,7 @@ int CBilibiliMain::CheckLotGift(std::shared_ptr<BILI_LOTTERYDATA> data)
 		if (data == nullptr) {
 			return 0;
 		}
-		_logfile << "{time:" << data->time_start
-			<< ",type:'" << data->type
-			<< "',ruid:" << data->rrid
-			<< ",loid:" << data->loid
-			<< ",title:'" << data->title
-			<< "'}," << std::endl;
-
-		if (isSkip()) {
-			continue;
-		}
-		_userlist->JoinLottery(data);
+		JoinLotGift(data);
 	}
 	return 0;
 }
@@ -585,22 +579,29 @@ int CBilibiliMain::CheckLotGuard(std::shared_ptr<BILI_LOTTERYDATA> data)
 		if (data == nullptr) {
 			return 0;
 		}
-		_logfile << "{time:" << data->time_start
-			<< ",type:'" << data->type << '_' << data->exinfo
-			<< "',ruid:" << data->rrid
-			<< ",loid:" << data->loid
-			<< "}," << std::endl;
-
-		if (isSkip()) {
-			continue;
-		}
-		_userlist->JoinLottery(data);
+		JoinLotGuard(data);
 	}
 
 	return 0;
 }
 
-// 房间上船事件
+int CBilibiliMain::JoinLotGift(std::shared_ptr<BILI_LOTTERYDATA> data)
+{
+	_logfile << "{time:" << data->time_start
+		<< ",type:'" << data->type
+		<< "',ruid:" << data->rrid
+		<< ",loid:" << data->loid
+		<< ",title:'" << data->title
+		<< "'}," << std::endl;
+
+	if (isSkip()) {
+		return 0;
+	}
+	_userlist->JoinLottery(data);
+
+	return 0;
+}
+
 int CBilibiliMain::JoinLotGuard(std::shared_ptr<BILI_LOTTERYDATA> data)
 {
 	_logfile << "{time:" << data->time_start
@@ -617,8 +618,6 @@ int CBilibiliMain::JoinLotGuard(std::shared_ptr<BILI_LOTTERYDATA> data)
 	return 0;
 }
 
-// 节奏风暴事件
-// 含有 rrid loid
 int CBilibiliMain::JoinLotStorm(std::shared_ptr<BILI_LOTTERYDATA> data)
 {
 	_logfile << "{time:" << data->time_start

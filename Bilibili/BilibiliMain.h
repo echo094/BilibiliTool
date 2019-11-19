@@ -76,12 +76,14 @@ private:
 	int CheckLotGift(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 上船消息通告只含有房间号
 	int CheckLotGuard(std::shared_ptr<BILI_LOTTERYDATA> data);
-	// 上船抽奖事件通告含有完整抽奖信息
+	// 礼物
+	int JoinLotGift(std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 守护
 	int JoinLotGuard(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 节奏风暴
 	int JoinLotStorm(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 大乱斗抽奖
-	int JoinLotPK (std::shared_ptr<BILI_LOTTERYDATA> data);
+	int JoinLotPK(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 弹幕抽奖
 	int JoinLotDanmu(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 天选时刻抽奖

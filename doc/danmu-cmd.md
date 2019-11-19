@@ -1919,43 +1919,36 @@
 
 #### RAFFLE_START
 
-房间内活动抽奖开始消息，包括摩天大楼、周星、BLS道具。
+更新时间：2019/11/19
+
+房间内礼物抽奖消息
 
 ```json
 {
 	"cmd": "RAFFLE_START",
 	"data": {
-		"id": "159459",
-		"dtime": 180,
-		"msg": {
-			"cmd": "SYS_MSG",
-			"msg": " :?主播:? 一颗奶糖不加糖:? 充满了欧气能量，充能炮发射！点击前往TA的房间去抽奖吧",
-			"msg_text": " :?主播:? 一颗奶糖不加糖:? 充满了欧气能量，充能炮发射！点击前往TA的房间去抽奖吧",
-			"msg_common": "全区广播：<% %>主播<% 一颗奶糖不加糖%> 充满了欧气能量，充能炮发射！点击前往TA的房间去抽奖吧",
-			"msg_self": "全区广播：<% %>主播<% 一颗奶糖不加糖%> 充满了欧气能量，充能炮发射！快来抽奖吧",
-			"rep": 1,
-			"styleType": 2,
-			"url": "http:\/\/live.bilibili.com\/418",
-			"roomid": 418,
-			"real_roomid": 3514612,
-			"rnd": 49070210,
-			"broadcast_type": 0
-		},
-		"raffleId": 159459,
-		"payflow_id": 1,
-		"title": "充能炮抽奖",
-		"type": "GIFT_30033",
-		"from": "一颗奶糖不加糖",
+		"asset_animation_pic": "http://i0.hdslb.com/bfs/live/7e47e9cfb744acd0319a4480e681258ce3a611fe.gif",
+		"asset_icon": "http://s1.hdslb.com/bfs/live/380bcd708da496d75737c68930965dd67b82879d.png",
+		"asset_tips_pic": "http://s1.hdslb.com/bfs/live/380bcd708da496d75737c68930965dd67b82879d.png",
+		"dtime": 120,
+		"from": "___゜独自",
 		"from_user": {
-			"uname": "一颗奶糖不加糖",
-			"face": "http:\/\/i0.hdslb.com\/bfs\/face\/a2ead6078e39d569b067453c06f21808df26d133.jpg"
+			"face": "http://i1.hdslb.com/bfs/face/9fe26879e5f24ebfe3ea7c341139b56c0cac3ddb.jpg",
+			"uname": "___゜独自"
 		},
-		"time": 180,
-		"max_time": 180,
-		"time_wait": 120,
-		"asset_animation_pic": "http:\/\/i0.hdslb.com\/bfs\/live\/84a2e86014546892853656992f5ebfc8baf4288b.gif",
-		"asset_tips_pic": "http:\/\/s1.hdslb.com\/bfs\/live\/1364c63088b4eb5e31d575e5b4095c904e48f017.png",
-		"sender_type": 0
+		"gift_id": 20003,
+		"id": "514709",
+		"max_time": 120,
+		"msg": "",
+		"payflow_id": "1574146700121900001",
+		"raffleId": 514709,
+		"sender_type": 0,
+		"thank_text": "感谢<%___゜独自%>赠送的摩天大楼",
+		"time": 120,
+		"time_wait": 60,
+		"title": "摩天大楼抽奖",
+		"type": "GIFT_20003",
+		"weight": 0
 	}
 }
 ```
@@ -1997,43 +1990,36 @@
 
 #### TV_START
 
-房间内小电视抽奖开始消息。
+更新时间：2019/11/19
+
+房间内小电视抽奖消息
 
 ```json
 {
 	"cmd": "TV_START",
 	"data": {
-		"id": "159458",
+		"asset_animation_pic": "http://i0.hdslb.com/bfs/live/746a8db0702740ec63106581825667ae525bb11a.gif",
+		"asset_icon": "http://s1.hdslb.com/bfs/live/ac43b069bec53d303a9a1e0c4e90ccd1213d1b6b.png",
+		"asset_tips_pic": "http://s1.hdslb.com/bfs/live/ac43b069bec53d303a9a1e0c4e90ccd1213d1b6b.png",
 		"dtime": 180,
-		"msg": {
-			"cmd": "SYS_MSG",
-			"msg": "正在精分的男子:? 送给:? 一颗奶糖不加糖:? 1个小电视飞船，点击前往TA的房间去抽奖吧",
-			"msg_text": "正在精分的男子:? 送给:? 一颗奶糖不加糖:? 1个小电视飞船，点击前往TA的房间去抽奖吧",
-			"msg_common": "全区广播：<%正在精分的男子%> 送给<% 一颗奶糖不加糖%> 1个小电视飞船，点击前往TA的房间去抽奖吧",
-			"msg_self": "全区广播：<%正在精分的男子%> 送给<% 一颗奶糖不加糖%> 1个小电视飞船，快来抽奖吧",
-			"rep": 1,
-			"styleType": 2,
-			"url": "http:\/\/live.bilibili.com\/418",
-			"roomid": 418,
-			"real_roomid": 3514612,
-			"rnd": 1540274096,
-			"broadcast_type": 0
+		"from": "鱼瓜猪妹",
+		"from_user": {
+			"face": "http://i0.hdslb.com/bfs/face/d47fa0975d03bcf00b1b3f3bd4d94618785c1a68.jpg",
+			"uname": "鱼瓜猪妹"
 		},
-		"raffleId": 159458,
-		"payflow_id": "1540274667111000001",
+		"gift_id": 25,
+		"id": "514713",
+		"max_time": 180,
+		"msg": "",
+		"payflow_id": "1574147056121500001",
+		"raffleId": 514713,
+		"sender_type": 0,
+		"thank_text": "感谢<%鱼瓜猪妹%>赠送的小电视飞船",
+		"time": 180,
+		"time_wait": 120,
 		"title": "小电视飞船抽奖",
 		"type": "small_tv",
-		"from": "正在精分的男子",
-		"from_user": {
-			"uname": "正在精分的男子",
-			"face": "http:\/\/static.hdslb.com\/images\/member\/noface.gif"
-		},
-		"time": 180,
-		"max_time": 180,
-		"time_wait": 120,
-		"asset_animation_pic": "http:\/\/i0.hdslb.com\/bfs\/live\/746a8db0702740ec63106581825667ae525bb11a.gif",
-		"asset_tips_pic": "http:\/\/s1.hdslb.com\/bfs\/live\/ac43b069bec53d303a9a1e0c4e90ccd1213d1b6b.png",
-		"sender_type": 0
+		"weight": 0
 	}
 }
 ```
