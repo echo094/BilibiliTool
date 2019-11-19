@@ -115,8 +115,10 @@ private:
 	 *
 	 * @param data  抽奖信息
 	 *
+	 * @return 抽奖API的返回状态
+	 *
 	 */
-	void do_task(const std::shared_ptr<BILI_LOTTERYDATA> &data);
+	BILIRET do_task(const std::shared_ptr<BILI_LOTTERYDATA> &data);
 
 private:
 	/**

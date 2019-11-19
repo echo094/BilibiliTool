@@ -38,6 +38,8 @@ dest_user::dest_user() :
 \nt8m+akI8uiRx6d6KTzCZAkBVZQV47puvjcLD75yUhQN5cUO7iqdeFQTFMYcv72DM\
 \naIzBAtlfQDwItQM7Ylkquj+Ns2MbYotX5RxWlLmKE15u\
 \n-----END RSA PRIVATE KEY-----";
+
+	srand((unsigned int)time(0));
 }
 
 dest_user::~dest_user() {
@@ -263,19 +265,22 @@ int dest_user::JoinLottery(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	if (!_usercount)
 		return 0;
 
-	switch (data->cmd) {
-	case MSG_LOT_STORM: {
-		data->time_get += _GetRand(1, 3);
-		break;
-	}
-	default: {
-		data->time_get += _GetRand(5, 5);
-	}
-	}
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
-		if (!(*itor)->islogin)
+		if (!(*itor)->islogin) {
 			continue;
-		(*itor)->post_task(data);
+		}
+		// 每个用户使用独立的副本
+		std::shared_ptr<BILI_LOTTERYDATA> p(new BILI_LOTTERYDATA(*data));
+		switch (p->cmd) {
+		case MSG_LOT_STORM: {
+			p->time_get += _GetRand(1, 3);
+			break;
+		}
+		default: {
+			p->time_get += _GetRand(5, 5);
+		}
+		}
+		(*itor)->post_task(p);
 	}
 
 	return 0;
@@ -420,6 +425,5 @@ void dest_user::_ActHeartContinue(std::shared_ptr<user_info> &user) {
 
 int dest_user::_GetRand(int start, int len)
 {
-	srand((unsigned int)time(0));
 	return rand() % len + start;
 }

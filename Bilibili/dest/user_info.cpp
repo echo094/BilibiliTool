@@ -298,59 +298,67 @@ void user_info::on_timer(boost::system::error_code ec)
 	// 检查任务列表
 	auto curtime = toollib::GetTimeStamp();
 	while (!tasks_.empty() && tasks_.top()->time_get < curtime) {
-		do_task(tasks_.top());
+		auto p = tasks_.top();
 		tasks_.pop();
+		if (do_task(p) == BILIRET::JOIN_AGAIN
+			&& (p->time_start + 30 > curtime)) {
+			// 节奏风暴没抽中且时间在30秒内
+			p->time_get += 1;
+			tasks_.push(p);
+		}
 	}
 
 	start_timer();
 }
 
-void user_info::do_task(const std::shared_ptr<BILI_LOTTERYDATA>& data)
+BILIRET user_info::do_task(const std::shared_ptr<BILI_LOTTERYDATA>& data)
 {
 	BOOST_LOG_SEV(g_logger::get(), trace) << "[User] Do task type: " << data->cmd
 		<< " id: " << data->loid;
+	BILIRET ret = BILIRET::NOFAULT;
 	switch (data->cmd) {
 	case MSG_LOT_STORM: {
 		if (conf_storm == 1) {
 			apibl::APIWebv1RoomEntry(this, data->rrid);
-			apibl::APIWebv1StormJoin(this, data, "", "");
+			ret = apibl::APIWebv1StormJoin(this, data, "", "");
 		}
 		break;
 	}
 	case MSG_LOT_GIFT: {
 		if (conf_gift == 1) {
 			apibl::APIWebv1RoomEntry(this, data->rrid);
-			apibl::APIWebv5SmalltvJoin(this, data);
+			ret = apibl::APIWebv5SmalltvJoin(this, data);
 		}
 		break;
 	}
 	case MSG_LOT_GUARD: {
 		if (conf_guard == 1) {
 			apibl::APIWebv1RoomEntry(this, data->rrid);
-			apibl::APIWebv3GuardJoin(this, data);
+			ret = apibl::APIWebv3GuardJoin(this, data);
 		}
 		break;
 	}
 	case MSG_LOT_PK: {
 		if (conf_pk == 1) {
 			apibl::APIWebv1RoomEntry(this, data->rrid);
-			apibl::APIWebv2PKJoin(this, data);
+			ret = apibl::APIWebv2PKJoin(this, data);
 		}
 		break;
 	}
 	case MSG_LOT_DANMU: {
 		if (conf_danmu == 1) {
 			apibl::APIWebv1RoomEntry(this, data->rrid);
-			apibl::APIWebv1DanmuJoin(this, data);
+			ret = apibl::APIWebv1DanmuJoin(this, data);
 		}
 		break;
 	}
 	case MSG_LOT_ANCHOR: {
 		if (conf_anchor == 1) {
 			apibl::APIWebv1RoomEntry(this, data->rrid);
-			apibl::APIWebv1AnchorJoin(this, data);
+			ret = apibl::APIWebv1AnchorJoin(this, data);
 		}
 		break;
 	}
 	}
+	return ret;
 }

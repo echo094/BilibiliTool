@@ -146,5 +146,6 @@ struct BILI_LOTTERYDATA {
 	unsigned gift_num = 0;
 
 	BILI_LOTTERYDATA();
+	BILI_LOTTERYDATA(const BILI_LOTTERYDATA& item);
 	~BILI_LOTTERYDATA();
 };
