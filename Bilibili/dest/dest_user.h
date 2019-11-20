@@ -1,14 +1,11 @@
-﻿#pragma once
+#pragma once
 #include <atomic>
 #include <memory>
 #include <vector>
 #include <boost/thread/thread.hpp>
 #include "user_info.h"
+#include "utility/platform.h"
 #include "BilibiliStruct.h"
-
-#ifndef MAX_PATH
-#define MAX_PATH 260
-#endif
 
 enum class LOGINRET {
 	NOFAULT,

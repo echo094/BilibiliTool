@@ -1,11 +1,10 @@
-﻿#include "dest_user.h"
+#include "dest_user.h"
 #include <fstream>
 #include <functional>
 #include <iostream>
 #include <thread>
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
-#include "utility/platform.h"
 #include "utility/strconvert.h"
 #include "logger/log.h"
 #include "api_bl.h" 

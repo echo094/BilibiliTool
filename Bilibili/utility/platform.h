@@ -1,6 +1,9 @@
-﻿#pragma once
+#pragma once
 #include <string>
 
+#ifndef MAX_PATH
+#define MAX_PATH 260
+#endif
 
 #ifdef WIN32
 #else

@@ -1,4 +1,4 @@
-﻿#include "api_bl.h" 
+#include "api_bl.h" 
 
 #include <fstream>
 #include <sstream>
@@ -132,11 +132,11 @@ BILIRET apibl::APIWebTaskInfo(const std::shared_ptr<user_info>& user) {
 		|| !doc.HasMember("data") || !doc["data"].IsObject()) {
 		return BILIRET::JSON_ERROR;
 	}
-	auto obj = doc["data"].GetObjectW();
+    auto &obj = doc["data"];
 	if (!obj.HasMember("double_watch_info") || !obj["double_watch_info"].IsObject()) {
 		return BILIRET::JSON_ERROR;
 	}
-	obj = obj["double_watch_info"].GetObjectW();
+	obj = obj["double_watch_info"];
 	if (!obj.HasMember("status") || !obj["status"].IsInt()) {
 		return BILIRET::JSON_ERROR;
 	}

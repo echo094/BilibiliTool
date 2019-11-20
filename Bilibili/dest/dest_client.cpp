@@ -1,4 +1,4 @@
-﻿#include "dest_client.h"
+#include "dest_client.h"
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
@@ -22,9 +22,12 @@ void dest_client::post_lottery(std::shared_ptr<BILI_LOTTERYDATA> data)
 	doc.AddMember("srid", data->srid, doc.GetAllocator());
 	doc.AddMember("rrid", data->rrid, doc.GetAllocator());
 	doc.AddMember("loid", data->loid, doc.GetAllocator());
-	doc.AddMember("time_start", data->time_start, doc.GetAllocator());
-	doc.AddMember("time_get", data->time_get, doc.GetAllocator());
-	doc.AddMember("time_end", data->time_end, doc.GetAllocator());
+    val.SetInt64(data->time_start);
+	doc.AddMember("time_start", val, doc.GetAllocator());
+    val.SetInt64(data->time_get);
+	doc.AddMember("time_get", val, doc.GetAllocator());
+    val.SetInt64(data->time_end);
+	doc.AddMember("time_end", val, doc.GetAllocator());
 	val.SetString(data->type.c_str(), data->type.size(), doc.GetAllocator());
 	doc.AddMember("type", val, doc.GetAllocator());
 	doc.AddMember("exinfo", data->exinfo, doc.GetAllocator());
