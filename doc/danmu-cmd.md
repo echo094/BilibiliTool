@@ -586,39 +586,40 @@
 {
 	"cmd": "NOTICE_MSG",
 	"full": {
-		"head_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/00f26756182b2e9d06c00af23001bc8e10da67d0.webp",
-		"tail_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/822da481fdaba986d738db5d8fd469ffa95a8fa1.webp",
-		"head_icon_fa": "http:\/\/i0.hdslb.com\/bfs\/live\/77983005023dc3f31cd599b637c83a764c842f87.png",
-		"tail_icon_fa": "http:\/\/i0.hdslb.com\/bfs\/live\/38cb2a9f1209b16c0f15162b0b553e3b28d9f16f.png",
+		"head_icon": "https://i0.hdslb.com/bfs/live/d07a73380d23c443d128a7031824727a66492cc7.webp",
+		"tail_icon": "https://i0.hdslb.com/bfs/live/822da481fdaba986d738db5d8fd469ffa95a8fa1.webp",
+		"head_icon_fa": "https://i0.hdslb.com/bfs/live/b2baed8a7d780bb6f917834ee30c10dada5f85b9.png",
+		"tail_icon_fa": "https://i0.hdslb.com/bfs/live/38cb2a9f1209b16c0f15162b0b553e3b28d9f16f.png",
 		"head_icon_fan": 36,
 		"tail_icon_fan": 4,
-		"background": "#6098FFFF",
+		"background": "#8675F5FF",
 		"color": "#FFFFFFFF",
 		"highlight": "#FDFF2FFF",
 		"time": 20
 	},
 	"half": {
-		"head_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/358cc52e974b315e83eee429858de4fee97a1ef5.png",
+		"head_icon": "https://i0.hdslb.com/bfs/live/df00be5ee88c4cd53514090a58f8702368b9a324.png",
 		"tail_icon": "",
-		"background": "#7BB6F2FF",
+		"background": "#9299F2FF",
 		"color": "#FFFFFFFF",
 		"highlight": "#FDFF2FFF",
 		"time": 15
 	},
 	"side": {
-		"head_icon": "http:\/\/i0.hdslb.com\/bfs\/live\/7ef6f2b7fe01c550f93dd569ca4b573b80b9e6a5.png",
-		"background": "#E6F4FFFF",
-		"color": "#51A8FBFF",
-		"highlight": "#0081F0FF",
-		"border": "#BDD9FFFF"
+		"head_icon": "https://i0.hdslb.com/bfs/live/8f511d12263b7c1ecc37842ade04ab556370b553.png",
+		"background": "#E9E6FFFF",
+		"color": "#9585FFFF",
+		"highlight": "#6751F6FF",
+		"border": "#CBC3FFFF"
 	},
-	"roomid": 11731666,
-	"real_roomid": 11731666,
-	"msg_common": "手游区广播: <%百茷襛%> 送给<% 安吉丽娜都蒙%> 1个摩天大楼，点击前往TA的房间去抽奖吧",
-	"msg_self": "手游区广播: <%百茷襛%> 送给<% 安吉丽娜都蒙%> 1个摩天大楼，快来抽奖吧",
-	"link_url": "http:\/\/live.bilibili.com\/11731666?live_lottery_type=1&broadcast_type=0&from=28003&extra_jump_from=28003",
+	"roomid": 5101555,
+	"real_roomid": 5101555,
+	"msg_common": "<%别惹河宝我会打人%>送给<%某欧洲的一方通行%>1个魔法降临！，点击前往TA的房间去抽奖吧",
+	"msg_self": "<%别惹河宝我会打人%>送给<%某欧洲的一方通行%>1个魔法降临！，快来抽奖吧",
+	"link_url": "http://live.bilibili.com/5101555?live_lottery_type=1&broadcast_type=0",
 	"msg_type": 2,
-	"shield_uid": -1
+	"shield_uid": -1,
+	"business_id": "30401"
 }
 ```
 

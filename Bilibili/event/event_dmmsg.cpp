@@ -429,15 +429,21 @@ int event_dmmsg::ParseNoticeGift(rapidjson::Value &doc, const unsigned room, con
 		return -1;
 	}
 	int rrid = doc["real_roomid"].GetInt();
-
-	// 如果是全区广播需要过滤重复消息
-	std::string tstr = doc["msg_common"].GetString();
-	std::wstring wmsg;
-	toollib::UTF8ToUTF16(tstr, wmsg);
-	if (wmsg.find(L"全区广播") != -1) {
+	// 检测礼物ID
+	if (!doc.HasMember("business_id") || !doc["business_id"].IsString()) {
+		return -1;
+	}
+	unsigned gift_id = atoi(doc["business_id"].GetString());
+	// 如果是全区广播的礼物需要过滤重复消息
+	switch (gift_id) {
+	case 25: // 小电视飞船
+	case 30035: // 任意门
+	case 30401: // 魔法降临
+	{
 		if (area != 1) {
 			return 0;
 		}
+	}
 	}
 
 	// 有房间号就进行抽奖
