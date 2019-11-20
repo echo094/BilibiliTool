@@ -51,6 +51,19 @@ void asioclient::deinit()
 	}
 }
 
+void asioclient::connect(
+	const std::string & host, 
+	const std::string & service, 
+	const unsigned id, 
+	const std::string & key)
+{
+	// Resolve ip address
+	tcp::resolver resolver(io_context_);
+	endpoints_ = resolver.resolve(host, service);
+	// Connect
+	connect(id, key);
+}
+
 void asioclient::connect(const unsigned id, const std::string &key)
 {
 	bool exist = false;
@@ -290,7 +303,7 @@ void asioclient::on_read_header(context_info* context, boost::system::error_code
 		do_read_some(context);
 	}
 	else {
-		do_read_payload(context, ret - 16);
+		do_read_payload(context, ret - header_len_);
 	}
 }
 

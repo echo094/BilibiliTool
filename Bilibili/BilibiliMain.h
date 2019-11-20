@@ -11,7 +11,9 @@ http://www.lyyyuna.com/2016/03/14/bilibili-danmu01/
 #include <boost/asio.hpp>
 #include "event/event_base.h"
 #include "source/source_base.h"
+#include "source/source_notice.h"
 #include "dest/dest_user.h"
+#include "dest/dest_client.h"
 #include "BilibiliYunYing.h"
 
 using std::unique_ptr;
@@ -24,6 +26,7 @@ enum class TOOL_EVENT {
 	ONLINE,
 	GET_SYSMSG_GIFT,
 	GET_HIDEN_GIFT,
+	JOIN_LOTTERY,
 	DEBUG1,
 	DEBUG2,
 };
@@ -93,8 +96,9 @@ private:
 
 	int StopMonitorALL();
 	int StartUserHeart();
-	int StartMonitorPubEvent();
-	int StartMonitorHiddenEvent();
+	int StartMonitorPubEvent(unsigned port);
+	int StartMonitorHiddenEvent(unsigned port);
+	int StartJoinLottery();
 	// 调试函数
 	int Debugfun(int index);
 
@@ -118,6 +122,8 @@ private:
 	int JoinLotDanmu(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 天选时刻抽奖
 	int JoinLotAnchor(std::shared_ptr<BILI_LOTTERYDATA> data);
+	// 根据当前工作模式推送抽奖信息
+	void PostLottery(std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 用户心跳
 	int HeartExp(unsigned type);
 
@@ -155,4 +161,8 @@ private:
 	unique_ptr<source_base> _dmsource;
 	// 账户列表类
 	unique_ptr<dest_user> _userlist;
+	// 抽奖信息服务器
+	shared_ptr<source_notice> src_notice_;
+	// 抽奖信息广播
+	shared_ptr<dest_client> dest_notice_;
 };

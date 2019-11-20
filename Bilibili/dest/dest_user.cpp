@@ -15,7 +15,7 @@ dest_user::dest_user() :
 	_usercount(0) {
 
 	GetDir(_cfgfile, sizeof(_cfgfile));
-	strcat(_cfgfile, DEF_CONFIGGILE_NAME);
+	strcat(_cfgfile, DEF_CONFIG_USER);
 
 	pubkey = "-----BEGIN PUBLIC KEY-----\
 \nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDqDG9LqVmteJ3xsWv6u/lAt6cU\

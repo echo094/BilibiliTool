@@ -86,7 +86,8 @@ public:
 public:
 	void init(const std::string& host, const std::string& service, const std::size_t interval);
 	void deinit();
-	void connect(const unsigned rid, const std::string &key);
+	void connect(const std::string& host, const std::string& service, const unsigned id, const std::string &key);
+	void connect(const unsigned id, const std::string &key);
 	int disconnect(const unsigned id);
 	void post_write(context_info* context, const char *msg, const size_t len);
 	void post_read(context_info* context);

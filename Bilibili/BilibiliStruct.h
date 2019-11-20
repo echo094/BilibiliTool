@@ -3,9 +3,11 @@
 #include <boost/shared_array.hpp>
 
 #ifdef WIN32
-const char DEF_CONFIGGILE_NAME[] = "\\BiliConfig.json";
+const char DEF_CONFIG_USER[] = "\\ConfigUser.json";
+const char DEF_CONFIG_SERVER[] = "\\ConfigServer.json";
 #else
-const char DEF_CONFIGGILE_NAME[] = "/BiliConfig.json";
+const char DEF_CONFIG_USER[] = "/ConfigUser.json";
+const char DEF_CONFIG_SERVER[] = "/ConfigServer.json";
 #endif
 
 const char APP_KEY[] = "1d8b6e7d45233436";
