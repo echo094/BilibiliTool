@@ -158,22 +158,17 @@ BILIRET apibl::APIWebSign(const std::shared_ptr<user_info>& user) {
 		return BILIRET::HTTP_ERROR;
 	}
 
-	// 0签到成功 -500已签到
+	// 0签到成功 -1已签到
 	rapidjson::Document doc;
 	doc.Parse(user->httpweb->recv_data.c_str());
-	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() ||
+		!doc.HasMember("message") || !doc["message"].IsString()) {
 		return BILIRET::JSON_ERROR;
 	}
-	ret = doc["code"].GetInt();
-	if (ret == -500) {
+	if (doc["code"].GetInt()) {
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
-			<< "APIWebSign: Signed.";
+			<< "APIWebSign: " << doc["message"].GetString();
 		return BILIRET::NOFAULT;
-	}
-	if (ret) {
-		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << user->fileid << "] "
-			<< "APIWebSign: " << user->httpweb->recv_data;
-		return BILIRET::JSON_ERROR;
 	}
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
 		<< "APIWebSign: Success.";
