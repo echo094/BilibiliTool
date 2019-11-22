@@ -104,7 +104,7 @@
 
 
 
-## 有效指令(112)
+## 有效指令(115)
 
 
 
@@ -2820,7 +2820,7 @@
 
 
 
-### 其它函数消息(7)
+### 其它函数消息(10)
 
 
 
@@ -2969,6 +2969,69 @@
 		"banner_type": 4,
 		"weight": 20,
 		"add_banner": 0
+	}
+}
+```
+
+
+
+#### ACTIVITY_BANNER_RED_NOTICE_CLOSE(无处理)
+
+添加日期：2019/11/21
+
+```json
+{
+	"cmd": "ACTIVITY_BANNER_RED_NOTICE_CLOSE",
+	"data": {
+		"id": 297,
+		"type": "revenue_banner"
+	}
+}
+```
+
+
+
+#### ACTIVITY_BANNER_UPDATE_BLS(无处理)
+
+添加日期：2019/11/22
+
+```json
+{
+	"cmd": "ACTIVITY_BANNER_UPDATE_BLS",
+	"data": {
+		"action": "update",
+		"cover": "https://i0.hdslb.com/bfs/live/de5afda1442786836c01243a20f78390bea84625.png",
+		"gift_progress": [
+			{
+				"current": 28,
+				"num": 3000
+			}
+		],
+		"id": 444,
+		"is_close": 1,
+		"jump_url": "https://live.bilibili.com/activity/bls-2019-room/index.html?is_live_half_webview=1&hybrid_rotate_d=1&hybrid_half_ui=1,3,100p,70p,19236c,0,30,100;2,2,375,100p,19236c,0,30,100;3,3,100p,70p,19236c,0,30,100;4,2,375,100p,19236c,0,30,100;5,3,100p,70p,19236c,0,30,100;6,3,100p,70p,19236c,0,30,100;7,3,100p,70p,19236c,0,30,100&room_id=#roomid#",
+		"weight": 100
+	}
+}
+```
+
+
+
+#### ANCHOR_NORMAL_NOTIFY(无处理)
+
+添加日期：2019/11/22
+
+```json
+{
+	"cmd": "ANCHOR_NORMAL_NOTIFY",
+	"data": {
+		"type": 1,
+		"show_type": 1,
+		"info": {
+			"icon": "https://i0.hdslb.com/bfs/live/f3ebd37ee59991bc45538be58e68a6d3aa43ccca.png",
+			"title": "",
+			"content": "恭喜，获得推荐位buff加持，上推荐的几率大大提高，持续时间：2小时。"
+		}
 	}
 }
 ```
