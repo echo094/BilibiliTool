@@ -24,6 +24,16 @@ final_target ()
 
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "app")
 
+list (APPEND cfgfiles
+"${CMAKE_SOURCE_DIR}/config/ConfigGift.txt" )
+file(COPY ${cfgfiles}
+DESTINATION  "${CMAKE_CURRENT_BINARY_DIR}/")
+install(FILES ${cfgfiles}
+CONFIGURATIONS Debug
+DESTINATION  "Debug/bin")
+install(FILES ${cfgfiles}
+CONFIGURATIONS Release
+DESTINATION  "Release/bin")
 if (MSVC)
   list (APPEND dllfiles
   ${CURL_DLL}

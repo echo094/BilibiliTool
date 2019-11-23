@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <map>
+#include <set>
 #include "event/event_base.h"
 #include "rapidjson/document.h"
 
@@ -13,12 +14,20 @@ class event_dmmsg :
 public:
 	event_dmmsg() {
 		InitCMD();
+		InitGift();
 	}
 	~event_dmmsg() {
 	}
 
 private:
+	/**
+	 * @brief 初始化消息类型列表
+	 */
 	void InitCMD();
+	/**
+	 * @brief 初始化全区礼物列表
+	 */
+	void InitGift();
 
 public:
 	void process_data(MSG_INFO *data) override;
@@ -141,5 +150,12 @@ private:
 	int ParseLotAnchor(rapidjson::Value &doc, const unsigned room);
 
 private:
+	/**
+	 * @brief 指令列表
+	 */
 	std::map<std::string, int> m_cmdid;
+	/**
+	 * @brief 全区礼物列表
+	 */
+	std::set<unsigned> m_gift;
 };

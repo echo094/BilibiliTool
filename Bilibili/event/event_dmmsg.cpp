@@ -1,4 +1,5 @@
 ﻿#include "event_dmmsg.h"
+#include <fstream>
 #include "logger/log.h"
 #include "utility/platform.h"
 #include "utility/strconvert.h"
@@ -263,6 +264,23 @@ void event_dmmsg::InitCMD() {
 	m_cmdid["ANCHOR_NORMAL_NOTIFY"] = DM_ANCHOR_NORMAL_NOTIFY;
 }
 
+void event_dmmsg::InitGift()
+{
+	char file[MAX_PATH];
+	GetDir(file, sizeof(file));
+	strcat(file, DEF_CONFIG_GIFT);
+	std::ifstream infile;
+	infile.open(file, std::ios::in);
+	if (!infile.is_open()) {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[DMMSG] Config file does not exist. ";
+		return;
+	}
+	unsigned id;
+	while (infile >> id) {
+		m_gift.insert(id);
+	}
+}
+
 void event_dmmsg::process_data(MSG_INFO *data)
 {
 	int ret;
@@ -441,15 +459,10 @@ int event_dmmsg::ParseNoticeGift(rapidjson::Value &doc, const unsigned room, con
 	}
 	unsigned gift_id = atoi(doc["business_id"].GetString());
 	// 如果是全区广播的礼物需要过滤重复消息
-	switch (gift_id) {
-	case 25: // 小电视飞船
-	case 30035: // 任意门
-	case 30401: // 魔法降临
-	{
+	if (m_gift.count(gift_id)) {
 		if (area != 1) {
 			return 0;
 		}
-	}
 	}
 
 	// 有房间号就进行抽奖

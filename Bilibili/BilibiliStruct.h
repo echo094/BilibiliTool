@@ -5,9 +5,11 @@
 #ifdef WIN32
 const char DEF_CONFIG_USER[] = "\\ConfigUser.json";
 const char DEF_CONFIG_SERVER[] = "\\ConfigServer.json";
+const char DEF_CONFIG_GIFT[] = "\\ConfigGift.txt";
 #else
 const char DEF_CONFIG_USER[] = "/ConfigUser.json";
 const char DEF_CONFIG_SERVER[] = "/ConfigServer.json";
+const char DEF_CONFIG_GIFT[] = "/ConfigGift.txt";
 #endif
 
 const char APP_KEY[] = "1d8b6e7d45233436";

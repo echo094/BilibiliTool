@@ -141,6 +141,14 @@ Bilibili直播站小工具
 
 
 
+### 全区广播礼物列表
+
+文件名：`ConfigGift.txt`
+
+每一行为一个礼物ID。
+
+
+
 ## Build and Usage
 
 ### 文件组织结构
@@ -150,6 +158,7 @@ source dir
 ├── README
 ├── CMakelists.txt (cmake配置文件)
 ├── cmake/ (cmake插件)
+├── config/ (配置文件)
 ├── doc/
 ├── Bilibili/ (主程序)
 └── LotteryHistory/ (历史记录) 
