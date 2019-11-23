@@ -99,6 +99,7 @@ void WsClientV2::close_spec(unsigned id)
 				{
 					on_close(p->label_);
 				});
+				break;
 			}
 		}
 	});
