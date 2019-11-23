@@ -124,7 +124,7 @@ size_t source_notice::on_payload(context_info * c, const int len) {
 	data->gift_id = doc["gift_id"].GetUint();
 	data->gift_num = doc["gift_num"].GetUint();
 	BOOST_LOG_SEV(g_logger::get(), info) << "[NOTICE] server:" << c->label_ 
-		<< " lottery room: " << data->rrid << " id: " << data->loid;
+		<< " type:" << data->cmd << " lottery room: " << data->rrid << " id: " << data->loid;
 	if (event_act_) {
 		event_act_(data);
 	}

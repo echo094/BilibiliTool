@@ -133,17 +133,6 @@ enum {
 	DM_ANCHOR_NORMAL_NOTIFY
 };
 
-struct tagDANMUMSGSYS
-{
-	int itype;
-	time_t time;
-	int iuid, iround;
-	int iroomid, igiftid;//SYSGIFT
-	std::string msg;
-	std::wstring wmsg;
-	std::string url;
-};
-
 void event_dmmsg::InitCMD() {
 	// 18 3
 	m_cmdid["CHANGE_ROOM_INFO"] = DM_CHANGE_ROOM_INFO;

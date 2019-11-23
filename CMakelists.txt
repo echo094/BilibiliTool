@@ -68,6 +68,7 @@ message (STATUS "-- Using BOOST_ROOT")
 message (STATUS "       " ${BOOST_ROOT})
 set (Boost_USE_MULTITHREADED TRUE)
 set (Boost_USE_STATIC_LIBS TRUE)
+set (Boost_NO_BOOST_CMAKE ON)
 find_package (Boost 1.71.0 REQUIRED COMPONENTS "${APP_BOOST_LIBS}")
 if (Boost_FOUND)
 	# Pretty print status
