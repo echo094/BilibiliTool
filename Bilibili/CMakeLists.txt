@@ -18,7 +18,6 @@ link_boost ()
 link_curl ()
 link_openssl ()
 link_rapidjson ()
-link_websocketpp ()
 link_zlib ()
 
 final_target ()

@@ -3,15 +3,25 @@
 #include <iostream>
 #include <list>
 #include <zlib.h>
+#include <boost/bind.hpp>
 #include "logger/log.h"
 #include "proto_bl.h"
 
-// const char DM_WSSERVER[] = "ws://broadcastlv.chat.bilibili.com:2244/sub";
-const char DM_WSSSERVER[] = "wss://broadcastlv.chat.bilibili.com:443/sub";
+const char DM_WS_HOST[] = "broadcastlv.chat.bilibili.com";
+const char DM_WS_PARAM[] = "/sub";
+#ifdef USE_WSS
+const char DM_WS_PORT[] = "443";
+#else
+const char DM_WS_PORT[] = "2244";
+#endif
 
-source_dmws::source_dmws() {
+source_dmws::source_dmws():
+	source_base(),
+	WsClientV2(),
+	heart_timer_(io_ctx_),
+	_isworking(false)
+{
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[DMWS] Create.";
-	_isworking = false;
 }
 
 source_dmws::~source_dmws() {
@@ -19,53 +29,58 @@ source_dmws::~source_dmws() {
 	BOOST_LOG_SEV(g_logger::get(), debug) << "[DMWS] Destroy.";
 }
 
-void source_dmws::on_timer(websocketpp::lib::error_code const & ec) {
+void source_dmws::start_timer()
+{
+	heart_timer_.expires_from_now(boost::posix_time::seconds(30));
+	heart_timer_.async_wait(
+		boost::bind(
+			&source_dmws::on_timer,
+			this,
+			boost::asio::placeholders::error
+		)
+	);
+}
+
+void source_dmws::on_timer(boost::system::error_code ec) {
 	if (ec) {
-		// there was an error, stop telemetry
-		m_client.get_alog().write(websocketpp::log::alevel::app,
-			"Timer Error: " + ec.message());
 		return;
 	}
 
-	std::list<int> recon_list;
-	for (con_list::const_iterator it = m_connection_list.begin(); it != m_connection_list.end(); ++it) {
-		if (it->second->get_status() != "Open") {
-			// Add wrong connection to reconnect list
-			recon_list.push_back(it->second->get_id());
-			continue;
-		}
+	for (auto it = sessions_.begin(); it != sessions_.end(); ++it) {
 		// Send heart data
-		this->SendHeartInfo(*(it->second));
-	}
-	while (recon_list.size()) {
-		// Connect to room again
-		// This will erase current metadata first and then create new metadata
-		// If it failed to connect, this room will lose. 
-		int rid = recon_list.front();
-		this->add_context(rid, get_info(rid));
-		recon_list.pop_front();
+		SendHeartInfo(*it);
 	}
 
 	// Start the timer for next heart
-	this->set_timer(30000);
+	start_timer();
 }
 
-void source_dmws::on_open(connection_metadata *it) {
-	BOOST_LOG_SEV(g_logger::get(), info) << "[DMWS] WebSocket Open: " << it->get_id();
-	SendConnectionInfo(it);
+void source_dmws::on_open(std::shared_ptr<session_ws> c) {
+	BOOST_LOG_SEV(g_logger::get(), info) << "[DMWS] WebSocket Open: " << c->label_;
+	source_base::do_list_add(c->label_);
+	SendConnectionInfo(c);
 }
 
-void source_dmws::on_fail(connection_metadata *it) {
-	BOOST_LOG_SEV(g_logger::get(), warning) << "[DMWS] WebSocket Error: " << it->get_id() << " " << it->get_error_reason();
+void source_dmws::on_fail(unsigned label) {
+	BOOST_LOG_SEV(g_logger::get(), warning) << "[DMWS] WebSocket Error: " << label;
+	// 从列表清除该房间
+	source_base::do_list_del(label);
+	if (_isworking) {
+		// 重连
+		add_context(label, get_info(label));
+	}
 }
 
-void source_dmws::on_close(connection_metadata *it) {
-	BOOST_LOG_SEV(g_logger::get(), info) << "[DMWS] WebSocket Close: " << it->get_id() << " " << it->get_error_reason();
+void source_dmws::on_close(unsigned label) {
+	BOOST_LOG_SEV(g_logger::get(), info) << "[DMWS] WebSocket Close: " << label;
+	// 从列表清除该房间
+	source_base::do_list_del(label);
 }
 
-void source_dmws::on_message(connection_metadata *it, std::string &msg, int len) {
-	int label = it->get_id();
-	int pos = 0, ireclen;
+void source_dmws::on_message(std::shared_ptr<session_ws> c, size_t len) {
+	int label = c->label_;
+	size_t pos = 0, ireclen;
+	std::string msg = beast::buffers_to_string(c->buffer_.data());
 	while (pos < len) {
 		const unsigned char *precv = (const unsigned char *)msg.c_str();
 		if (len < pos + 16) {
@@ -206,39 +221,35 @@ void source_dmws::process_data(const char *buff,
 }
 
 int source_dmws::start() {
-	if (_isworking)
+	if (_isworking) {
 		return -1;
-
-	this->set_timer(30000);
-
+	}
 	_isworking = true;
+
+	start_timer();
+
 	return 0;
 }
 
 int source_dmws::stop() {
-	if (!_isworking)
+	if (!_isworking) {
 		return 0;
+	}
+	_isworking = false;
 
-	this->cancel_timer();
+	heart_timer_.cancel();
 	// 这里会触发事件但不会进入继承的 on_close 函数
-	this->closeall();
+	close_all();
 	// 清理列表
 	source_base::stop();
 
-	_isworking = false;
 	return 0;
 }
 
-int source_dmws::add_context(const unsigned id, const ROOM_INFO& info) {
-	int ret;
-	std::string url = DM_WSSSERVER;
-	ret = this->connect(id, url, info.key);
-	if (ret) {
-		BOOST_LOG_SEV(g_logger::get(), error) << "[DMWS] Connect to " << id << " failed!";
-		return -1;
-	}
+int source_dmws::add_context(const unsigned id, const ROOM_INFO& info) 
+{
+	connect(id, DM_WS_HOST, DM_WS_PORT, DM_WS_PARAM, info.key);
 	source_base::do_info_add(id, info);
-	source_base::do_list_add(id);
 
 	return 0;
 }
@@ -247,9 +258,7 @@ int source_dmws::del_context(const unsigned id) {
 	if (!source_base::is_exist(id)) {
 		return -1;
 	}
-	this->close(id, websocketpp::close::status::going_away, "");
-	// 从列表清除该房间
-	source_base::do_list_del(id);
+	close_spec(id);
 
 	return 0;
 }
@@ -260,36 +269,28 @@ int source_dmws::clean_context(std::set<unsigned> &nlist) {
 
 void source_dmws::show_stat() {
 	source_base::show_stat();
-	printf("IO count: %ld \n", m_connection_list.size());
+	printf("IO count: %ld \n", sessions_.size());
 }
 
-int source_dmws::SendConnectionInfo(connection_metadata *it) {
+int source_dmws::SendConnectionInfo(std::shared_ptr<session_ws> c) {
 	unsigned char cmdstr[512];
 	int len = protobl::MakeWebConnectionInfo(
 		cmdstr, 
 		sizeof(cmdstr), 
-		it->get_id(), 
-		it->get_key().c_str()
+		c->label_, 
+		c->key_.c_str()
 	);
-	websocketpp::lib::error_code ec;
-	m_client.send(it->get_hdl(), cmdstr, len, websocketpp::frame::opcode::binary, ec);
-	if (ec) {
-		BOOST_LOG_SEV(g_logger::get(), error) << "[DMWS] Error sending connection message: " << ec.message();
-		return -1;
-	}
+	std::shared_ptr<std::string> buff(new std::string((const char*)cmdstr, len));
+	do_write(c, buff);
 
 	return 0;
 }
 
-int source_dmws::SendHeartInfo(connection_metadata &it) {
+int source_dmws::SendHeartInfo(std::shared_ptr<session_ws> c) {
 	unsigned char cmdstr[128];
 	int len = protobl::MakeWebHeartInfo(cmdstr, 128);
-	websocketpp::lib::error_code ec;
-	m_client.send(it.get_hdl(), cmdstr, len, websocketpp::frame::opcode::binary, ec);
-	if (ec) {
-		BOOST_LOG_SEV(g_logger::get(), error) << "[DMWS] Error sending heart message: " << ec.message();
-		return -1;
-	}
+	std::shared_ptr<std::string> buff(new std::string((const char*)cmdstr, len));
+	do_write(c, buff);
 
 	return 0;
 }

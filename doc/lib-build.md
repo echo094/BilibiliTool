@@ -2,7 +2,7 @@
 
 ### boost
 
-版本 1.69.0
+版本 1.71.0
 
 [主页](https://www.boost.org/)  
 
@@ -84,14 +84,6 @@ nmake install
 版本 1.1.0
 
 [主页](http://rapidjson.org/)  
-
-
-
-### Websocketpp
-
-版本 0.8.1
-
-[主页](https://www.zaphoyd.com/websocketpp)  
 
 
 

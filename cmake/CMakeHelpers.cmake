@@ -110,10 +110,6 @@ macro (link_sqlite3)
     set_property(TARGET ${TARGET_NAME} APPEND PROPERTY INCLUDE_DIRECTORIES ${SQLite3_INCLUDE_DIRS})
 endmacro ()
 
-macro (link_websocketpp)
-    set_property(TARGET ${TARGET_NAME} APPEND PROPERTY INCLUDE_DIRECTORIES ${WEPP_INCLUDE_DIR})
-endmacro ()
-
 macro (link_zlib)
 	target_link_libraries (${TARGET_NAME} ${ZLIB_LIBRARIES})
     set_property(TARGET ${TARGET_NAME} APPEND PROPERTY INCLUDE_DIRECTORIES ${ZLIB_INCLUDE_DIRS})

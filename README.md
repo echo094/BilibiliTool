@@ -2,7 +2,7 @@
 
 Bilibili直播站小工具 
 
-模式12使用wss协议(websocketpp)连接弹幕服务器，各分区监控一个房间。
+模式12使用wss协议(boost beast)连接弹幕服务器，各分区监控一个房间。
 
 模式13使用tcp协议(boost asio)连接弹幕服务器，经测试，网络条件允许时，1800个房间没问题。
 
@@ -163,16 +163,15 @@ build dir
 
 ### 依赖库  
 
-- boost  
+- boost (1.70.0及以上)
 - curl  
 - openssl  
 - rapidjson  
-- websocketpp(需要做一些修改)
 - zlib
 
 依赖库的编译参考[doc/lib-build.md](doc/lib-build.md)
 
-**[重要]WSS相关内容参考[doc/notes-wss.md](doc/notes-wss.md)**
+`boost`1.70.0之前的版本存在WSS无法连接的问题。
 
 
 
@@ -187,7 +186,6 @@ build dir
   * `CURL_DLL`：DLL文件路径（仅Windows平台配置）
 * `OPENSSL_ROOT_DIR`：OpenSSL安装目录，动态链接
 * `RapidJSON_ROOT`：RapidJSON头文件所在文件夹
-* `WebsocketPP_ROOT`：WebsocketPP头文件所在文件夹
 * `ZLIB_ROOT`：ZLIB安装目录，动态链接
 
 输出目录可以选择其它文件夹，不建议使用当前文件夹。
@@ -198,9 +196,9 @@ build dir
 
 **编译器**
 
-Windows平台建议使用VS2017，由于插件`WebsocketPP`目前不支持`Boost 1.70.0`，目前无法使用VS2019。
+Windows平台可使用VS2017及后续版本。
 
-Mac平台我用的Xcode，还需要测试。
+Mac平台可使用Xcode。
 
 
 
@@ -208,7 +206,6 @@ Mac平台我用的Xcode，还需要测试。
 
 - 添加验证码识别领取瓜子(识别部分就不用C写了 是个大工程 有生之年)
 - 重构代码，适配`doxygen`注释规范。
-- 使用`Beast`替换`Websocketpp`
 
 
 
