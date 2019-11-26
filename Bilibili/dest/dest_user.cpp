@@ -3,9 +3,9 @@
 #include <functional>
 #include <iostream>
 #include <thread>
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
-#include "utility/strconvert.h"
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
+#include <utility/strconvert.h>
 #include "logger/log.h"
 #include "api_bl.h" 
 
@@ -261,8 +261,14 @@ int dest_user::HeartExp(int firsttime) {
 int dest_user::JoinLottery(std::shared_ptr<BILI_LOTTERYDATA> data) {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Lottery Room: " << data->rrid << " ID: " << data->loid;
 	// 当前没有用户则不领取
-	if (!_usercount)
+	if (!_usercount) {
 		return 0;
+	}
+
+	// 转换为毫秒
+	data->time_start *= 1000;
+	data->time_end *= 1000;
+	data->time_get *= 1000;
 
 	for (auto itor = _user_list.begin(); itor != _user_list.end(); itor++) {
 		if (!(*itor)->islogin) {
@@ -272,11 +278,11 @@ int dest_user::JoinLottery(std::shared_ptr<BILI_LOTTERYDATA> data) {
 		std::shared_ptr<BILI_LOTTERYDATA> p(new BILI_LOTTERYDATA(*data));
 		switch (p->cmd) {
 		case MSG_LOT_STORM: {
-			p->time_get += _GetRand(1, 3);
+			p->time_get += _GetRand(6000, 4000);
 			break;
 		}
 		default: {
-			p->time_get += _GetRand(5, 5);
+			p->time_get += _GetRand(5000, 30000);
 		}
 		}
 		(*itor)->post_task(p);

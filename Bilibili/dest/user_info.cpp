@@ -1,6 +1,8 @@
 ﻿#include "user_info.h"
 #include <cstdlib>
+#include <random>
 #include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include "api_bl.h" 
 #include "utility/base64.h"
 #include "utility/sslex.h"
@@ -19,7 +21,7 @@ user_info::user_info() :
 	conf_pk(0),
 	conf_danmu(0),
 	conf_anchor(0),
-	httpweb(new CHTTPPack()),
+	httpweb(new CHTTPPack("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36")),
 	httpapp(new CHTTPPack("Mozilla/5.0 BiliDroid/5.43.0 (bbcallen@gmail.com)")),
 	ioc_(),
 	timer_(ioc_)
@@ -193,9 +195,7 @@ void user_info::WriteFileAccount(const std::string key, rapidjson::Document& doc
 }
 
 bool user_info::CheckBanned(const std::string &msg) {
-	std::wstring wmsg;
-	toollib::UTF8ToUTF16(msg, wmsg);
-	if (wmsg.find(L"访问被拒绝") != -1) {
+	if (msg.find(u8"访问被拒绝") != -1) {
 		this->SetBanned();
 		return true;
 	}
@@ -280,7 +280,7 @@ void user_info::clear_task()
 
 void user_info::start_timer()
 {
-	timer_.expires_from_now(boost::posix_time::seconds(1));
+	timer_.expires_from_now(boost::posix_time::milliseconds(100));
 	timer_.async_wait(
 		boost::bind(
 			&user_info::on_timer,
@@ -292,18 +292,24 @@ void user_info::start_timer()
 
 void user_info::on_timer(boost::system::error_code ec)
 {
+	static thread_local std::mt19937 gen;
+	static thread_local boost::posix_time::ptime epoch(
+		boost::gregorian::date(1970, boost::gregorian::Jan, 1));
 	if (ec) {
 		return;
 	}
 	// 检查任务列表
-	auto curtime = toollib::GetTimeStamp();
+	boost::posix_time::time_duration now =
+		boost::posix_time::microsec_clock::universal_time() - epoch;
+	auto curtime = now.total_milliseconds();
+	std::uniform_int_distribution<int> dis(100, 300);
 	while (!tasks_.empty() && tasks_.top()->time_get < curtime) {
 		auto p = tasks_.top();
 		tasks_.pop();
-		if (do_task(p) == BILIRET::JOIN_AGAIN
-			&& (p->time_start + 30 > curtime)) {
-			// 节奏风暴没抽中且时间在30秒内
-			p->time_get += 1;
+		if (do_task(p, curtime) == BILIRET::JOIN_AGAIN
+			&& (p->time_start + 22000 > curtime)) {
+			// 节奏风暴没抽中且时间在22秒内
+			p->time_get += dis(gen);
 			tasks_.push(p);
 		}
 	}
@@ -311,7 +317,9 @@ void user_info::on_timer(boost::system::error_code ec)
 	start_timer();
 }
 
-BILIRET user_info::do_task(const std::shared_ptr<BILI_LOTTERYDATA>& data)
+BILIRET user_info::do_task(
+	const std::shared_ptr<BILI_LOTTERYDATA>& data, 
+	long long curtime)
 {
 	BOOST_LOG_SEV(g_logger::get(), trace) << "[User] Do task type: " << data->cmd
 		<< " id: " << data->loid;
@@ -319,46 +327,56 @@ BILIRET user_info::do_task(const std::shared_ptr<BILI_LOTTERYDATA>& data)
 	switch (data->cmd) {
 	case MSG_LOT_STORM: {
 		if (conf_storm == 1) {
-			apibl::APIWebv1RoomEntry(this, data->rrid);
+			do_visit(data->rrid, curtime);
 			ret = apibl::APIWebv1StormJoin(this, data, "", "");
 		}
 		break;
 	}
 	case MSG_LOT_GIFT: {
 		if (conf_gift == 1) {
-			apibl::APIWebv1RoomEntry(this, data->rrid);
+			do_visit(data->rrid, curtime);
 			ret = apibl::APIWebv5SmalltvJoin(this, data);
 		}
 		break;
 	}
 	case MSG_LOT_GUARD: {
 		if (conf_guard == 1) {
-			apibl::APIWebv1RoomEntry(this, data->rrid);
+			do_visit(data->rrid, curtime);
 			ret = apibl::APIWebv3GuardJoin(this, data);
 		}
 		break;
 	}
 	case MSG_LOT_PK: {
 		if (conf_pk == 1) {
-			apibl::APIWebv1RoomEntry(this, data->rrid);
+			do_visit(data->rrid, curtime);
 			ret = apibl::APIWebv2PKJoin(this, data);
 		}
 		break;
 	}
 	case MSG_LOT_DANMU: {
 		if (conf_danmu == 1) {
-			apibl::APIWebv1RoomEntry(this, data->rrid);
+			do_visit(data->rrid, curtime);
 			ret = apibl::APIWebv1DanmuJoin(this, data);
 		}
 		break;
 	}
 	case MSG_LOT_ANCHOR: {
 		if (conf_anchor == 1) {
-			apibl::APIWebv1RoomEntry(this, data->rrid);
+			do_visit(data->rrid, curtime);
 			ret = apibl::APIWebv1AnchorJoin(this, data);
 		}
 		break;
 	}
 	}
 	return ret;
+}
+
+void user_info::do_visit(unsigned room, long long curtime)
+{
+	if (his_visit_.count(room) &&
+		his_visit_[room] > curtime) {
+		return;
+	}
+	his_visit_[room] = curtime + 180000;
+	apibl::APIWebv1RoomEntry(this, room);
 }

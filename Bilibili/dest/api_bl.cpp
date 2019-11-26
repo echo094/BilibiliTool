@@ -495,15 +495,13 @@ BILIRET apibl::APIWebv1StormJoin(
 		msg = doc["msg"].GetString();
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
 			<< "APIWebv1StormJoin: " << ret << " " << msg;
-		if (ret == 400) {
-			if (user->CheckBanned(msg)) {
-				// 检查是否被封禁
-				return BILIRET::NOFAULT;
-			}
-			if (msg.find(u8"你错过了奖励") != -1) {
-				// 未抽中 可多次参与抽奖
-				return BILIRET::JOIN_AGAIN;
-			}
+		if (user->CheckBanned(msg)) {
+			// 检查是否被封禁
+			return BILIRET::NOFAULT;
+		}
+		if (msg.find(u8"你错过了奖励") != -1) {
+			// 未抽中 可多次参与抽奖
+			return BILIRET::JOIN_AGAIN;
 		}
 		// 抽奖过期或其它未知情况
 		return BILIRET::NOFAULT;
@@ -547,19 +545,14 @@ BILIRET apibl::APIWebv5SmalltvJoin(
 		return BILIRET::JSON_ERROR;
 	}
 
-	// 0成功 -400已领取 -500系统繁忙
+	// 0成功 -403已领取
 	int icode = doc["code"].GetInt();
 	if (icode) {
+		std::string msg = doc["msg"].GetString();
 		// 检查是否被封禁
-		if (icode == 400) {
-			user->SetBanned();
-		}
-		std::string tmpstr;
-		if (doc.HasMember("message") && doc["message"].IsString()) {
-			tmpstr = doc["message"].GetString();
-		}
+		user->CheckBanned(msg);
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
-			<< "APIWebv5SmalltvJoin: " << tmpstr;
+			<< "APIWebv5SmalltvJoin: " << icode << ' ' << msg;
 		return BILIRET::NOFAULT;
 	}
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
@@ -599,19 +592,14 @@ BILIRET apibl::APIWebv3GuardJoin(
 		return BILIRET::JSON_ERROR;
 	}
 
-	std::string tmpstr;
 	int icode = doc["code"].GetInt();
+	std::string msg = doc["msg"].GetString();
 	if (icode) {
 		// 检查是否被封禁
-		if (icode == 400) {
-			user->SetBanned();
-		}
-	}
-	if (doc.HasMember("message") && doc["message"].IsString()) {
-		tmpstr = doc["message"].GetString();
+		user->CheckBanned(msg);
 	}
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
-		<< "APIWebv3GuardJoin: " << tmpstr;
+		<< "APIWebv3GuardJoin: " << icode << ' ' << msg;
 
 	return BILIRET::NOFAULT;
 }
@@ -647,19 +635,13 @@ BILIRET apibl::APIWebv2PKJoin(
 		return BILIRET::JSON_ERROR;
 	}
 
-	// 0成功 -400已领取 -500系统繁忙
 	int icode = doc["code"].GetInt();
 	if (icode) {
+		std::string msg = doc["msg"].GetString();
 		// 检查是否被封禁
-		if (icode == 400) {
-			user->SetBanned();
-		}
-		std::string tmpstr;
-		if (doc.HasMember("message") && doc["message"].IsString()) {
-			tmpstr = doc["message"].GetString();
-		}
+		user->CheckBanned(msg);
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
-			<< "APIWebv2PKJoin: " << tmpstr;
+			<< "APIWebv2PKJoin: " << icode << ' ' << msg;
 		return BILIRET::NOFAULT;
 	}
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
@@ -691,8 +673,27 @@ BILIRET apibl::APIWebv1DanmuJoin(
 		return BILIRET::HTTP_ERROR;
 	}
 
+	/*
+	{
+		"code": 0,
+		"data": {
+			"code": 0,
+			"message": ""
+		},
+		"message": "发送成功",
+		"msg": "发送成功"
+	}
+	*/
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpweb->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
+		return BILIRET::JSON_ERROR;
+	}
+
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
-		<< "APIWebv1DanmuJoin: " << user->httpweb->recv_data;
+		<< "APIWebv1DanmuJoin: " << doc["code"].GetInt()
+		<< ' ' << doc["msg"].GetString();
 
 	return BILIRET::NOFAULT;
 }
@@ -731,19 +732,13 @@ BILIRET apibl::APIWebv1AnchorJoin(
 		return BILIRET::JSON_ERROR;
 	}
 
-	// 0成功 -400已领取 -500系统繁忙
 	int icode = doc["code"].GetInt();
 	if (icode) {
+		std::string msg = doc["msg"].GetString();
 		// 检查是否被封禁
-		if (icode == 400) {
-			user->SetBanned();
-		}
-		std::string tmpstr;
-		if (doc.HasMember("message") && doc["message"].IsString()) {
-			tmpstr = doc["message"].GetString();
-		}
+		user->CheckBanned(msg);
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
-			<< "APIWebv1AnchorJoin: " << tmpstr;
+			<< "APIWebv1AnchorJoin: " << icode << ' ' << msg;
 		return BILIRET::NOFAULT;
 	}
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "

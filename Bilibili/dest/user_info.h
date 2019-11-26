@@ -11,6 +11,7 @@ conf_guard   亲密度
 conf_pk      大乱斗抽奖
 */
 #pragma once
+#include <map>
 #include <memory>
 #include <queue>
 #include <string>
@@ -28,6 +29,9 @@ struct task_cmp {
 		const std::shared_ptr<BILI_LOTTERYDATA> &a, 
 		const std::shared_ptr<BILI_LOTTERYDATA> &b)
 	{
+		if (a->time_get == b->time_get) {
+			return a->rrid > b->rrid;
+		}
 		return a->time_get > b->time_get;
 	}
 };
@@ -118,7 +122,16 @@ private:
 	 * @return 抽奖API的返回状态
 	 *
 	 */
-	BILIRET do_task(const std::shared_ptr<BILI_LOTTERYDATA> &data);
+	BILIRET do_task(const std::shared_ptr<BILI_LOTTERYDATA> &data, long long curtime);
+	/**
+	 * @brief 访问房间
+	 *
+	 * 180秒内不重复访问
+	 *
+	 * @param room      房间号
+	 * @param curtime   当前时间 ms
+	 */
+	void do_visit(unsigned room, long long curtime);
 
 private:
 	/**
@@ -145,4 +158,8 @@ private:
 		std::vector<std::shared_ptr<BILI_LOTTERYDATA>>,
 		task_cmp
 	> tasks_;
+	/**
+	 * @brief 直播间访问历史
+	 */
+	std::map<unsigned, long long> his_visit_;
 };
