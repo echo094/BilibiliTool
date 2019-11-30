@@ -141,6 +141,18 @@ struct BILI_LOTTERYDATA {
 	 */
 	std::string title;
 	/**
+	 * @brief 天选抽奖的抽奖类型
+	 */
+	unsigned join_type = 0;
+	/**
+	 * @brief 天选抽奖的限制条件
+	 */
+	unsigned require_type = 0;
+	/**
+	 * @brief 天选抽奖限制条件的数值要求
+	 */
+	unsigned require_value = 0;
+	/**
 	 * @brief 天选抽奖所需送的礼物编号
 	 */
 	unsigned gift_id = 0;

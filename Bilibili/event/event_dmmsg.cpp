@@ -615,10 +615,13 @@ int event_dmmsg::ParseLotAnchor(rapidjson::Value & doc, const unsigned room) {
 	data->type = "anchor";
 	data->title = doc["data"]["award_name"].GetString();
 	data->exinfo = doc["data"]["award_num"].GetUint();
+	data->join_type = doc["data"]["join_type"].GetUint();
+	data->require_type = doc["data"]["require_type"].GetUint();
+	data->require_value = doc["data"]["require_value"].GetUint();
 	data->gift_id = doc["data"]["gift_id"].GetUint();
 	data->gift_num = doc["data"]["gift_num"].GetUint();
 	BOOST_LOG_SEV(g_logger::get(), info) << "[DMMSG] anchor " << room
-		<< " id: " << data->loid;
+		<< " id: " << data->loid << " join_type: " << data->join_type;
 	event_base::post_lottery_hidden(data);
 	return 0;
 }

@@ -121,6 +121,9 @@ size_t source_notice::on_payload(context_info * c, const int len) {
 	data->type = doc["type"].GetString();
 	data->title = doc["title"].GetString();
 	data->exinfo = doc["exinfo"].GetUint();
+	data->join_type = doc["join_type"].GetUint();
+	data->require_type = doc["require_type"].GetUint();
+	data->require_value = doc["require_value"].GetUint();
 	data->gift_id = doc["gift_id"].GetUint();
 	data->gift_num = doc["gift_num"].GetUint();
 	BOOST_LOG_SEV(g_logger::get(), info) << "[NOTICE] server:" << c->label_ 

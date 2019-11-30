@@ -60,6 +60,20 @@
 
 * 19年10月开放 [ “天选时刻”玩法介绍 ]( https://www.bilibili.com/blackboard/live/activity-introduction_anchordraw.html )
 
+抽奖类型`join_type`：
+
+0. 弹幕口令抽奖
+1. 赠送道具抽奖
+
+参与条件`require_type`：
+
+0. 全部用户
+1. 关注
+2. 粉丝勋章
+3. 大航海
+4. 用户等级
+5. 主站等级
+
 
 
 ### 历史运营活动

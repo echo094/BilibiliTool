@@ -751,12 +751,15 @@ int CBilibiliMain::JoinLotAnchor(std::shared_ptr<BILI_LOTTERYDATA> data)
 		<< ",loid:" << data->loid
 		<< ",award_name:'" << data->title
 		<< "',award_num:" << data->exinfo
+		<< ",join_type:" << data->join_type
+		<< ",require_type:" << data->require_type
+		<< ",require_value:" << data->require_value
 		<< ",gift_id:" << data->gift_id
 		<< ",gift_num:" << data->gift_num
 		<< "}," << std::endl;
 
 	// 需要送礼的不领取
-	if (data->gift_id) {
+	if (data->join_type) {
 		return 0;
 	}
 

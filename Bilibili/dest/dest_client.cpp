@@ -33,6 +33,9 @@ void dest_client::post_lottery(std::shared_ptr<BILI_LOTTERYDATA> data)
 	doc.AddMember("exinfo", data->exinfo, doc.GetAllocator());
 	val.SetString(data->title.c_str(), data->title.size(), doc.GetAllocator());
 	doc.AddMember("title", val, doc.GetAllocator());
+	doc.AddMember("join_type", data->join_type, doc.GetAllocator());
+	doc.AddMember("require_type", data->require_type, doc.GetAllocator());
+	doc.AddMember("require_value", data->require_value, doc.GetAllocator());
 	doc.AddMember("gift_id", data->gift_id, doc.GetAllocator());
 	doc.AddMember("gift_num", data->gift_num, doc.GetAllocator());
 	rapidjson::StringBuffer buffer;
