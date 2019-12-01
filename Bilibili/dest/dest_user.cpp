@@ -281,6 +281,10 @@ int dest_user::JoinLottery(std::shared_ptr<BILI_LOTTERYDATA> data) {
 			p->time_get += _GetRand(6000, 4000);
 			break;
 		}
+		case MSG_LOT_GIFT: {
+			p->time_get += _GetRand(100, 1000);
+			break;
+		}
 		default: {
 			p->time_get += _GetRand(5000, 30000);
 		}

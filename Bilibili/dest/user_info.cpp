@@ -262,6 +262,10 @@ void user_info::post_task(std::shared_ptr<BILI_LOTTERYDATA> lot)
 		ioc_,
 		[this, lot] {
 		BOOST_LOG_SEV(g_logger::get(), trace) << "[User] Push task type: " << lot->cmd;
+		if (lot->cmd == MSG_LOT_GIFT && conf_gift == 1) {
+			// 送礼类别的提前进入房间
+			this->do_visit(lot->rrid, toollib::GetTimeStamp() * 1000);
+		}
 		this->tasks_.push(lot);
 	});
 }
@@ -334,7 +338,6 @@ BILIRET user_info::do_task(
 	}
 	case MSG_LOT_GIFT: {
 		if (conf_gift == 1) {
-			do_visit(data->rrid, curtime);
 			ret = apibl::APIWebv5SmalltvJoin(this, data);
 		}
 		break;

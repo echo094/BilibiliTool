@@ -515,7 +515,7 @@ BILIRET apibl::APIWebv1StormJoin(
 }
 
 BILIRET apibl::APIWebv5SmalltvJoin(
-	user_info *user,
+	user_info* user,
 	std::shared_ptr<BILI_LOTTERYDATA> data
 ) {
 	user->httpweb->url = URL_LIVEAPI_HEAD + "/xlive/lottery-interface/v5/smalltv/join";
@@ -538,7 +538,23 @@ BILIRET apibl::APIWebv5SmalltvJoin(
 	if (ret) {
 		return BILIRET::HTTP_ERROR;
 	}
-
+	/*
+	{
+		"code": 0,
+		"data": {
+			"id": 540620,
+			"award_id": 1,
+			"award_type": 0,
+			"award_num": 5,
+			"award_image": "http://i0.hdslb.com/bfs/live/*.png",
+			"award_name": "辣条",
+			"award_text": "",
+			"award_ex_time": 1577721600
+		},
+		"message": "",
+		"msg": ""
+	}
+	*/
 	rapidjson::Document doc;
 	doc.Parse(user->httpweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
@@ -556,7 +572,8 @@ BILIRET apibl::APIWebv5SmalltvJoin(
 		return BILIRET::NOFAULT;
 	}
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
-		<< "APIWebv5SmalltvJoin: Success ";
+		<< "APIWebv5SmalltvJoin: " << doc["data"]["award_name"].GetString()
+		<< u8"×" << doc["data"]["award_num"].GetInt();
 
 	return BILIRET::NOFAULT;
 }
