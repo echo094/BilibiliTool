@@ -4,9 +4,44 @@ on:
   push:
     branches: 
       - master
+    paths: 
+      - 'Bilibili/**'
 
 jobs:
+  
+  build-ubuntu:
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      
+      - name: Install dev packages
+        run: |
+          sudo apt-get install libcurl4-openssl-dev
+          sudo apt-get install zlib1g-dev
+          
+      - name: Install dependency
+        run: |
+          mkdir deps && cd deps
+          echo "Install rapidjson"
+          git clone "https://github.com/Tencent/rapidjson.git"
+          echo "Install BOOST 1.71.0"
+          wget https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.gz
+          tar xvzf boost_1_71_0.tar.gz
+          cd boost_1_71_0
+          ./bootstrap.sh
+          ./b2
+          
+      - name: Compile
+        run: |
+          cmake -version\
+          cmake -D BOOST_ROOT=./deps/boost_1_71_0 -D RapidJSON_ROOT=./deps/rapidjson/include/ ./
+          make
+  
   build-macos:
+    
     runs-on: macOS-latest
     
     steps:
