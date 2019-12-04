@@ -38,10 +38,8 @@ bool toollib::Encrypt_RSA_KeyBuff(char *pPubkey, const std::string &strData, std
 bool toollib::Decrypt_RSA_KeyBuff(const char *pPrikey, const std::string &strData, std::string &strres)
 {
 	int ret;
-	unsigned int len;
 	strres = "";
 	//调用BASE64解码
-	len = strData.length();
 	std::string buff;
 	ret = Decode_Base64(strData, buff);
 	if (ret == false) {

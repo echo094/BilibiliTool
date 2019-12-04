@@ -56,8 +56,6 @@ void WsClientV2::connect(
 	char const* param,
 	const std::string key)
 {
-	using tcp = boost::asio::ip::tcp;
-
 	// Create a session
 #ifdef USE_WSS
 	std::shared_ptr<session_ws> c(new session_ws(

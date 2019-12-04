@@ -195,7 +195,7 @@ void user_info::WriteFileAccount(const std::string key, rapidjson::Document& doc
 }
 
 bool user_info::CheckBanned(const std::string &msg) {
-	if (msg.find(u8"访问被拒绝") != -1) {
+	if (msg.find(u8"访问被拒绝") != std::string::npos) {
 		this->SetBanned();
 		return true;
 	}

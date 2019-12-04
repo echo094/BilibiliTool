@@ -2,7 +2,7 @@
 ############ Setup project and cmake
 # Minimum cmake requirement. We should require a quite recent
 # cmake for the dependency find macros etc. to be up to date.
-cmake_minimum_required( VERSION 3.14 )
+cmake_minimum_required( VERSION 3.12 )
 
 ############ Paths
 message ("${CMAKE_BINARY_DIR}")
@@ -50,9 +50,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   add_definitions (-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
   add_definitions (-DNOMINMAX)
   add_definitions (-D_WIN32_WINNT=0x0A00)
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++0x -stdlib=libc++") # todo: is libc++ really needed here?
-  add_definitions (-DNDEBUG -Wall -Wno-padded) # todo: should we use CMAKE_C_FLAGS for these?
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  set (CMAKE_CXX_STANDARD 14)
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pthread")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
   set (CMAKE_CXX_STANDARD 14)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)

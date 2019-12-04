@@ -30,7 +30,7 @@ void CHTTPPack::ClearRec() {
 
 int toollib::HttpImportCookie(CURL * pcurl, const std::string & str) {
 	size_t pl = 0, pr = str.find('\n', 0);
-	while (pr != -1) {
+	while (pr != std::string::npos) {
 		CURLcode ret = curl_easy_setopt(pcurl, CURLOPT_COOKIELIST, str.c_str() + pl);
 		if (ret != CURLE_OK) {
 			return ret;

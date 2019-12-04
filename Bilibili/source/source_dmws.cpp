@@ -104,8 +104,8 @@ void source_dmws::on_message(std::shared_ptr<session_ws> c, size_t len) {
 			}
 			return;
 		}
-		int type = protobl::CheckMessage(precv + pos);
-		if (type == -1) {
+		unsigned type = protobl::CheckMessage(precv + pos);
+		if (!type) {
 			// The header is wrong
 			BOOST_LOG_SEV(g_logger::get(), error) << "[DMWS] Data pack check failed!";
 			msg.clear();
@@ -188,7 +188,7 @@ void source_dmws::process_data(const char *buff,
 		info.len = head[0] << 24 | head[1] << 16 | head[2] << 8 | head[3];
 		info.len -= 16;
 		info.buff.reset(new char[info.len + 1]);
-		if (info.type == -1) {
+		if (!info.type) {
 			success = false;
 			break;
 		}

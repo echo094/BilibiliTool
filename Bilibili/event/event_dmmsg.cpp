@@ -463,7 +463,7 @@ int event_dmmsg::ParseNoticeGift(rapidjson::Value &doc, const unsigned room, con
 int event_dmmsg::ParseNoticeGuard(rapidjson::Value &doc, const unsigned room, const unsigned area) {
 	// 过滤当前房间的开通信息
 	std::string tstr = doc["msg_common"].GetString();
-	if (tstr.find(u8"在本房间") != -1) {
+	if (tstr.find(u8"在本房间") != std::string::npos) {
 		return 0;
 	}
 	// 全区广播只需通知一次

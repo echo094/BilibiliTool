@@ -499,7 +499,7 @@ BILIRET apibl::APIWebv1StormJoin(
 			// 检查是否被封禁
 			return BILIRET::NOFAULT;
 		}
-		if (msg.find(u8"你错过了奖励") != -1) {
+		if (msg.find(u8"你错过了奖励") != std::string::npos) {
 			// 未抽中 可多次参与抽奖
 			return BILIRET::JOIN_AGAIN;
 		}
@@ -546,7 +546,7 @@ BILIRET apibl::APIWebv5SmalltvJoin(
 			"award_id": 1,
 			"award_type": 0,
 			"award_num": 5,
-			"award_image": "http://i0.hdslb.com/bfs/live/*.png",
+			"award_image": "http://i0.hdslb.com/bfs/live/ .png",
 			"award_name": "辣条",
 			"award_text": "",
 			"award_ex_time": 1577721600
@@ -998,7 +998,7 @@ BILIRET apibl::APIAndv1StormJoin(
 				// 检查是否被封禁
 				return BILIRET::NOFAULT;
 			}
-			if (msg.find(u8"你错过了奖励") != -1) {
+			if (msg.find(u8"你错过了奖励") != std::string::npos) {
 				// 未抽中 可多次参与抽奖
 				return BILIRET::JOIN_AGAIN;
 			}

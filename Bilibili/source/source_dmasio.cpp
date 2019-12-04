@@ -142,8 +142,8 @@ void source_dmasio::on_heart(context_info * c) {
 size_t source_dmasio::on_header(context_info * c, const int len) {
 	unsigned char *data = (unsigned char *)c->buff_header_;
 	size_t bufflen = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
-	int type = protobl::CheckMessage(data);
-	if ((bufflen > 5000) || (type == -1)) {
+	unsigned type = protobl::CheckMessage(data);
+	if ((bufflen > 5000) || (!type)) {
 		BOOST_LOG_SEV(g_logger::get(), error) << "[DMAS] Recv: " << c->label_ 
 			<< " bytes: " << char2hexstring(data, len);
 		return 0;
@@ -225,7 +225,7 @@ int source_dmasio::uncompress_dmpack(
 		info.len = head[0] << 24 | head[1] << 16 | head[2] << 8 | head[3];
 		info.len -= 16;
 		info.buff.reset(new char[info.len + 1]);
-		if (info.type == -1) {
+		if (!info.type) {
 			success = false;
 			break;
 		}

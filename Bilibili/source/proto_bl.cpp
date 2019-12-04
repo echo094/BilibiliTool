@@ -16,21 +16,21 @@ long long GetRUID() {
 	return static_cast <long long> (val);
 }
 
-int protobl::CheckMessage(const unsigned char *str) {
+unsigned protobl::CheckMessage(const unsigned char *str) {
 	int i;
 	if (str[4]) {
-		return -1;
+		return 0;
 	}
 	if (str[5] - 16) {
-		return -1;
+		return 0;
 	}
 	for (i = 8; i < 11; i++) {
 		if (str[i])
-			return -1;
+			return 0;
 	}
 	for (i = 12; i < 15; i++) {
 		if (str[i])
-			return -1;
+			return 0;
 	}
 	return str[11];
 }

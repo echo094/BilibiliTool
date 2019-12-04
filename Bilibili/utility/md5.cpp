@@ -1,4 +1,6 @@
 ﻿#include "md5.h"
+#include <cstring>
+#include <memory>
 #include <iostream>
 #include <math.h>
 
@@ -37,8 +39,8 @@ UInt32 CycleMoveLeft(unsigned int src_num, int bit_num_to_move) {
 	if (0 >= bit_num_to_move) {
 		return src_num;
 	}
-	UInt32 num1 = src_num1 << bit_num_to_move;
-	UInt32 num2 = src_num2 >> (32 - bit_num_to_move);
+	// UInt32 num1 = src_num1 << bit_num_to_move;
+	// UInt32 num2 = src_num2 >> (32 - bit_num_to_move);
 
 	return ((src_num1 << bit_num_to_move) \
 		| (src_num2 >> (32 - bit_num_to_move)));
@@ -51,7 +53,7 @@ UInt32 CycleMoveLeft(unsigned int src_num, int bit_num_to_move) {
 // return : 填充信息后的数据长度,以字节为单位
 UInt32 FillData(const char *in_data_ptr, int data_byte_len, char** out_data_ptr) {
 	int bit_num = data_byte_len * BIT_OF_BYTE;
-	int grop_num = bit_num / BIT_OF_GROUP;
+	// int grop_num = bit_num / BIT_OF_GROUP;
 	int mod_bit_num = bit_num % BIT_OF_GROUP;
 	int bit_need_fill = 0;
 	if (mod_bit_num > (BIT_OF_GROUP - SRC_DATA_LEN)) {

@@ -21,7 +21,8 @@ void dest_client::post_lottery(std::shared_ptr<BILI_LOTTERYDATA> data)
 	doc.AddMember("cmd", data->cmd, doc.GetAllocator());
 	doc.AddMember("srid", data->srid, doc.GetAllocator());
 	doc.AddMember("rrid", data->rrid, doc.GetAllocator());
-	doc.AddMember("loid", data->loid, doc.GetAllocator());
+    val.SetInt64(data->loid);
+	doc.AddMember("loid", val, doc.GetAllocator());
     val.SetInt64(data->time_start);
 	doc.AddMember("time_start", val, doc.GetAllocator());
     val.SetInt64(data->time_get);

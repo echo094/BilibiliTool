@@ -292,7 +292,7 @@ void asioclient::on_read_header(context_info* context, boost::system::error_code
 		on_error(context, ec);
 		return;
 	}
-	int ret = 0;
+	size_t ret = 0;
 	if (header_handler_) {
 		ret = header_handler_(context, length);
 	}
