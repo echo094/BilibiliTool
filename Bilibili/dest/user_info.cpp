@@ -10,6 +10,9 @@
 #include "logger/log.h"
 using namespace toollib;
 
+static std::string _valBuvid = "XZ843B78BAAB10F554BBD584271300E8DE86A";
+static std::string _valDeviceID = "HCwUIUJwQndBcEVwDD4MPgw1V2EAZF0_CnYKOAo_CTgNOAo_Cz8IOAA1Vg";
+
 user_info::user_info() :
 	islogin(false),
 	fileid(0),
@@ -28,15 +31,30 @@ user_info::user_info() :
 {
 	curlweb = curl_easy_init();
 	curlapp = curl_easy_init();
+
+	// 网页端 Headers
 	httpweb->AddHeaderInf("Accept-Language: zh-CN,zh;q=0.8");
 	httpweb->AddHeaderInf("Connection: keep-alive");
 	httpweb->AddHeaderInf("DNT: 1");
+
+	// 安卓端参数
+	phoneDeviceName = toollib::UrlEncodeAnd("HUAWEI HUAWEI EVR-AN00");
+	phoneDevicePlatform = toollib::UrlEncodeAnd("Android5.1.1HUAWEI HUAWEI EVR-AN00");
+	phoneBuvid = _valBuvid;
+	phoneDeviceID = _valDeviceID;
+	phoneDisplayID = _valBuvid + "-" + std::to_string(toollib::GetTimeStamp());
+	// 安卓端 Headers
+	std::string str;
 	httpapp->AddHeaderInf("APP-KEY: android");
-	httpapp->AddHeaderInf("Buvid: XZ843B78BAAB10F554BBD584271300E8DE86A");
-	httpapp->AddHeaderInf("Device-ID: HCwUIUJwQndBcEVwDD4MPgw1V2EAZF0_CnYKOAo_CTgNOAo_Cz8IOAA1Vg");
-	httpapp->AddHeaderInf("Display-ID: XZ843B78BAAB10F554BBD584271300E8DE86A-1560783638");
+	str = "Buvid: " + phoneBuvid;
+	httpapp->AddHeaderInf(str.c_str());
+	str = "Device-ID: " + phoneDeviceID;
+	httpapp->AddHeaderInf(str.c_str());
+	str = "Display-ID: " + phoneDisplayID;
+	httpapp->AddHeaderInf(str.c_str());
 	httpapp->AddHeaderInf("env: prod");
 	httpapp->AddHeaderInf("Connection: keep-alive");
+
 	// 启动用户IO
 	worker_ = std::make_shared< boost::asio::io_context::work>(ioc_);
 	start_timer();

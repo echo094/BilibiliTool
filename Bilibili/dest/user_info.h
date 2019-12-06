@@ -70,6 +70,12 @@ public:
 	// 两个连接 一个用于网页端 一个用于手机端
 	CURL *curlweb, *curlapp;
 	unique_ptr<toollib::CHTTPPack> httpweb, httpapp;
+	// 手机ID
+	std::string phoneDeviceName;
+	std::string phoneDevicePlatform;
+	std::string phoneBuvid;
+	std::string phoneDeviceID;
+	std::string phoneDisplayID;
 	
 public:
 	explicit user_info();

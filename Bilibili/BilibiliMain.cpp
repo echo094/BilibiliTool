@@ -291,11 +291,8 @@ int CBilibiliMain::ProcessCommand(std::string str) {
 		getline(cin, name);
 		cout << "Password: ";
 		GetPassword(psd);
-		boost::asio::post(
-			io_context_,
-			[this, name, psd] {
-			this->_userlist->AddUser(name, psd);
-		});
+		// 由于可能需要输入验证码 必须在主线程执行
+		this->_userlist->AddUser(name, psd);
 	}
 	else if (!str.compare("5")) {
 		char tstr[30];
@@ -308,11 +305,8 @@ int CBilibiliMain::ProcessCommand(std::string str) {
 		});
 	}
 	else if (!str.compare("6")) {
-		boost::asio::post(
-			io_context_,
-			[this] {
-			this->_userlist->ReloginAll();
-		});
+		// 由于可能需要输入验证码 必须在主线程执行
+		this->_userlist->ReloginAll();
 	}
 	else if (!str.compare("7")) {
 		boost::asio::post(

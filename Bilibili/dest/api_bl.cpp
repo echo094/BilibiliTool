@@ -16,6 +16,8 @@ using namespace toollib;
 #undef GetObject
 #endif
 
+static const char UALogin[] = "Mozilla/5.0 BiliDroid/5.51.1 (bbcallen@gmail.com) os/android model/HUAWEI EVR-AN00 mobi_app/android build/5511400 channel/yingyongbao innerVer/5511400 osVer/5.1.1 network/2";
+
 int GetMD5Sign(const char *in, std::string &sign) {
 	std::string str = in;
 	str += APP_SECRET;
@@ -40,23 +42,6 @@ BILIRET apibl::APIWebGetCoin(const std::shared_ptr<user_info>& user) {
 	double money = doc["data"]["money"].GetDouble();
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
 		<< "APIWebGetCoin: Current Coin " << money;
-
-	return BILIRET::NOFAULT;
-}
-
-BILIRET apibl::APIWebGETLoginCaptcha(const std::shared_ptr<user_info>& user) {
-	BOOST_LOG_SEV(g_logger::get(), info) << "[User] Get captcha...";
-	user->httpapp->url = "https://passport.bilibili.com/captcha?rnd=569";
-	user->httpapp->ClearHeader();
-	int ret = toollib::HttpGetEx(user->curlapp, user->httpapp);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	std::ofstream out;
-	out.open("Captcha.jpg", std::ios::binary);
-	out.write(user->httpapp->recv_data.c_str(), user->httpapp->recv_data.size());
-	out.close();
 
 	return BILIRET::NOFAULT;
 }
@@ -764,20 +749,28 @@ BILIRET apibl::APIWebv1AnchorJoin(
 	return BILIRET::NOFAULT;
 }
 
-BILIRET apibl::APIAndGetKey(const std::shared_ptr<user_info>& user, std::string & psd) {
+BILIRET apibl::APIAndGetKey(
+	const std::shared_ptr<user_info>& user, 
+	std::string & psd)
+{
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User] Get APP RSA key...";
 	user->httpapp->url = "https://passport.bilibili.com/api/oauth2/getKey";
+	std::string statistics = "{\"appId\":1,\"platform\":3,\"version\":\"5.51.1\",\"abtest\":\"\"}";
 	std::ostringstream oss;
 	oss << "appkey=" << APP_KEY
-		<< "&build=" << PARAM_BUILD
-		<< "&mobi_app=android&platform=android&ts=" << GetTimeStamp();
+		<< "&build=" << "5511400"
+		<< "&channel=yingyongbao"
+		<< "&mobi_app=android"
+		<< "&platform=android"
+		<< "&statistics=" << toollib::UrlEncodeAnd(statistics)
+		<< "&ts=" << GetTimeStamp();
 	std::string sign;
 	GetMD5Sign(oss.str().c_str(), sign);
 	oss << "&sign=" << sign;
 	user->httpapp->send_data = oss.str();
 	user->httpapp->ClearHeader();
 	user->httpapp->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=utf-8");
-	int ret = toollib::HttpPostEx(user->curlapp, user->httpapp);
+	int ret = toollib::HttpPostEx(user->curlapp, user->httpapp, UALogin);
 	if (ret) {
 		return BILIRET::HTTP_ERROR;
 	}
@@ -798,6 +791,90 @@ BILIRET apibl::APIAndGetKey(const std::shared_ptr<user_info>& user, std::string 
 	}
 
 	return BILIRET::OPENSSL_ERROR;
+}
+
+BILIRET apibl::APIAndv3Login(
+	std::shared_ptr<user_info>& user, 
+	std::string username, 
+	std::string password,
+	std::string challenge,
+	std::string validate)
+{
+	BOOST_LOG_SEV(g_logger::get(), info) << "[User] Logging in by app api...";
+	user->httpapp->url = "https://passport.bilibili.com/api/v3/oauth2/login";
+	std::string statistics = "{\"appId\":1,\"platform\":3,\"version\":\"5.51.1\",\"abtest\":\"\"}";
+	std::ostringstream oss;
+	oss << "appkey=" << APP_KEY
+		<< "&bili_local_id=" << user->phoneDeviceID
+		<< "&build=" << "5511400"
+		<< "&buvid=" << user->phoneBuvid;
+	if (challenge != "") {
+		oss << "&challenge=" << challenge;
+	}
+	oss << "&channel=yingyongbao"
+		<< "&device_id=" << user->phoneDeviceID
+		<< "&device_name=" << user->phoneDeviceName
+		<< "&device_platform=" << user->phoneDevicePlatform
+		<< "&local_id=" << user->phoneBuvid
+		<< "&mobi_app=android"
+		<< "&password=" << toollib::UrlEncodeAnd(password.c_str())
+		<< "&platform=android";
+	if (challenge != "") {
+		oss << "&seccode=" << validate << toollib::UrlEncodeAnd("|jordan");
+	}
+	oss << "&statistics=" << toollib::UrlEncodeAnd(statistics)
+		<< "&ts=" << GetTimeStamp()
+		<< "&username=" << username;
+	if (challenge != "") {
+		oss << "&validate=" << validate;
+	}
+	std::string sign;
+	GetMD5Sign(oss.str().c_str(), sign);
+	oss << "&sign=" << sign;
+	user->httpapp->send_data = oss.str();
+	user->httpapp->ClearHeader();
+	user->httpapp->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=utf-8");
+	int ret = toollib::HttpPostEx(user->curlapp, user->httpapp, UALogin);
+	if (ret) {
+		return BILIRET::HTTP_ERROR;
+	}
+
+	rapidjson::Document doc;
+	doc.Parse(user->httpapp->recv_data.c_str());
+	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
+		return BILIRET::JSON_ERROR;
+	}
+	ret = doc["code"].GetInt();
+	if (ret == -105) {
+		std::string url = doc["data"]["url"].GetString();
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIAndv3Login: " << url;
+		return BILIRET::LOGIN_NEEDVERIFY;
+	}
+	if (ret) {
+		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
+			<< "APIAndv3Login: " << ret << ' ' << doc["message"].GetString();
+		return BILIRET::LOGIN_PASSWORDWRONG;
+	}
+
+	// 登录成功
+	user->uid = doc["data"]["token_info"]["mid"].GetInt();
+	user->tokena = doc["data"]["token_info"]["access_token"].GetString();
+	user->tokenr = doc["data"]["token_info"]["refresh_token"].GetString();
+	oss.str("");
+	rapidjson::Value& cookie_list = doc["data"]["cookie_info"]["cookies"];
+	for (unsigned i = 0; i < cookie_list.Size(); i++) {
+		if (cookie_list[i]["http_only"].GetInt()) {
+			oss << "#HttpOnly_";
+		}
+		oss << ".bilibili.com\tTRUE\t/\tFALSE\t"
+			<< cookie_list[i]["expires"].GetInt64() << "\t"
+			<< cookie_list[i]["name"].GetString() << "\t"
+			<< cookie_list[i]["value"].GetString() << "\n";
+	}
+	toollib::HttpImportCookie(user->curlweb, oss.str());
+
+	return BILIRET::NOFAULT;
 }
 
 BILIRET apibl::APIAndv1RoomEntry(const std::shared_ptr<user_info>& user, unsigned room) {
@@ -1117,62 +1194,6 @@ BILIRET apibl::APIAndv2LotteryJoin(
 	}
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
 		<< "APIAndv2LotteryJoin: " << tmpstr;
-
-	return BILIRET::NOFAULT;
-}
-
-BILIRET apibl::APIAndv2Login(std::shared_ptr<user_info>& user, std::string username, std::string password, std::string captcha) {
-	BOOST_LOG_SEV(g_logger::get(), info) << "[User] Logging in by app api...";
-	user->httpapp->url = "https://passport.bilibili.com/api/v2/oauth2/login";
-	std::ostringstream oss;
-	oss << "appkey=" << APP_KEY
-		<< "&build=" << PARAM_BUILD;
-	if (captcha != "") {
-		oss << "&captcha=" << captcha;
-	}
-	oss << "&mobi_app=android&password=" << toollib::UrlEncode(password.c_str())
-		<< "&platform=android&ts=" << GetTimeStamp()
-		<< "&username=" << username;
-	std::string sign;
-	GetMD5Sign(oss.str().c_str(), sign);
-	oss << "&sign=" << sign;
-	user->httpapp->send_data = oss.str();
-	user->httpapp->ClearHeader();
-	user->httpapp->AddHeaderManual("Content-Type: application/x-www-form-urlencoded; charset=utf-8");
-	int ret = toollib::HttpPostEx(user->curlapp, user->httpapp);
-	if (ret) {
-		return BILIRET::HTTP_ERROR;
-	}
-
-	rapidjson::Document doc;
-	doc.Parse(user->httpapp->recv_data.c_str());
-	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt()) {
-		return BILIRET::JSON_ERROR;
-	}
-	ret = doc["code"].GetInt();
-	if (ret == -105) {
-		return BILIRET::LOGIN_NEEDVERIFY;
-	}
-	if (ret) {
-		return BILIRET::LOGIN_PASSWORDWRONG;
-	}
-
-	// 登录成功
-	user->uid = doc["data"]["token_info"]["mid"].GetInt();
-	user->tokena = doc["data"]["token_info"]["access_token"].GetString();
-	user->tokenr = doc["data"]["token_info"]["refresh_token"].GetString();
-	oss.str("");
-	rapidjson::Value &cookie_list = doc["data"]["cookie_info"]["cookies"];
-	for (unsigned i = 0; i < cookie_list.Size(); i++) {
-		if (cookie_list[i]["http_only"].GetInt()) {
-			oss << "#HttpOnly_";
-		}
-		oss << ".bilibili.com\tTRUE\t/\tFALSE\t"
-			<< cookie_list[i]["expires"].GetInt64() << "\t"
-			<< cookie_list[i]["name"].GetString() << "\t"
-			<< cookie_list[i]["value"].GetString() << "\n";
-	}
-	toollib::HttpImportCookie(user->curlweb, oss.str());
 
 	return BILIRET::NOFAULT;
 }

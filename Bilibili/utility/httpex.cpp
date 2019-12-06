@@ -7,7 +7,7 @@ using namespace toollib;
 CHTTPPack::CHTTPPack(const char *ua) :
 	header_num_inf(0) {
 	strcpy(useragent, ua);
-	url.empty();
+	url = "";
 	recv_data = "";
 }
 
@@ -112,7 +112,7 @@ static size_t write_data_callback(void *ptr, size_t size, size_t nmemb, void *st
 	return realsize;
 }
 
-CURLcode http_perform(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack) {
+CURLcode http_perform(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, const char* ua) {
 	CURLcode ret;
 	// 存放HTTP表头
 	struct curl_slist *slist = NULL;
@@ -133,7 +133,12 @@ CURLcode http_perform(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack) {
 	// 设置接受的 Cookies
 	// curl_easy_setopt(curl, CURLOPT_COOKIEJAR, cookieFilePath);
 	// 设置UA
-	curl_easy_setopt(pcurl, CURLOPT_USERAGENT, pHTTPPack->useragent);
+	if (ua == nullptr) {
+		curl_easy_setopt(pcurl, CURLOPT_USERAGENT, pHTTPPack->useragent);
+	}
+	else {
+		curl_easy_setopt(pcurl, CURLOPT_USERAGENT, ua);
+	}
 	// 自动解压Header
 	curl_easy_setopt(pcurl, CURLOPT_ACCEPT_ENCODING, "gzip");
 	// 不检查证书
@@ -154,7 +159,7 @@ CURLcode http_perform(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack) {
 	return ret;
 }
 
-int toollib::HttpGetEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack) {
+int toollib::HttpGetEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, const char* ua) {
 	if (pcurl == NULL) {
 		return -1;
 	}
@@ -164,12 +169,12 @@ int toollib::HttpGetEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack) {
 	curl_easy_setopt(pcurl, CURLOPT_WRITEDATA, (void *)&pHTTPPack->recv_data);
 	curl_easy_setopt(pcurl, CURLOPT_WRITEFUNCTION, write_data_callback);
 	//执行
-	CURLcode res = http_perform(pcurl, pHTTPPack);
+	CURLcode res = http_perform(pcurl, pHTTPPack, ua);
 
 	return res;
 }
 
-int toollib::HttpPostEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack) {
+int toollib::HttpPostEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, const char* ua) {
 	if (pcurl == NULL) {
 		return -1;
 	}
@@ -183,12 +188,12 @@ int toollib::HttpPostEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack) {
 	curl_easy_setopt(pcurl, CURLOPT_WRITEDATA, (void *)&pHTTPPack->recv_data);
 	curl_easy_setopt(pcurl, CURLOPT_WRITEFUNCTION, write_data_callback);
 	//执行
-	CURLcode res = http_perform(pcurl, pHTTPPack);
+	CURLcode res = http_perform(pcurl, pHTTPPack, ua);
 
 	return res;
 }
 
-int toollib::HttpHeadEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack) {
+int toollib::HttpHeadEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, const char* ua) {
 	if (pcurl == NULL) {
 		return -1;
 	}
@@ -196,7 +201,7 @@ int toollib::HttpHeadEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack) {
 	// 标记为HEAD
 	curl_easy_setopt(pcurl, CURLOPT_NOBODY, 1L);
 	// 执行
-	CURLcode res = http_perform(pcurl, pHTTPPack);
+	CURLcode res = http_perform(pcurl, pHTTPPack, ua);
 
 	return res;
 }

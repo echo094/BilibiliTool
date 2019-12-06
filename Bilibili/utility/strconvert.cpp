@@ -58,6 +58,28 @@ namespace toollib {
 		return strTemp;
 	}
 
+	std::string UrlEncodeAnd(const std::string& str)
+	{
+		std::string strTemp = "";
+		size_t length = str.length();
+		for (size_t i = 0; i < length; i++)
+		{
+			if (isalnum((unsigned char)str[i]) ||
+				(str[i] == '-') ||
+				(str[i] == '_') ||
+				(str[i] == '.') ||
+				(str[i] == '~')) {
+				strTemp += str[i];
+			}
+			else {
+				strTemp += '%';
+				strTemp += ToHex((unsigned char)str[i] >> 4);
+				strTemp += ToHex((unsigned char)str[i] % 16);
+			}
+		}
+		return strTemp;
+	}
+
 	bool UTF8ToUTF16(const std::string &in, std::wstring &out) {
 		using namespace rapidjson;
 		StringStream source(in.c_str());

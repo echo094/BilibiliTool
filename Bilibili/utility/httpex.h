@@ -73,9 +73,9 @@ namespace toollib {
 	// 成功时返回值为 0
 	int HttpGetCookieTime(CURL *pcurl, const char* ckname, int &val);
 
-	int HttpGetEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack);
-	int HttpPostEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack);
-	int HttpHeadEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack);
+	int HttpGetEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, const char* ua = nullptr);
+	int HttpPostEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, const char* ua = nullptr);
+	int HttpHeadEx(CURL *pcurl, const unique_ptr<CHTTPPack> &pHTTPPack, const char* ua = nullptr);
 
 }
 

@@ -309,23 +309,21 @@ LOGINRET dest_user::_ActLogin(std::shared_ptr<user_info>& user, int index, std::
 	if (bret != BILIRET::NOFAULT) {
 		return LOGINRET::NOTLOGIN;
 	}
-	bret = apibl::APIAndv2Login(user, username, password, "");
+	bret = apibl::APIAndv3Login(user, username, password, "", "");
 	if (bret == BILIRET::LOGIN_NEEDVERIFY) {
-		// 获取验证码
-		bret = apibl::APIWebGETLoginCaptcha(user);
-		if (bret != BILIRET::NOFAULT) {
-			return LOGINRET::NOTLOGIN;
-		}
-		std::string tmp_chcode;
-		printf("Enter the pic validate code: ");
-		std::cin >> tmp_chcode;
+		// 滑块验证
+		std::string challenge, validate;
+		std::cout << "Enter the challenge code: ";
+		std::cin >> challenge;
+		std::cout << "Enter the validate code: ";
+		std::cin >> validate;
 		// 移动端使用验证码登录
 		password = user->password;
 		bret = apibl::APIAndGetKey(user, password);
 		if (bret != BILIRET::NOFAULT) {
 			return LOGINRET::NOTLOGIN;
 		}
-		bret = apibl::APIAndv2Login(user, username, password, tmp_chcode);
+		bret = apibl::APIAndv3Login(user, username, password, challenge, validate);
 	}
 	if (bret != BILIRET::NOFAULT) {
 		return LOGINRET::NOTLOGIN;

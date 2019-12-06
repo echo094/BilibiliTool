@@ -17,46 +17,7 @@ void GetDir(char *path, unsigned len) {
 
 #ifdef WIN32
 int GetPassword(std::string &psd) {
-	using namespace std;
-
-	int ret = 0;
-	char ch;
-	unsigned int ich;
-	psd = "";
-
-	while (1) {
-		ich = _getch();
-		if (!ich) {
-			continue;
-		}
-		//case cursor move
-		if (ich == 224) {
-			ch = _getch();
-			continue;
-		}
-		ch = ich;
-		//case enter
-		if (ch == 13) {
-			if (psd.size() > 0) {
-				cout << '\n';
-				return 0;
-			}
-			cout << "\nPassword is empty. Please reenter. \n";
-			continue;
-		}
-		//case backspace
-		if (ch == 8)
-		{
-			if (psd.size() == 0)
-				continue;
-			psd.erase(psd.end() - 1);
-			cout << "\b \b";
-			continue;
-		}
-		//noral case
-		psd += ch;
-		cout << "*";
-	}
+	std::cin >> psd;
 	return 0;
 }
 #else

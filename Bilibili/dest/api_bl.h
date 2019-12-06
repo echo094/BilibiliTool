@@ -11,8 +11,6 @@ namespace apibl {
 
 	// 获取登录硬币
 	BILIRET APIWebGetCoin(const std::shared_ptr<user_info> &user);
-	// 获取移动端登录验证码
-	BILIRET APIWebGETLoginCaptcha(const std::shared_ptr<user_info> &user);
 	// 获取必要的临时id
 	BILIRET APIWebGetCaptchaKey(const std::shared_ptr<user_info> &user);
 
@@ -174,10 +172,53 @@ namespace apibl {
 
 	/* 安卓端 API*/
 
-	/* 安卓端 无版本 API*/
+	/**
+	 * @brief 获取RSA密钥
+	 *
+	 * 更新日期 12/06/2019 <br>
+	 * <br>
+	 * 收到密钥后将传入的密码加密 <br>
+	 *
+	 * @param user  用户IO
+	 * @param psd   密码
+	 *
+	 * @return
+	 *   返回码
+	 */
+	BILIRET APIAndGetKey(
+		const std::shared_ptr<user_info> &user, 
+		std::string &psd
+	);
 
-	// 移动端加密密钥
-	BILIRET APIAndGetKey(const std::shared_ptr<user_info> &user, std::string &psd);
+	/**
+	 * @brief 登录v3
+	 *
+	 * 更新日期 12/06/2019 <br>
+	 * <br>
+	 * 返回值 <br>
+	 * -     0: 成功
+	 * -    -3: API sign invalid
+	 * -  -105: 验证码错误
+	 * -  -629: 账号或密码错误
+	 * - -2001: 校验失败,请重新提交
+	 *
+	 *
+	 * @param user       用户IO
+	 * @param username   登录名
+	 * @param password   加密后的密码
+	 * @param challenge  验证码ID  不需要时留空
+	 * @param validate   验证码 不需要时留空
+	 *
+	 * @return
+	 *   返回码
+	 */
+	BILIRET APIAndv3Login(
+		std::shared_ptr<user_info>& user,
+		std::string username,
+		std::string password,
+		std::string challenge,
+		std::string validate
+	);
 
 	/* 安卓端 v1 API*/
 
@@ -206,13 +247,6 @@ namespace apibl {
 	BILIRET APIAndv2LotteryJoin(
 		std::shared_ptr<user_info> &user,
 		std::shared_ptr<BILI_LOTTERYDATA> data
-	);
-	// 移动端登录接口
-	BILIRET APIAndv2Login(
-		std::shared_ptr<user_info> &user, 
-		std::string username, 
-		std::string password, 
-		std::string captcha
 	);
 
 	/* 安卓端 v4 API*/
