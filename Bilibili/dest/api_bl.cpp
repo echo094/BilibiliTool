@@ -475,9 +475,16 @@ BILIRET apibl::APIWebv1StormJoin(
 	}
 	ret = doc["code"].GetInt();
 	std::string msg;
-	// 429需要验证码 400未抽中或已过期
 	if (ret) {
-		msg = doc["msg"].GetString();
+		if (doc.HasMember("msg")) {
+			msg = doc["msg"].GetString();
+		}
+		else if (doc.HasMember("message")) {
+			msg = doc["message"].GetString();
+		}
+		else {
+			msg = user->httpweb->recv_data;
+		}
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
 			<< "APIWebv1StormJoin: " << ret << " " << msg;
 		if (user->CheckBanned(msg)) {
@@ -546,10 +553,18 @@ BILIRET apibl::APIWebv5SmalltvJoin(
 		return BILIRET::JSON_ERROR;
 	}
 
-	// 0成功 -403已领取
 	int icode = doc["code"].GetInt();
 	if (icode) {
-		std::string msg = doc["msg"].GetString();
+		std::string msg;
+		if (doc.HasMember("msg")) {
+			msg = doc["msg"].GetString();
+		}
+		else if (doc.HasMember("message")) {
+			msg = doc["message"].GetString();
+		}
+		else {
+			msg = user->httpweb->recv_data;
+		}
 		// 检查是否被封禁
 		user->CheckBanned(msg);
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
@@ -595,7 +610,16 @@ BILIRET apibl::APIWebv3GuardJoin(
 	}
 
 	int icode = doc["code"].GetInt();
-	std::string msg = doc["msg"].GetString();
+	std::string msg;
+	if (doc.HasMember("msg")) {
+		msg = doc["msg"].GetString();
+	}
+	else if (doc.HasMember("message")) {
+		msg = doc["message"].GetString();
+	}
+	else {
+		msg = user->httpweb->recv_data;
+	}
 	if (icode) {
 		// 检查是否被封禁
 		user->CheckBanned(msg);
@@ -639,7 +663,16 @@ BILIRET apibl::APIWebv2PKJoin(
 
 	int icode = doc["code"].GetInt();
 	if (icode) {
-		std::string msg = doc["msg"].GetString();
+		std::string msg;
+		if (doc.HasMember("msg")) {
+			msg = doc["msg"].GetString();
+		}
+		else if (doc.HasMember("message")) {
+			msg = doc["message"].GetString();
+		}
+		else {
+			msg = user->httpweb->recv_data;
+		}
 		// 检查是否被封禁
 		user->CheckBanned(msg);
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
@@ -693,9 +726,16 @@ BILIRET apibl::APIWebv1DanmuJoin(
 		return BILIRET::JSON_ERROR;
 	}
 
+	std::string msg;
+	if (doc.HasMember("message")) {
+		msg = doc["message"].GetString();
+	}
+	else {
+		msg = user->httpweb->recv_data;
+	}
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
 		<< "APIWebv1DanmuJoin: " << doc["code"].GetInt()
-		<< ' ' << doc["msg"].GetString();
+		<< ' ' << msg;
 
 	return BILIRET::NOFAULT;
 }
@@ -736,7 +776,16 @@ BILIRET apibl::APIWebv1AnchorJoin(
 
 	int icode = doc["code"].GetInt();
 	if (icode) {
-		std::string msg = doc["msg"].GetString();
+		std::string msg;
+		if (doc.HasMember("msg")) {
+			msg = doc["msg"].GetString();
+		}
+		else if (doc.HasMember("message")) {
+			msg = doc["message"].GetString();
+		}
+		else {
+			msg = user->httpweb->recv_data;
+		}
 		// 检查是否被封禁
 		user->CheckBanned(msg);
 		BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
