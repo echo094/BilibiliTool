@@ -5,6 +5,7 @@ on:
     branches: 
       - master
     paths: 
+      - '.github/**'
       - 'Bilibili/**'
 
 jobs:
@@ -27,22 +28,22 @@ jobs:
           mkdir deps && cd deps
           echo "Install rapidjson"
           git clone "https://github.com/Tencent/rapidjson.git"
-          echo "Install BOOST 1.71.0"
-          wget https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.gz
-          tar xvzf boost_1_71_0.tar.gz
-          cd boost_1_71_0
+          echo "Install BOOST"
+          wget https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz
+          tar xvzf boost_1_72_0.tar.gz
+          cd boost_1_72_0
           ./bootstrap.sh
           ./b2
           
       - name: Compile
         run: |
           cmake -version\
-          cmake -D BOOST_ROOT=./deps/boost_1_71_0 -D RapidJSON_ROOT=./deps/rapidjson/include/ ./
+          cmake -D BOOST_ROOT=./deps/boost_1_72_0 -D RapidJSON_ROOT=./deps/rapidjson/include/ ./
           make
   
   build-macos:
     
-    runs-on: macOS-latest
+    runs-on: macos-latest
     
     steps:
       - name: Checkout
@@ -56,6 +57,6 @@ jobs:
 
       - name: Compile
         run: |
-          cmake -B build -G "Xcode" -D BOOST_ROOT=/usr/local/Cellar/boost/ -D OPENSSL_ROOT_DIR=/usr/local/Cellar/openssl@1.1/1.1.1d/ -D RapidJSON_ROOT=./rapidjson/include/
+          cmake -B build -G "Xcode" -D BOOST_ROOT=/usr/local/Cellar/boost/1.72.0 -D OPENSSL_ROOT_DIR=/usr/local/Cellar/openssl@1.1/1.1.1d/ -D RapidJSON_ROOT=./rapidjson/include/
           cd build
           xcodebuild -target Bilibili
