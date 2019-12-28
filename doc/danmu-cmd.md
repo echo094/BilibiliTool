@@ -104,7 +104,7 @@
 
 
 
-## 有效指令(115)
+## 有效指令(117)
 
 
 
@@ -580,7 +580,7 @@
 }
 ```
 
-2 广播的抽奖消息。
+2 广播的抽奖消息，或房间内PK消息。
 
 ```json
 {
@@ -620,6 +620,45 @@
 	"msg_type": 2,
 	"shield_uid": -1,
 	"business_id": "30401"
+}
+```
+```json{
+	"cmd": "NOTICE_MSG",
+	"full": {
+		"head_icon": "https://i0.hdslb.com/bfs/live/00f26756182b2e9d06c00af23001bc8e10da67d0.webp",
+		"tail_icon": "https://i0.hdslb.com/bfs/live/822da481fdaba986d738db5d8fd469ffa95a8fa1.webp",
+		"head_icon_fa": "https://i0.hdslb.com/bfs/live/77983005023dc3f31cd599b637c83a764c842f87.png",
+		"tail_icon_fa": "https://i0.hdslb.com/bfs/live/38cb2a9f1209b16c0f15162b0b553e3b28d9f16f.png",
+		"head_icon_fan": 36,
+		"tail_icon_fan": 4,
+		"background": "#6098FFFF",
+		"color": "#FFFFFFFF",
+		"highlight": "#FDFF2FFF",
+		"time": 20
+	},
+	"half": {
+		"head_icon": "https://i0.hdslb.com/bfs/live/358cc52e974b315e83eee429858de4fee97a1ef5.png",
+		"tail_icon": "",
+		"background": "#7BB6F2FF",
+		"color": "#FFFFFFFF",
+		"highlight": "#FDFF2FFF",
+		"time": 15
+	},
+	"side": {
+		"head_icon": "https://i0.hdslb.com/bfs/live/7ef6f2b7fe01c550f93dd569ca4b573b80b9e6a5.png",
+		"background": "#E6F4FFFF",
+		"color": "#51A8FBFF",
+		"highlight": "#0081F0FF",
+		"border": "#BDD9FFFF"
+	},
+	"roomid": 302816,
+	"real_roomid": 302816,
+	"msg_common": "",
+	"msg_self": "<%枕边小软%>本场大乱斗获胜可获得双倍神力值，快点投喂道具支持ta~",
+	"link_url": "",
+	"msg_type": 2,
+	"shield_uid": -1,
+	"business_id": "302816"
 }
 ```
 
@@ -2820,7 +2859,7 @@
 
 
 
-### 其它函数消息(10)
+### 其它函数消息(12)
 
 
 
@@ -3032,6 +3071,48 @@
 			"title": "",
 			"content": "恭喜，获得推荐位buff加持，上推荐的几率大大提高，持续时间：2小时。"
 		}
+	}
+}
+```
+
+
+
+#### HOT_ROOM_NOTIFY(无处理)
+
+添加日期：2019/12/21
+
+```json
+{
+	"cmd": "HOT_ROOM_NOTIFY",
+	"data": {
+		"ttl": 300,
+		"exit_no_refresh": 1,
+		"random_delay_req": []
+	}
+}
+```
+
+
+
+#### ACTIVITY_BANNER_UPDATE(无处理)
+
+添加日期：2019/12/22
+
+```json
+{
+	"cmd": "ACTIVITY_BANNER_UPDATE",
+	"data": {
+		"id": 299,
+		"title": "觉醒之灵x1星",
+		"cover": "https://i0.hdslb.com/bfs/live/8bfddbf1534d8ffa18e2b67f0f3536edbc5b0ece.png",
+		"background": "https://i0.hdslb.com/bfs/live/dd98e73c962087c1b04a29805fecb875f79f9ae4.png",
+		"jump_url": "https://live.bilibili.com/p/html/live-app-battle/u-anchor.html?is_live_half_webview=1&hybrid_biz=live-app-battle-u-anchor&hybrid_half_ui=1,5,272,320,0,0,30,0,8;2,5,272,320,0,0,30,0,8;3,5,272,320,0,0,30,0,8;4,5,272,320,0,0,30,0,8;5,5,272,320,0,0,30,0,8;6,5,272,320,0,0,30,0,8;7,5,272,320,0,0,30,0,8;8,5,272,320,0,0,30,0,8&battleAnchorId=98978083",
+		"title_color": "#444693",
+		"closeable": 0,
+		"banner_type": 1,
+		"weight": 10,
+		"web_text": "",
+		"web_cover": ""
 	}
 }
 ```

@@ -259,7 +259,8 @@ int dest_user::HeartExp(int firsttime) {
 }
 
 int dest_user::JoinLottery(std::shared_ptr<BILI_LOTTERYDATA> data) {
-	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Lottery Room: " << data->rrid << " ID: " << data->loid;
+	BOOST_LOG_SEV(g_logger::get(), info) << "[UserList] Lottery Room: " << data->rrid 
+		<< " ID: " << data->loid << " type: " << data->type;
 	// 当前没有用户则不领取
 	if (!_usercount) {
 		return 0;
@@ -282,7 +283,14 @@ int dest_user::JoinLottery(std::shared_ptr<BILI_LOTTERYDATA> data) {
 			break;
 		}
 		case MSG_LOT_GIFT: {
-			p->time_get += _GetRand(100, 1000);
+			if (p->type == "small_tv" || p->type == "GIFT_30436") {
+				// 小电视抽奖需要快速抽争取中奖
+				p->time_get += _GetRand(100, 1000);
+			}
+			else {
+				// 其它抽奖抽慢点避免中奖
+				p->time_get += _GetRand(5000, 5000);
+			}
 			break;
 		}
 		default: {
