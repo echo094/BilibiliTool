@@ -1,3 +1,0 @@
-﻿let Lot_Danmu_1911 = [
-{"time":1573986609,"type":"danmu","ruid":544641,"loid":75,"award_name":"《乐隐长歌·破晓》主创签名海报","award_num":1},
-]
