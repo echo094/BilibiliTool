@@ -285,11 +285,11 @@ int dest_user::JoinLottery(std::shared_ptr<BILI_LOTTERYDATA> data) {
 		case MSG_LOT_GIFT: {
 			if (p->type == "small_tv" || p->type == "GIFT_30436") {
 				// 小电视抽奖需要快速抽争取中奖
-				p->time_get += _GetRand(100, 1000);
+				p->time_get += static_cast<long long>(100) + (p->rrid & 0x1ff);
 			}
 			else {
 				// 其它抽奖抽慢点避免中奖
-				p->time_get += _GetRand(5000, 5000);
+				p->time_get += static_cast<long long>(5000) + (p->rrid & 0xfff);
 			}
 			break;
 		}

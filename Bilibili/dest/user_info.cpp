@@ -328,6 +328,12 @@ void user_info::on_timer(boost::system::error_code ec)
 	while (!tasks_.empty() && tasks_.top()->time_get < curtime) {
 		auto p = tasks_.top();
 		tasks_.pop();
+		if (p->time_end < curtime) {
+			// 抽奖已过期
+			BOOST_LOG_SEV(g_logger::get(), trace) << "[User] Overdue task type: " << p->cmd
+				<< " id: " << p->loid;
+			continue;
+		}
 		if (do_task(p, curtime) == BILIRET::JOIN_AGAIN
 			&& (p->time_start + 22000 > curtime)) {
 			// 节奏风暴没抽中且时间在22秒内

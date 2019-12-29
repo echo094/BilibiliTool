@@ -29,10 +29,13 @@ struct task_cmp {
 		const std::shared_ptr<BILI_LOTTERYDATA> &a, 
 		const std::shared_ptr<BILI_LOTTERYDATA> &b)
 	{
-		if (a->time_get == b->time_get) {
+		if (a->time_get != b->time_get) {
+			return a->time_get > b->time_get;
+		}
+		if (a->rrid != b->rrid) {
 			return a->rrid > b->rrid;
 		}
-		return a->time_get > b->time_get;
+		return a->loid > b->loid;
 	}
 };
 
