@@ -450,7 +450,7 @@ int CBilibiliMain::StartMonitorPubEvent(unsigned port) {
 		}
 
 		// 清空错过抽奖列表
-		_lotterytv->ClearMissingLottery();
+		_lotterytv->ClearLotteryCache();
 
 		// 获取key
 		std::string key;

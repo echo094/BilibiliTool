@@ -13,7 +13,6 @@ bool sortbiliyunyingdata(
 
 event_list_base::event_list_base() :
 	m_httppack(new toollib::CHTTPPack()) {
-	m_curid = 0;
 }
 
 event_list_base::~event_list_base() {
@@ -48,18 +47,6 @@ std::shared_ptr<BILI_LOTTERYDATA> event_list_base::GetNextLottery() {
 	std::shared_ptr<BILI_LOTTERYDATA> pdata = m_lotteryactive.front();
 	m_lotteryactive.pop_front();
 	return pdata;
-}
-
-void event_list_base::ShowMissingLottery() {
-	BOOST_LOG_SEV(g_logger::get(), info) << "Missing lottery list: ";
-	for (auto it = m_missingid.begin(); it != m_missingid.end(); it++) {
-		BOOST_LOG_SEV(g_logger::get(), info) << *it;
-	}
-	BOOST_LOG_SEV(g_logger::get(), info) << "End of list. ";
-}
-
-void event_list_base::ClearMissingLottery() {
-	m_missingid.clear();
 }
 
 BILIRET event_list_base::_CheckRoom(CURL* pcurl, std::shared_ptr<BILI_LOTTERYDATA> &data) {
@@ -142,32 +129,16 @@ void lottery_list::_UpdateLotteryList(rapidjson::Value &infoArray, std::shared_p
 	}
 }
 
+void lottery_list::ClearLotteryCache() {
+    m_cacheid.clear();
+}
+
 bool lottery_list::_CheckLoid(const long long id) {
-	if (m_curid == 0) {
-		// 第一次
-		m_curid = id;
-		return true;
-	}
-	if (id == m_curid + 1) {
-		// 没有漏掉
-		m_curid = id;
-		return true;
-	}
-	if (id > m_curid) {
-		// 有漏掉 进行记录
-		for (long long i = m_curid + 1; i < id; i++) {
-			m_missingid.insert(i);
-		}
-		m_curid = id;
-		return true;
-	}
-	// id <= m_curid
-	// 判断是否是漏掉的
-	if (m_missingid.count(id)) {
-		m_missingid.erase(id);
-		return true;
-	}
-	return false;
+    if (m_cacheid.count(id)) {
+        return false;
+    }
+    m_cacheid.insert(id);
+    return true;
 }
 
 BILIRET guard_list::_GetLotteryID(CURL *pcurl, std::shared_ptr<BILI_LOTTERYDATA> &data) {

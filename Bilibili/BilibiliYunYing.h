@@ -20,10 +20,6 @@ public:
 	int CheckLottery(CURL *pcurl, std::shared_ptr<BILI_LOTTERYDATA> data);
 	// 获取最近的一条抽奖信息 无信息返回空
 	std::shared_ptr<BILI_LOTTERYDATA> GetNextLottery();
-	// 显示漏掉的抽奖事件
-	void ShowMissingLottery();
-	// 清空漏掉的抽奖事件
-	void ClearMissingLottery();
 
 protected:
 	// 需要在类中实例化的查询API
@@ -35,9 +31,7 @@ protected:
 
 protected:
 	unique_ptr<toollib::CHTTPPack> m_httppack;
-	long long m_curid;
 	std::list<std::shared_ptr<BILI_LOTTERYDATA> > m_lotteryactive;
-	std::set<long long> m_missingid;
 };
 
 class lottery_list : public event_list_base
@@ -46,17 +40,31 @@ protected:
 	BILIRET _GetLotteryID(CURL *pcurl, std::shared_ptr<BILI_LOTTERYDATA> &data) override;
 	// 更新待抽奖列表
 	void _UpdateLotteryList(rapidjson::Value &infoArray, std::shared_ptr<BILI_LOTTERYDATA> &data) override;
+    
+public:
+    // 清空抽奖id缓存
+    void ClearLotteryCache();
 
 private:
 	bool _CheckLoid(const long long id);
+    
+private:
+    std::set<long long> m_cacheid;
 };
 
 class guard_list : public event_list_base
 {
+public:
+    guard_list():
+        m_curid(0) {}
+
 protected:
 	BILIRET _GetLotteryID(CURL *pcurl, std::shared_ptr<BILI_LOTTERYDATA> &data) override;
 	// 更新待领取列表
 	void _UpdateLotteryList(rapidjson::Value &infoArray, std::shared_ptr<BILI_LOTTERYDATA> &data) override;
+        
+private:
+    long long m_curid;
 };
 
 // 其它API
