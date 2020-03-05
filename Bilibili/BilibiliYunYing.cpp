@@ -243,7 +243,7 @@ BILIRET CBilibiliLive::GetAreaNum(CURL * pcurl, unsigned & num) const {
 
 BILIRET CBilibiliLive::GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, const unsigned minpop) const {
 	BILIRET ret = BILIRET::NOFAULT;
-	int page = 0, err = 10;
+	int page = 0, err = 10, filternum = 0;
 	while (1) {
 		rapidjson::Document doc;
 		page++;
@@ -263,9 +263,15 @@ BILIRET CBilibiliLive::GetLiveList(CURL *pcurl, std::set<unsigned> &rlist, const
 				// 可能会有人气小的房间跑到前面去的情况
 				err--;
 				if (!err) {
+                    BOOST_LOG_SEV(g_logger::get(), error) << "[Live] Filtered quantity: " << filternum;
 					return BILIRET::NOFAULT;
 				}
 			}
+            if ((*it)["area_v2_id"].GetInt() == 27) {
+                // 过滤学习分区
+                ++filternum;
+                continue;
+            }
 			rlist.insert((*it)["roomid"].GetUint());
 		}
 	}
