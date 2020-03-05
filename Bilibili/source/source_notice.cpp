@@ -25,6 +25,9 @@ int source_notice::start() {
 	asioclient_.set_open_handler(
 		std::bind(&source_notice::on_open, this, _1)
 	);
+    asioclient_.set_timer_handler(
+        std::bind(&source_notice::on_heart, this, _1)
+    );
 	asioclient_.set_header_handler(
 		std::bind(&source_notice::on_header, this, _1, _2)
 	);
@@ -94,6 +97,13 @@ void source_notice::on_error(const unsigned id, const boost::system::error_code 
 
 void source_notice::on_open(context_info * c) {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[NOTICE] Open: " << c->label_;
+}
+
+void source_notice::on_heart(context_info * c) {
+    BOOST_LOG_SEV(g_logger::get(), info) << "[NOTICE] Keepalive: " << c->label_;
+    char cmdstr[] = "keepalive";
+    int len = 9;
+    asioclient_.post_write(c, cmdstr, len);
 }
 
 size_t source_notice::on_header(context_info * c, const int len) {

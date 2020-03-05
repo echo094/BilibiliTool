@@ -58,6 +58,13 @@ private:
 	 *
 	 */
 	void on_open(context_info* c);
+    /**
+     * @brief asio/tcp的连接心跳
+     *
+     * @param c     当前连接的session
+     *
+     */
+    void on_heart(context_info* c);
 	/**
 	 * @brief asio/tcp的协议头处理回调
 	 *
