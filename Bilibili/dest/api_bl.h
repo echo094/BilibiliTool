@@ -45,8 +45,44 @@ namespace apibl {
 
 	// 领取每日礼物
 	BILIRET APIWebv2GiftDaily(const std::shared_ptr<user_info> &user);
-	// 查询背包道具
-	BILIRET APIWebv2GiftBag(const std::shared_ptr<user_info> &user);
+    /**
+     * @brief 查询背包道具
+     *
+     * 更新日期 02/12/2020
+     *
+     * @param user  用户IO
+     * @param flag  是否输出
+     *
+     * @return
+     *   返回抽奖参与情况
+     */
+    BILIRET APIWebv1GiftBag(
+       const std::shared_ptr<user_info>& user,
+       unsigned flag = 0
+    );
+    /**
+     * @brief 赠送背包中的礼物礼物
+     *
+     * 更新日期 02/12/2020
+     *
+     * @param user           用户IO
+     * @param ruid           主播uid
+     * @param room           主播原始房间号
+     * @param gift_id    礼物编号
+     * @param gift_num  礼物数量
+     * @param bag_id      礼物包裹号
+     *
+     * @return
+     *   返回抽奖参与情况
+     */
+    BILIRET APIWebv2GiftSend(
+        const std::shared_ptr<user_info>& user,
+        unsigned ruid,
+        unsigned room,
+        unsigned gift_id,
+        unsigned gift_num,
+        unsigned bag_id
+    );
 	/**
 	 * @brief 进入直播间 留下历史记录
 	 *

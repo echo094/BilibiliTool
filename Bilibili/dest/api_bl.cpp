@@ -375,8 +375,16 @@ BILIRET apibl::APIWebv2GiftDaily(const std::shared_ptr<user_info>& user) {
 	return BILIRET::NOFAULT;
 }
 
-BILIRET apibl::APIWebv2GiftBag(const std::shared_ptr<user_info>& user) {
-	user->httpweb->url = URL_LIVEAPI_HEAD + "/gift/v2/gift/bag_list";
+BILIRET apibl::APIWebv1GiftBag(
+   const std::shared_ptr<user_info>& user,
+   unsigned flag
+) {
+    std::ostringstream oss;
+    oss << URL_LIVEAPI_HEAD
+        << "/xlive/web-room/v1/gift/bag_list?"
+        << "t=" << GetTimeStampM()
+        << "&room_id=23058";
+	user->httpweb->url = oss.str();
 	user->httpweb->ClearHeader();
 	user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
 	user->httpweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
@@ -390,15 +398,15 @@ BILIRET apibl::APIWebv2GiftBag(const std::shared_ptr<user_info>& user) {
 	doc.Parse(user->httpweb->recv_data.c_str());
 	if (!doc.IsObject() || !doc.HasMember("code") || !doc["code"].IsInt() || doc["code"].GetInt()) {
 		BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << user->fileid << "] "
-			<< "APIWebv2GiftBag: Get bag info failed.";
+			<< "APIWebv1GiftBag: Get bag info failed.";
 		return BILIRET::JSON_ERROR;
 	}
 	printf("  Current bag info: \n");
 	int curtime, expiretime;
 	std::string giftname;
-	curtime = doc["data"]["time"].GetInt();
+	curtime = GetTimeStamp();
 	rapidjson::Value &datalist = doc["data"]["list"];
-	unsigned int i;
+	unsigned int i, si = 0;
 	for (i = 0; i < datalist.Size(); i++) {
 		giftname = datalist[i]["gift_name"].GetString();
 		printf("Gift:%8s   Num:%5d   ", giftname.c_str(), datalist[i]["gift_num"].GetInt());
@@ -410,9 +418,73 @@ BILIRET apibl::APIWebv2GiftBag(const std::shared_ptr<user_info>& user) {
 		else {
 			printf("Expire: Infinite\n");
 		}
+        if (flag) {
+            unsigned gift_id = datalist[i]["gift_id"].GetUint();
+            unsigned gift_num = datalist[i]["gift_num"].GetUint();
+            unsigned bag_id = datalist[i]["bag_id"].GetUint();
+            if (gift_id != 1 || gift_num != 3 || ++si > 50) {
+                continue;
+            }
+            apibl::APIWebv2GiftSend(
+                user,
+                11153765,
+                23058,
+                gift_id,
+                gift_num,
+                bag_id
+            );
+        }
 	}
 
 	return BILIRET::NOFAULT;
+}
+
+BILIRET apibl::APIWebv2GiftSend(
+   const std::shared_ptr<user_info>& user,
+   unsigned ruid,
+   unsigned room,
+   unsigned gift_id,
+   unsigned gift_num,
+   unsigned bag_id
+) {
+    user->httpweb->url = URL_LIVEAPI_HEAD + "/gift/v2/live/bag_send";
+    std::ostringstream oss;
+    oss << "uid=" << user->uid
+        << "&gift_id=" << gift_id
+        << "&ruid=" << ruid
+        << "&send_ruid=" << 0
+        << "&gift_num=" << gift_num
+        << "&bag_id=" << bag_id
+        << "&platform=pc"
+        << "&biz_code=live"
+        << "&biz_id=" << room
+        << "&rnd=" << GetTimeStamp()
+        << "&storm_beat_id=" << 0
+        << "&metadata="
+        << "&price=" << 0
+        << "&csrf_token=" << user->tokenjct
+        << "&csrf=" << user->tokenjct
+        << "&visit_id=" << user->visitid;
+    user->httpweb->send_data = oss.str();
+    user->httpweb->ClearHeader();
+    user->httpweb->AddHeaderManual("Accept: application/json, text/plain, */*");
+    user->httpweb->AddHeaderManual("Content-Type: application/x-www-form-urlencoded");
+    user->httpweb->AddHeaderManual(URL_DEFAULT_ORIGIN);
+    std::string strreffer(URL_DEFAULT_REFERERBASE);
+    strreffer += std::to_string(room);
+    user->httpweb->AddHeaderManual(strreffer.c_str());
+    int ret = toollib::HttpPostEx(user->curlweb, user->httpweb);
+    if (ret) {
+        return BILIRET::HTTP_ERROR;
+    }
+
+    rapidjson::Document doc;
+    doc.Parse(user->httpweb->recv_data.c_str());
+    BOOST_LOG_SEV(g_logger::get(), warning) << "[User" << user->fileid << "] "
+        << "APIWebv2GiftSend: " << doc["code"].GetInt()
+        << " " << doc["msg"].GetString();
+
+    return BILIRET::NOFAULT;
 }
 
 BILIRET apibl::APIWebv1RoomEntry(const user_info *user, unsigned room) {

@@ -393,7 +393,7 @@ LOGINRET dest_user::_ActCheckLogin(std::shared_ptr<user_info>& user) {
 
 int dest_user::_ActGetUserInfo(const std::shared_ptr<user_info>& user) {
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] ";
-	apibl::APIWebv2GiftBag(user);
+	apibl::APIWebv1GiftBag(user, 0);
 	apibl::APIWebv1CapsuleCheck(user);
 	return 0;
 }
