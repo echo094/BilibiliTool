@@ -1,5 +1,6 @@
 ﻿#include "event_dmmsg.h"
 #include <fstream>
+#include <regex>
 #include "logger/log.h"
 #include "utility/platform.h"
 #include "utility/strconvert.h"
@@ -421,8 +422,12 @@ int event_dmmsg::ParseMsgNotice(rapidjson::Value &doc, const unsigned room, cons
 	}
 	int type = doc["msg_type"].GetInt();
 	switch (type) {
-	case 2:
+	case 2:{
+        // 抽奖事件
+        return ParseNoticeGift(doc, room, area);
+    }
 	case 8: {
+        // 任意门抽奖 房间内获奖公告
 		return ParseNoticeGift(doc, room, area);
 	}
 	case 3: {
@@ -447,20 +452,49 @@ int event_dmmsg::ParseNoticeGift(rapidjson::Value &doc, const unsigned room, con
 		return -1;
 	}
 	int rrid = doc["real_roomid"].GetInt();
-	// 检测礼物ID
+	// 检测business_id可能是礼物id或房间id
 	if (!doc.HasMember("business_id") || !doc["business_id"].IsString()) {
 		return -1;
 	}
-	unsigned gift_id = atoi(doc["business_id"].GetString());
-	// 如果是全区广播的礼物需要过滤重复消息
-	if (m_gift.count(gift_id)) {
-		if (area != 1) {
-			return 0;
-		}
-	}
+    unsigned bsid = atoi(doc["business_id"].GetString());
+    
+    // 根据消息格式分别过滤消息
+    std::string msgs = doc["msg_self"].GetString();
+    if (std::regex_match(msgs, std::regex("(<%.+%>.+<%.+%>.+)"))) {
+        // 观众送礼 如果是全区广播的礼物需要过滤重复消息
+        // 房间内中奖消息也会被分类进来 但数量较少不影响大局
+        if (m_gift.count(bsid) && (area != 1)) {
+            return 0;
+        }
+    } else if (~msgs.find(u8"%>开启")) {
+        // 主播使用任意门 如果是全区任意门需要过滤重复消息
+        if (m_gift.count(bsid) && (area != 1)) {
+            return 0;
+        }
+    } else {
+        // 主播触发事件或其它未知事件
+        // 过滤已知事件 未知事件直接放过
+        // 22地图无抽奖
+        if (~msgs.find(u8"%>完成今日22地图历险")) {
+            return 0;
+        }
+        // 活动你的直播间长猫了的全区广播
+        if (~msgs.find(u8"%>完成\"撸猫撸到手发油\"") && (area != 1)) {
+            return 0;
+        }
+        if (~msgs.find(u8"%>完成\"人在家中坐，猫从天上来\"") && (area != 1)) {
+            return 0;
+        }
+    }
 
 	// 有房间号就进行抽奖
 	event_base::post_lottery_pub(MSG_NOTICE_GIFT, rrid);
+    BOOST_LOG_SEV(g_logger::get(), info) << "[DMMSG] type: "
+        << doc["msg_type"].GetInt()
+        << " srid: " << doc["roomid"].GetInt()
+        << " rrid: " << rrid
+        << " bsid: " << bsid
+        << " msgs: " << msgs;
 
 	return 0;
 }

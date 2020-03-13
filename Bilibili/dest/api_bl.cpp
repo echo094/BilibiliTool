@@ -644,7 +644,7 @@ BILIRET apibl::APIWebv5SmalltvJoin(
 		return BILIRET::NOFAULT;
 	}
 	BOOST_LOG_SEV(g_logger::get(), info) << "[User" << user->fileid << "] "
-		<< "APIWebv5SmalltvJoin: " << doc["data"]["award_name"].GetString()
+		<< "APIWebv5SmalltvJoin: " << data->loid << ' ' << doc["data"]["award_name"].GetString()
 		<< u8"×" << doc["data"]["award_num"].GetInt();
 
 	return BILIRET::NOFAULT;
