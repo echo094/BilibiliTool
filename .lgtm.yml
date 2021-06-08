@@ -1,0 +1,19 @@
+extraction:
+  cpp:
+    prepare:
+      packages:
+      - "libcurl4-openssl-dev"
+      - "zlib1g-dev"
+    after_prepare:
+    - "export GNU_MAKE=make"
+    - "export GIT=true"
+    before_index:
+    - "git clone \"https://github.com/Tencent/rapidjson.git\""
+    - "wget https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.gz"
+    - "tar xvzf boost_1_76_0.tar.gz"
+    - "cd boost_1_76_0 && ./bootstrap.sh && ./b2"
+    index:
+      build_command:
+      - "cmake -D BOOST_ROOT=./boost_1_76_0 -D RapidJSON_ROOT=./rapidjson/include/\
+        \ ./"
+      - "$GNU_MAKE"
